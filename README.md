@@ -61,6 +61,7 @@ All inline elements follow a **uniform syntax rule**: if the first token after t
    
    //#todo Fix this later
    // → {type: "CommentInline", name: "todo", content: " Fix this later"}
+   // Note: Leading whitespace after the name is preserved in content
    
    //#note Important detail here
    // → {type: "CommentInline", name: "note", content: " Important detail here"}

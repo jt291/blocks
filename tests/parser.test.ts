@@ -3,39 +3,73 @@ import { parse } from '../src/index';
 
 describe('Parser', () => {
   describe('Comment blocks', () => {
-    it('should parse simple comment block', () => {
-      const result = parse('/* comment content */');
+    it('should parse simple comment block without name', () => {
+      const result = parse('/* This is a comment block */');
       
       expect(result.errors).toEqual([]);
       expect(result.ast.children).toHaveLength(1);
       expect(result.ast.children[0]).toMatchObject({
         type: 'CommentBlock',
-        content: ' comment content '
+        content: 'This is a comment block '
       });
+      expect(result.ast.children[0].name).toBeUndefined();
     });
 
-    it('should parse comment block with name', () => {
-      const result = parse('/* include file.txt */');
+    it('should parse comment block with name starting with #', () => {
+      const result = parse('/* #include header.html */');
       
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
         type: 'CommentBlock',
         name: 'include',
-        content: expect.stringContaining('file.txt')
+        content: ' header.html '
       });
     });
 
-    it('should parse comment block with attributes', () => {
-      const result = parse('/* myname { #id .class } content */');
+    it('should parse comment block with name and longer content', () => {
+      const result = parse('/* #config some important content */');
+      
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children[0]).toMatchObject({
+        type: 'CommentBlock',
+        name: 'config',
+        content: ' some important content '
+      });
+    });
+
+    it('should treat # in middle of content as content', () => {
+      const result = parse('/* This has # in the middle */');
+      
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children[0]).toMatchObject({
+        type: 'CommentBlock',
+        content: 'This has # in the middle '
+      });
+      expect(result.ast.children[0].name).toBeUndefined();
+    });
+
+    it('should parse multiline comment with name', () => {
+      const result = parse('/* #ifdef DEBUG\nsome content\n*/');
+      
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children[0]).toMatchObject({
+        type: 'CommentBlock',
+        name: 'ifdef',
+        content: expect.stringContaining('DEBUG')
+      });
+    });
+
+    it('should NOT parse attributes in comment blocks', () => {
+      const result = parse('/* #config { #id .class } content */');
       
       expect(result.errors).toEqual([]);
       const node = result.ast.children[0];
       expect(node.type).toBe('CommentBlock');
-      expect(node.name).toBe('myname');
-      expect(node.attributes).toMatchObject({
-        id: 'id',
-        classes: ['class']
-      });
+      expect(node.name).toBe('config');
+      expect(node.attributes).toBeUndefined();
+      // Les { #id .class } font partie du contenu
+      expect(node.content).toContain('{');
+      expect(node.content).toContain('#id');
     });
   });
 

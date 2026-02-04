@@ -32,7 +32,16 @@ const code = parse('```javascript\nfunction hello() {\n  console.log("Hello");\n
 
 ### Blocks
 
-1. **Comment Block**: `/* name? attributes? content */`
+1. **Comment Block**: `/* #name? content */`
+   - If the first token is `#identifier`, it becomes the **name** of the block
+   - The rest is always the **content**
+   - **No attributes** for comment blocks
+   
+   Examples:
+   - `/* Simple comment */` → content only
+   - `/* #include file.txt */` → name: "include", content: " file.txt "
+   - `/* #ifdef DEBUG */` → name: "ifdef", content: " DEBUG "
+
 2. **Code Block**: ` ``` name? attributes? content ``` `
 3. **Script Block**: `!!! name? attributes? content !!!`
 4. **Generic Block**: `::: name? attributes? content :::`

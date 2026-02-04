@@ -24,6 +24,8 @@ export class BlocksParser extends EmbeddedActionsParser {
     this.performSelfAnalysis();
   }
 
+
+
   // Helper to check if we should parse name+attributes
   // Name is consumed if: Identifier [Whitespace]* LBrace
   private shouldConsumeName(): boolean {
@@ -61,7 +63,8 @@ export class BlocksParser extends EmbeddedActionsParser {
     ]);
   });
 
-  // Comment block: /* name? attrs? content */
+  // Comment block: /* #name? content */
+  // Simplified: only # prefix indicates name, no attributes ever
   private commentBlock = this.RULE('commentBlock', (): CommentBlockNode => {
     this.CONSUME(tokens.BlockCommentStart);
     
@@ -70,36 +73,30 @@ export class BlocksParser extends EmbeddedActionsParser {
       this.CONSUME(tokens.Whitespace);
     });
     
-    // Try to consume name if followed by attributes
-    let name: IToken | undefined;
-    if (this.shouldConsumeName()) {
-      name = this.CONSUME(tokens.Identifier);
-      // Skip whitespace after name
-      this.MANY2(() => {
-        this.CONSUME2(tokens.Whitespace);
-      });
-    }
-    
-    let attributes: Attributes | undefined;
-    if (this.LA(1).tokenType === tokens.LBrace) {
-      attributes = this.SUBRULE(this.attributes);
-    }
-    
-    // Consume all content until */
+    let name: string | undefined;
     const contentTokens: IToken[] = [];
+    
+    // Try to consume name if it starts with #
+    this.OPTION(() => {
+      this.CONSUME(tokens.Hash);
+      const nameToken = this.CONSUME(tokens.Identifier);
+      name = nameToken.image;
+    });
+    
+    // Consume all remaining content until */
     this.MANY3(() => {
       const tok = this.OR([
         { ALT: () => this.CONSUME2(tokens.Identifier) },
         { ALT: () => this.CONSUME(tokens.Content) },
-        { ALT: () => this.CONSUME3(tokens.Whitespace) },
+        { ALT: () => this.CONSUME2(tokens.Whitespace) },
         { ALT: () => this.CONSUME(tokens.Newline) },
         { ALT: () => this.CONSUME(tokens.InlineCommentStart) },
         { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
         { ALT: () => this.CONSUME(tokens.InlineScriptDelim) },
         { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
-        { ALT: () => this.CONSUME2(tokens.LBrace) },
+        { ALT: () => this.CONSUME(tokens.LBrace) },
         { ALT: () => this.CONSUME(tokens.RBrace) },
-        { ALT: () => this.CONSUME(tokens.Hash) },
+        { ALT: () => this.CONSUME2(tokens.Hash) },
         { ALT: () => this.CONSUME(tokens.Dot) },
         { ALT: () => this.CONSUME(tokens.Percent) },
         { ALT: () => this.CONSUME(tokens.Equals) },
@@ -119,8 +116,9 @@ export class BlocksParser extends EmbeddedActionsParser {
       content: contentTokens.map(t => t.image).join('')
     };
     
-    if (name) node.name = name.image;
-    if (attributes) node.attributes = attributes;
+    if (name) {
+      node.name = name;
+    }
     
     return node;
   });

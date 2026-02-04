@@ -623,19 +623,6 @@ export class BlocksParser extends EmbeddedActionsParser {
     // IMPORTANT: performSelfAnalysis() AFTER having defined all the rules
     this.performSelfAnalysis();
   }
-
-  // Helper to check if we should parse name
-  // Name is consumed if: Identifier [Whitespace]* LBrace
-  private shouldConsumeName(): boolean {
-    let idx = 1;
-    if (this.LA(idx).tokenType !== tokens.Identifier) return false;
-    idx++;
-    // Skip whitespace
-    while (this.LA(idx).tokenType === tokens.Whitespace) {
-      idx++;
-    }
-    return this.LA(idx).tokenType === tokens.LBrace;
-  }
 }
 
 export function createParser(): BlocksParser {

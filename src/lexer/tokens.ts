@@ -100,7 +100,7 @@ export const Identifier = createToken({
 
 export const StringValue = createToken({
   name: 'StringValue',
-  pattern: /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^\s{}#.%=]+/
+  pattern: /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^\s{}#.%=`!:]+/
 });
 
 // Content token - matches any character sequence

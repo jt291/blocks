@@ -175,20 +175,43 @@ describe('Parser', () => {
   });
 
   describe('Inline comments', () => {
-    it('should parse inline comment', () => {
-      const result = parse('// this is a comment\n');
+    it('should parse inline comment without name', () => {
+      const result = parse('// This is a comment\n');
       
       expect(result.errors).toEqual([]);
       expect(result.ast.children).toHaveLength(1);
       expect(result.ast.children[0]).toMatchObject({
         type: 'CommentInline',
-        content: ' this is a comment'
+        content: 'This is a comment'
+      });
+      expect(result.ast.children[0].name).toBeUndefined();
+    });
+
+    it('should parse inline comment with name', () => {
+      const result = parse('//#todo Fix this later\n');
+      
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children[0]).toMatchObject({
+        type: 'CommentInline',
+        name: 'todo',
+        content: ' Fix this later'
+      });
+    });
+
+    it('should parse inline comment with name and spaces', () => {
+      const result = parse('// #note Important detail here\n');
+      
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children[0]).toMatchObject({
+        type: 'CommentInline',
+        name: 'note',
+        content: ' Important detail here'
       });
     });
   });
 
   describe('Inline code', () => {
-    it('should parse simple inline code', () => {
+    it('should parse simple inline code without name', () => {
       const result = parse('`code`');
       
       expect(result.errors).toEqual([]);
@@ -197,30 +220,43 @@ describe('Parser', () => {
         type: 'CodeInline',
         content: 'code'
       });
+      expect(result.ast.children[0].name).toBeUndefined();
     });
 
     it('should parse inline code with name', () => {
-      const result = parse('`js console.log()`');
+      const result = parse('`#js console.log()`');
       
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
         type: 'CodeInline',
-        name: 'js'
+        name: 'js',
+        content: ' console.log()'
       });
     });
 
     it('should parse inline code with attributes', () => {
-      const result = parse('`code` { .highlight }');
+      const result = parse('`code`{.highlight}');
       
       expect(result.errors).toEqual([]);
       const node = result.ast.children[0];
       expect(node.type).toBe('CodeInline');
       expect(node.attributes?.classes).toContain('highlight');
     });
+
+    it('should parse inline code with name and attributes', () => {
+      const result = parse('`#js code`{.highlight}');
+      
+      expect(result.errors).toEqual([]);
+      const node = result.ast.children[0];
+      expect(node.type).toBe('CodeInline');
+      expect(node.name).toBe('js');
+      expect(node.content).toBe(' code');
+      expect(node.attributes?.classes).toContain('highlight');
+    });
   });
 
   describe('Inline scripts', () => {
-    it('should parse simple inline script', () => {
+    it('should parse simple inline script without name', () => {
       const result = parse('!script!');
       
       expect(result.errors).toEqual([]);
@@ -229,21 +265,43 @@ describe('Parser', () => {
         type: 'ScriptInline',
         content: 'script'
       });
+      expect(result.ast.children[0].name).toBeUndefined();
     });
 
     it('should parse inline script with name', () => {
-      const result = parse('!js alert()!');
+      const result = parse('!#js alert()!');
       
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
         type: 'ScriptInline',
-        name: 'js'
+        name: 'js',
+        content: ' alert()'
       });
+    });
+
+    it('should parse inline script with attributes', () => {
+      const result = parse('!script!{#id1}');
+      
+      expect(result.errors).toEqual([]);
+      const node = result.ast.children[0];
+      expect(node.type).toBe('ScriptInline');
+      expect(node.attributes?.id).toBe('id1');
+    });
+
+    it('should parse inline script with name and attributes', () => {
+      const result = parse('!#py script!{.external}');
+      
+      expect(result.errors).toEqual([]);
+      const node = result.ast.children[0];
+      expect(node.type).toBe('ScriptInline');
+      expect(node.name).toBe('py');
+      expect(node.content).toBe(' script');
+      expect(node.attributes?.classes).toContain('external');
     });
   });
 
   describe('Inline generic', () => {
-    it('should parse simple inline generic', () => {
+    it('should parse simple inline generic without name', () => {
       const result = parse(':text:');
       
       expect(result.errors).toEqual([]);
@@ -251,26 +309,36 @@ describe('Parser', () => {
       expect(result.ast.children[0]).toMatchObject({
         type: 'GenericInline'
       });
+      expect(result.ast.children[0].name).toBeUndefined();
     });
 
     it('should parse inline generic with name', () => {
-      const result = parse(':strong bold:');
+      const result = parse(':#link GitHub:');
       
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
         type: 'GenericInline',
-        name: 'strong'
+        name: 'link'
       });
     });
 
     it('should parse inline generic with attributes', () => {
-      const result = parse(':em italic: { .emphasis }');
+      const result = parse(':text:{.emphasis}');
       
       expect(result.errors).toEqual([]);
       const node = result.ast.children[0];
       expect(node.type).toBe('GenericInline');
-      expect(node.name).toBe('em');
       expect(node.attributes?.classes).toContain('emphasis');
+    });
+
+    it('should parse inline generic with name and attributes', () => {
+      const result = parse(':#link GitHub:{href="https://github.com"}');
+      
+      expect(result.errors).toEqual([]);
+      const node = result.ast.children[0];
+      expect(node.type).toBe('GenericInline');
+      expect(node.name).toBe('link');
+      expect(node.attributes?.keyValues?.href).toBe('"https://github.com"');
     });
   });
 

@@ -1,6 +1,6 @@
-import { EmbeddedActionsParser, IToken } from 'chevrotain';
+import { EmbeddedActionsParser, type IToken } from 'chevrotain';
 import * as tokens from '../lexer/tokens.js';
-import {
+import type {
   BlockNode,
   InlineNode,
   Attributes,

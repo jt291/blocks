@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blocks development</title>
+</head>
+<body>
+  <h3>Langage de blocs</h3>
+  <textarea>
+/* This is a comment block */
+/* #include header.html */
+/* #config { #settings .important %readonly } some content */
+
+// Simple comment
+//#todo Fix later
+`console.log()`
+`#js alert()`{.hl}
+!getValue()!
+!#py script!{#s1}
+:bold:
+:#link text:{href="..."}
+  </textarea>
+
+  <script type="module">
+    import { parse } from './src/index.ts';
+    const textarea = document.body.querySelector('textarea');
+    if (textarea) {
+      const input = textarea.value;
+      const output = parse(input);
+      console.log(output);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+/* This is a comment block */
+
+/* include header.html */
+
+/* config { #settings .important %readonly } some content */
+
+::: section { #main .container }
+  
+  This is a paragraph with `inline code` and :em emphasized text:.
+  
+  // This is an inline comment
+  
+  ::: p { .lead }
+    A paragraph with !js alert('hi')! script inline.
+  :::
+  
+  ``` javascript { .highlight }
+function hello() {
+  console.log("Hello")
+}
+  ```
+  
+  !!! python { .executable }
+print("Hello from Python")
+x = 42
+  !!!
+  
+:::
+
+:::: nested { #nested }
+  
+  Nested blocks work with different delimiter lengths.
+  
+  ::: inner
+    Inner content
+  :::
+  
+::::
+
+Regular text can be mixed with blocks and inlines.
+
+Some `code` and :strong bold text: here.

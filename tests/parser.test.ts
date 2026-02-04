@@ -67,7 +67,7 @@ describe('Parser', () => {
       expect(node.type).toBe('CommentBlock');
       expect(node.name).toBe('config');
       expect(node.attributes).toBeUndefined();
-      // Les { #id .class } font partie du contenu
+      // The { #id .class } are part of the content
       expect(node.content).toContain('{');
       expect(node.content).toContain('#id');
     });

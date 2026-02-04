@@ -1,4 +1,4 @@
-import { EmbeddedActionsParser, IToken, TokenType } from 'chevrotain';
+import { EmbeddedActionsParser, IToken } from 'chevrotain';
 import * as tokens from '../lexer/tokens.js';
 import {
   BlockNode,
@@ -22,6 +22,17 @@ export class BlocksParser extends EmbeddedActionsParser {
       nodeLocationTracking: 'full'
     });
     this.performSelfAnalysis();
+  }
+
+  // Helper to check if we should parse name+attributes
+  // Name is consumed if: Identifier [Whitespace]* LBrace
+  private shouldConsumeName(): boolean {
+    let idx = 1;
+    if (this.LA(idx).tokenType !== tokens.Identifier) return false;
+    idx++;
+    // Skip whitespace
+    while (this.LA(idx).tokenType === tokens.Whitespace) idx++;
+    return this.LA(idx).tokenType === tokens.LBrace;
   }
 
   // Main document rule
@@ -54,10 +65,19 @@ export class BlocksParser extends EmbeddedActionsParser {
   private commentBlock = this.RULE('commentBlock', (): CommentBlockNode => {
     this.CONSUME(tokens.BlockCommentStart);
     
-    // Try to consume name (first identifier if followed by { or space/content)
+    // Skip leading whitespace
+    this.MANY(() => {
+      this.CONSUME(tokens.Whitespace);
+    });
+    
+    // Try to consume name if followed by attributes
     let name: IToken | undefined;
-    if (this.LA(1).tokenType === tokens.Identifier && this.LA(2).tokenType === tokens.LBrace) {
+    if (this.shouldConsumeName()) {
       name = this.CONSUME(tokens.Identifier);
+      // Skip whitespace after name
+      this.MANY2(() => {
+        this.CONSUME2(tokens.Whitespace);
+      });
     }
     
     let attributes: Attributes | undefined;
@@ -67,9 +87,30 @@ export class BlocksParser extends EmbeddedActionsParser {
     
     // Consume all content until */
     const contentTokens: IToken[] = [];
-    while (this.LA(1).tokenType !== tokens.BlockCommentEnd && this.LA(1).tokenType !== tokens.EOF) {
-      contentTokens.push(this.CONSUME(this.LA(1).tokenType as TokenType));
-    }
+    this.MANY3(() => {
+      const tok = this.OR([
+        { ALT: () => this.CONSUME2(tokens.Identifier) },
+        { ALT: () => this.CONSUME(tokens.Content) },
+        { ALT: () => this.CONSUME3(tokens.Whitespace) },
+        { ALT: () => this.CONSUME(tokens.Newline) },
+        { ALT: () => this.CONSUME(tokens.InlineCommentStart) },
+        { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
+        { ALT: () => this.CONSUME(tokens.InlineScriptDelim) },
+        { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
+        { ALT: () => this.CONSUME2(tokens.LBrace) },
+        { ALT: () => this.CONSUME(tokens.RBrace) },
+        { ALT: () => this.CONSUME(tokens.Hash) },
+        { ALT: () => this.CONSUME(tokens.Dot) },
+        { ALT: () => this.CONSUME(tokens.Percent) },
+        { ALT: () => this.CONSUME(tokens.Equals) },
+        { ALT: () => this.CONSUME(tokens.StringValue) },
+        { ALT: () => this.CONSUME(tokens.AnyChar) },
+        { ALT: () => this.CONSUME(tokens.BlockCodeDelim) },
+        { ALT: () => this.CONSUME(tokens.BlockScriptDelim) },
+        { ALT: () => this.CONSUME(tokens.BlockGenericDelim) }
+      ]);
+      if (tok) contentTokens.push(tok);
+    });
     
     this.CONSUME(tokens.BlockCommentEnd);
 
@@ -88,10 +129,19 @@ export class BlocksParser extends EmbeddedActionsParser {
   private codeBlock = this.RULE('codeBlock', (): CodeBlockNode => {
     this.CONSUME(tokens.BlockCodeDelim);
     
+    // Skip leading whitespace
+    this.MANY(() => {
+      this.CONSUME(tokens.Whitespace);
+    });
+    
     // Try to consume name
     let name: IToken | undefined;
-    if (this.LA(1).tokenType === tokens.Identifier && this.LA(2).tokenType === tokens.LBrace) {
+    if (this.shouldConsumeName()) {
       name = this.CONSUME(tokens.Identifier);
+      // Skip whitespace after name
+      this.MANY2(() => {
+        this.CONSUME2(tokens.Whitespace);
+      });
     }
     
     let attributes: Attributes | undefined;
@@ -101,9 +151,31 @@ export class BlocksParser extends EmbeddedActionsParser {
     
     // Consume all content until ```
     const contentTokens: IToken[] = [];
-    while (this.LA(1).tokenType !== tokens.BlockCodeDelim && this.LA(1).tokenType !== tokens.EOF) {
-      contentTokens.push(this.CONSUME(this.LA(1).tokenType as TokenType));
-    }
+    this.MANY3(() => {
+      const tok = this.OR([
+        { ALT: () => this.CONSUME2(tokens.Identifier) },
+        { ALT: () => this.CONSUME(tokens.Content) },
+        { ALT: () => this.CONSUME3(tokens.Whitespace) },
+        { ALT: () => this.CONSUME(tokens.Newline) },
+        { ALT: () => this.CONSUME(tokens.InlineCommentStart) },
+        { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
+        { ALT: () => this.CONSUME(tokens.InlineScriptDelim) },
+        { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
+        { ALT: () => this.CONSUME2(tokens.LBrace) },
+        { ALT: () => this.CONSUME(tokens.RBrace) },
+        { ALT: () => this.CONSUME(tokens.Hash) },
+        { ALT: () => this.CONSUME(tokens.Dot) },
+        { ALT: () => this.CONSUME(tokens.Percent) },
+        { ALT: () => this.CONSUME(tokens.Equals) },
+        { ALT: () => this.CONSUME(tokens.StringValue) },
+        { ALT: () => this.CONSUME(tokens.AnyChar) },
+        { ALT: () => this.CONSUME(tokens.BlockCommentStart) },
+        { ALT: () => this.CONSUME(tokens.BlockCommentEnd) },
+        { ALT: () => this.CONSUME(tokens.BlockScriptDelim) },
+        { ALT: () => this.CONSUME(tokens.BlockGenericDelim) }
+      ]);
+      if (tok) contentTokens.push(tok);
+    });
     
     this.CONSUME2(tokens.BlockCodeDelim);
 
@@ -122,10 +194,19 @@ export class BlocksParser extends EmbeddedActionsParser {
   private scriptBlock = this.RULE('scriptBlock', (): ScriptBlockNode => {
     this.CONSUME(tokens.BlockScriptDelim);
     
+    // Skip leading whitespace
+    this.MANY(() => {
+      this.CONSUME(tokens.Whitespace);
+    });
+    
     // Try to consume name
     let name: IToken | undefined;
-    if (this.LA(1).tokenType === tokens.Identifier && this.LA(2).tokenType === tokens.LBrace) {
+    if (this.shouldConsumeName()) {
       name = this.CONSUME(tokens.Identifier);
+      // Skip whitespace after name
+      this.MANY2(() => {
+        this.CONSUME2(tokens.Whitespace);
+      });
     }
     
     let attributes: Attributes | undefined;
@@ -135,9 +216,31 @@ export class BlocksParser extends EmbeddedActionsParser {
     
     // Consume all content until !!!
     const contentTokens: IToken[] = [];
-    while (this.LA(1).tokenType !== tokens.BlockScriptDelim && this.LA(1).tokenType !== tokens.EOF) {
-      contentTokens.push(this.CONSUME(this.LA(1).tokenType as TokenType));
-    }
+    this.MANY3(() => {
+      const tok = this.OR([
+        { ALT: () => this.CONSUME2(tokens.Identifier) },
+        { ALT: () => this.CONSUME(tokens.Content) },
+        { ALT: () => this.CONSUME3(tokens.Whitespace) },
+        { ALT: () => this.CONSUME(tokens.Newline) },
+        { ALT: () => this.CONSUME(tokens.InlineCommentStart) },
+        { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
+        { ALT: () => this.CONSUME(tokens.InlineScriptDelim) },
+        { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
+        { ALT: () => this.CONSUME2(tokens.LBrace) },
+        { ALT: () => this.CONSUME(tokens.RBrace) },
+        { ALT: () => this.CONSUME(tokens.Hash) },
+        { ALT: () => this.CONSUME(tokens.Dot) },
+        { ALT: () => this.CONSUME(tokens.Percent) },
+        { ALT: () => this.CONSUME(tokens.Equals) },
+        { ALT: () => this.CONSUME(tokens.StringValue) },
+        { ALT: () => this.CONSUME(tokens.AnyChar) },
+        { ALT: () => this.CONSUME(tokens.BlockCommentStart) },
+        { ALT: () => this.CONSUME(tokens.BlockCommentEnd) },
+        { ALT: () => this.CONSUME(tokens.BlockCodeDelim) },
+        { ALT: () => this.CONSUME(tokens.BlockGenericDelim) }
+      ]);
+      if (tok) contentTokens.push(tok);
+    });
     
     this.CONSUME2(tokens.BlockScriptDelim);
 
@@ -157,10 +260,19 @@ export class BlocksParser extends EmbeddedActionsParser {
     const openDelim = this.CONSUME(tokens.BlockGenericDelim);
     const delimLength = openDelim.image.length;
     
+    // Skip leading whitespace
+    this.MANY(() => {
+      this.CONSUME(tokens.Whitespace);
+    });
+    
     // Try to consume name
     let name: IToken | undefined;
-    if (this.LA(1).tokenType === tokens.Identifier && this.LA(2).tokenType === tokens.LBrace) {
+    if (this.shouldConsumeName()) {
       name = this.CONSUME(tokens.Identifier);
+      // Skip whitespace after name
+      this.MANY2(() => {
+        this.CONSUME2(tokens.Whitespace);
+      });
     }
     
     let attributes: Attributes | undefined;
@@ -170,13 +282,19 @@ export class BlocksParser extends EmbeddedActionsParser {
     
     // Parse content (can contain inlines)
     const content: InlineNode[] = [];
-    while (!(this.LA(1).tokenType === tokens.BlockGenericDelim && (this.LA(1) as IToken).image?.length === delimLength) && this.LA(1).tokenType !== tokens.EOF) {
+    this.MANY3(() => {
+      // Check if we've reached the closing delimiter
+      if (this.LA(1).tokenType === tokens.BlockGenericDelim && 
+          (this.LA(1) as IToken).image?.length === delimLength) {
+        return;
+      }
+      
       const child = this.OR([
-        { ALT: () => this.SUBRULE(this.inlineElement), GATE: () => this.isInline(this.LA(1).tokenType) },
+        { ALT: () => this.SUBRULE(this.inlineElement) },
         { ALT: () => this.SUBRULE(this.textElement) }
       ]);
       if (child) content.push(child);
-    }
+    });
     
     const closeDelim = this.CONSUME2(tokens.BlockGenericDelim);
     
@@ -196,14 +314,6 @@ export class BlocksParser extends EmbeddedActionsParser {
     return node;
   });
 
-  // Helper to check if token type is an inline starter
-  private isInline(tokenType: TokenType): boolean {
-    return tokenType === tokens.InlineCommentStart ||
-           tokenType === tokens.InlineCodeDelim ||
-           tokenType === tokens.InlineScriptDelim ||
-           tokenType === tokens.InlineGenericDelim;
-  }
-
   // Inline elements
   private inlineElement = this.RULE('inlineElement', (): InlineNode => {
     return this.OR([
@@ -220,13 +330,32 @@ export class BlocksParser extends EmbeddedActionsParser {
     
     // Consume all content until newline or EOF
     const contentTokens: IToken[] = [];
-    while (this.LA(1).tokenType !== tokens.Newline && this.LA(1).tokenType !== tokens.EOF) {
-      contentTokens.push(this.CONSUME(this.LA(1).tokenType as TokenType));
-    }
+    this.MANY(() => {
+      const tok = this.OR([
+        { ALT: () => this.CONSUME(tokens.Identifier) },
+        { ALT: () => this.CONSUME(tokens.Content) },
+        { ALT: () => this.CONSUME(tokens.Whitespace) },
+        { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
+        { ALT: () => this.CONSUME(tokens.InlineScriptDelim) },
+        { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
+        { ALT: () => this.CONSUME(tokens.LBrace) },
+        { ALT: () => this.CONSUME(tokens.RBrace) },
+        { ALT: () => this.CONSUME(tokens.Hash) },
+        { ALT: () => this.CONSUME(tokens.Dot) },
+        { ALT: () => this.CONSUME(tokens.Percent) },
+        { ALT: () => this.CONSUME(tokens.Equals) },
+        { ALT: () => this.CONSUME(tokens.StringValue) },
+        { ALT: () => this.CONSUME(tokens.AnyChar) },
+        { ALT: () => this.CONSUME(tokens.BlockCommentStart) },
+        { ALT: () => this.CONSUME(tokens.BlockCommentEnd) },
+        { ALT: () => this.CONSUME(tokens.BlockCodeDelim) },
+        { ALT: () => this.CONSUME(tokens.BlockScriptDelim) },
+        { ALT: () => this.CONSUME(tokens.BlockGenericDelim) }
+      ]);
+      if (tok) contentTokens.push(tok);
+    });
     
-    if (this.LA(1).tokenType === tokens.Newline) {
-      this.CONSUME(tokens.Newline);
-    }
+    this.OPTION(() => this.CONSUME(tokens.Newline));
 
     const node: CommentInlineNode = {
       type: 'CommentInline',
@@ -243,14 +372,48 @@ export class BlocksParser extends EmbeddedActionsParser {
     // Try to consume name
     let name: IToken | undefined;
     if (this.LA(1).tokenType === tokens.Identifier) {
-      name = this.CONSUME(tokens.Identifier);
+      const possibleName = this.CONSUME(tokens.Identifier);
+      // If next token is another content token (not `), it was the name
+      if (this.LA(1).tokenType !== tokens.InlineCodeDelim) {
+        name = possibleName;
+      } else {
+        // It was the content, add it back
+        name = undefined;
+      }
     }
     
     // Consume all content until `
     const contentTokens: IToken[] = [];
-    while (this.LA(1).tokenType !== tokens.InlineCodeDelim && this.LA(1).tokenType !== tokens.EOF) {
-      contentTokens.push(this.CONSUME(this.LA(1).tokenType as TokenType));
+    if (!name && this.LA(1).tokenType === tokens.Identifier) {
+      // The identifier we consumed was actually content
+      // But we already consumed it, so we need a different approach
     }
+    
+    this.MANY(() => {
+      const tok = this.OR([
+        { ALT: () => this.CONSUME2(tokens.Identifier) },
+        { ALT: () => this.CONSUME(tokens.Content) },
+        { ALT: () => this.CONSUME(tokens.Whitespace) },
+        { ALT: () => this.CONSUME(tokens.Newline) },
+        { ALT: () => this.CONSUME(tokens.InlineCommentStart) },
+        { ALT: () => this.CONSUME(tokens.InlineScriptDelim) },
+        { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
+        { ALT: () => this.CONSUME(tokens.LBrace) },
+        { ALT: () => this.CONSUME(tokens.RBrace) },
+        { ALT: () => this.CONSUME(tokens.Hash) },
+        { ALT: () => this.CONSUME(tokens.Dot) },
+        { ALT: () => this.CONSUME(tokens.Percent) },
+        { ALT: () => this.CONSUME(tokens.Equals) },
+        { ALT: () => this.CONSUME(tokens.StringValue) },
+        { ALT: () => this.CONSUME(tokens.AnyChar) },
+        { ALT: () => this.CONSUME(tokens.BlockCommentStart) },
+        { ALT: () => this.CONSUME(tokens.BlockCommentEnd) },
+        { ALT: () => this.CONSUME(tokens.BlockCodeDelim) },
+        { ALT: () => this.CONSUME(tokens.BlockScriptDelim) },
+        { ALT: () => this.CONSUME(tokens.BlockGenericDelim) }
+      ]);
+      if (tok) contentTokens.push(tok);
+    });
     
     this.CONSUME2(tokens.InlineCodeDelim);
     
@@ -277,14 +440,39 @@ export class BlocksParser extends EmbeddedActionsParser {
     // Try to consume name
     let name: IToken | undefined;
     if (this.LA(1).tokenType === tokens.Identifier) {
-      name = this.CONSUME(tokens.Identifier);
+      const possibleName = this.CONSUME(tokens.Identifier);
+      if (this.LA(1).tokenType !== tokens.InlineScriptDelim) {
+        name = possibleName;
+      }
     }
     
     // Consume all content until !
     const contentTokens: IToken[] = [];
-    while (this.LA(1).tokenType !== tokens.InlineScriptDelim && this.LA(1).tokenType !== tokens.EOF) {
-      contentTokens.push(this.CONSUME(this.LA(1).tokenType as TokenType));
-    }
+    this.MANY(() => {
+      const tok = this.OR([
+        { ALT: () => this.CONSUME2(tokens.Identifier) },
+        { ALT: () => this.CONSUME(tokens.Content) },
+        { ALT: () => this.CONSUME(tokens.Whitespace) },
+        { ALT: () => this.CONSUME(tokens.Newline) },
+        { ALT: () => this.CONSUME(tokens.InlineCommentStart) },
+        { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
+        { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
+        { ALT: () => this.CONSUME(tokens.LBrace) },
+        { ALT: () => this.CONSUME(tokens.RBrace) },
+        { ALT: () => this.CONSUME(tokens.Hash) },
+        { ALT: () => this.CONSUME(tokens.Dot) },
+        { ALT: () => this.CONSUME(tokens.Percent) },
+        { ALT: () => this.CONSUME(tokens.Equals) },
+        { ALT: () => this.CONSUME(tokens.StringValue) },
+        { ALT: () => this.CONSUME(tokens.AnyChar) },
+        { ALT: () => this.CONSUME(tokens.BlockCommentStart) },
+        { ALT: () => this.CONSUME(tokens.BlockCommentEnd) },
+        { ALT: () => this.CONSUME(tokens.BlockCodeDelim) },
+        { ALT: () => this.CONSUME(tokens.BlockScriptDelim) },
+        { ALT: () => this.CONSUME(tokens.BlockGenericDelim) }
+      ]);
+      if (tok) contentTokens.push(tok);
+    });
     
     this.CONSUME2(tokens.InlineScriptDelim);
     
@@ -311,18 +499,21 @@ export class BlocksParser extends EmbeddedActionsParser {
     // Try to consume name
     let name: IToken | undefined;
     if (this.LA(1).tokenType === tokens.Identifier) {
-      name = this.CONSUME(tokens.Identifier);
+      const possibleName = this.CONSUME(tokens.Identifier);
+      if (this.LA(1).tokenType !== tokens.InlineGenericDelim) {
+        name = possibleName;
+      }
     }
     
     // Parse content (can contain nested inlines)
     const content: InlineNode[] = [];
-    while (this.LA(1).tokenType !== tokens.InlineGenericDelim && this.LA(1).tokenType !== tokens.EOF) {
+    this.MANY(() => {
       const child = this.OR([
-        { ALT: () => this.SUBRULE(this.inlineElement), GATE: () => this.isInline(this.LA(1).tokenType) },
+        { ALT: () => this.SUBRULE(this.inlineElement) },
         { ALT: () => this.SUBRULE(this.textElement) }
       ]);
       if (child) content.push(child);
-    }
+    });
     
     this.CONSUME2(tokens.InlineGenericDelim);
     
@@ -347,7 +538,8 @@ export class BlocksParser extends EmbeddedActionsParser {
     const token = this.OR([
       { ALT: () => this.CONSUME(tokens.Content) },
       { ALT: () => this.CONSUME(tokens.Whitespace) },
-      { ALT: () => this.CONSUME(tokens.Newline) }
+      { ALT: () => this.CONSUME(tokens.Newline) },
+      { ALT: () => this.CONSUME(tokens.Identifier) }
     ]);
 
     const node: TextNode = {

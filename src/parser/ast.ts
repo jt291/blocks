@@ -60,7 +60,7 @@ export interface GenericBlockNode extends Node {
 export interface InlineNode extends Node {
   name?: string;
   attributes?: Attributes;
-  content: string | InlineNode[];
+  content: string | (InlineNode | TextNode)[];
 }
 
 export interface CommentInlineNode extends InlineNode {
@@ -80,7 +80,7 @@ export interface ScriptInlineNode extends InlineNode {
 
 export interface GenericInlineNode extends InlineNode {
   type: 'GenericInline';
-  content: InlineNode[];
+  content: (InlineNode | TextNode)[];
 }
 
 export interface TextNode extends Node {

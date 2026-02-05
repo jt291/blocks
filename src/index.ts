@@ -41,7 +41,7 @@ function mergeTextNodes(nodes: (BlockNode | InlineNode | TextNode)[]): (BlockNod
         const genericInline = node as GenericInlineNode;
         merged.push({
           ...genericInline,
-          content: mergeTextNodes(genericInline.content as (BlockNode | InlineNode | TextNode)[]) as InlineNode[]
+          content: mergeTextNodes(genericInline.content) as (InlineNode | TextNode)[]
         });
       } else {
         merged.push(node);

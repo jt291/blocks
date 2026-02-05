@@ -61,15 +61,53 @@
       padding: 1rem;
     }
     
-    textarea {
-      width: 100%;
+    .editor-container {
+      display: flex;
       height: 100%;
-      border: none;
+      position: relative;
       font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
       font-size: 14px;
-      resize: none;
-      padding: 0;
       line-height: 1.5;
+    }
+
+    .line-numbers {
+      background: #f5f5f5;
+      border-right: 1px solid #ddd;
+      color: #999;
+      padding: 0 0.5rem;
+      text-align: right;
+      user-select: none;
+      min-width: 3rem;
+      overflow: hidden;
+    }
+
+    .line-number {
+      height: 1.5em;
+      line-height: 1.5;
+      position: relative;
+    }
+
+    .line-number.error {
+      background: #fee;
+      color: #c00;
+      font-weight: bold;
+    }
+
+    .line-number.error::before {
+      content: '⚠️ ';
+      position: absolute;
+      left: -1.5rem;
+    }
+    
+    textarea {
+      flex: 1;
+      border: none;
+      font-family: inherit;
+      font-size: inherit;
+      line-height: inherit;
+      resize: none;
+      padding: 0 0.5rem;
+      background: transparent;
     }
     
     textarea:focus { outline: none; }
@@ -155,6 +193,66 @@
     .json-null {
       color: #6f42c1;
     }
+
+    /* AST Tree Styles */
+    .ast-node {
+      margin-left: 1rem;
+    }
+
+    .ast-node-header {
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      border-radius: 3px;
+      display: inline-block;
+      margin: 0.125rem 0;
+      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+      font-size: 13px;
+    }
+
+    .ast-node-header:hover {
+      background: #e9ecef;
+    }
+
+    .toggle-icon {
+      display: inline-block;
+      width: 1.5em;
+      text-align: left;
+      user-select: none;
+    }
+
+    .ast-node-children {
+      margin-left: 0.5rem;
+    }
+
+    .ast-node-children.collapsed {
+      display: none;
+    }
+
+    .node-meta {
+      color: #666;
+      font-style: italic;
+    }
+
+    .node-content-preview {
+      color: #22863a;
+    }
+
+    .node-Document {
+      font-weight: bold;
+      color: #0366d6;
+    }
+
+    .node-GenericBlock, .node-CodeBlock, .node-ScriptBlock, .node-CommentBlock {
+      color: #6f42c1;
+    }
+
+    .node-GenericInline, .node-CodeInline, .node-ScriptInline, .node-CommentInline {
+      color: #d73a49;
+    }
+
+    .node-Text {
+      color: #22863a;
+    }
   </style>
 </head>
 <body>
@@ -207,7 +305,10 @@
         </select>
       </div>
       <div class="panel-content">
-        <textarea id="editor" spellcheck="false"></textarea>
+        <div class="editor-container">
+          <div class="line-numbers" id="lineNumbers"></div>
+          <textarea id="editor" spellcheck="false"></textarea>
+        </div>
       </div>
       <div id="errors" style="display: none;"></div>
     </div>
@@ -217,6 +318,8 @@
       <div class="panel-header">
         AST (JSON)
         <div class="ast-controls">
+          <button id="expandAll">Expand All</button>
+          <button id="collapseAll">Collapse All</button>
           <button id="copyJson">Copy JSON</button>
         </div>
       </div>
@@ -231,10 +334,13 @@
     import { parse } from './dist/playground.js';
     
     const editor = document.getElementById('editor');
+    const lineNumbers = document.getElementById('lineNumbers');
     const astTreeEl = document.getElementById('astTree');
     const errorsEl = document.getElementById('errors');
     const examplesSelect = document.getElementById('examplesSelect');
     const copyJsonBtn = document.getElementById('copyJson');
+    const expandAllBtn = document.getElementById('expandAll');
+    const collapseAllBtn = document.getElementById('collapseAll');
     
     let currentAst = null;
     let parseTimeout = null;
@@ -415,17 +521,55 @@ Fourth level with \`code\` and :inline:
     
     editor.value = defaultCode;
     
+    // Update line numbers
+    function updateLineNumbers() {
+      const lines = editor.value.split('\n');
+      const lineNumbersHtml = lines.map((_, index) => 
+        `<div class="line-number" data-line="${index + 1}">${index + 1}</div>`
+      ).join('');
+      lineNumbers.innerHTML = lineNumbersHtml;
+    }
+
+    // Highlight error lines
+    function highlightErrorLines(errors) {
+      // Clear previous errors
+      document.querySelectorAll('.line-number.error').forEach(el => {
+        el.classList.remove('error');
+      });
+      
+      // Extract line numbers from errors
+      errors.forEach(error => {
+        // Try to extract line number from error message
+        // Chevrotain errors might contain position info
+        const lineMatch = error.match(/line (\d+)/i);
+        if (lineMatch) {
+          const lineNum = parseInt(lineMatch[1]);
+          const lineEl = document.querySelector(`.line-number[data-line="${lineNum}"]`);
+          if (lineEl) {
+            lineEl.classList.add('error');
+          }
+        }
+      });
+    }
+
+    // Sync scroll between textarea and line numbers
+    editor.addEventListener('scroll', () => {
+      lineNumbers.scrollTop = editor.scrollTop;
+    });
+
     // Handle example selection
     examplesSelect.addEventListener('change', (e) => {
       const exampleKey = e.target.value;
       if (exampleKey && examples[exampleKey]) {
         editor.value = examples[exampleKey];
+        updateLineNumbers();
         parseCode();
       }
     });
     
     // Debounced parse
     function handleInput() {
+      updateLineNumbers();
       clearTimeout(parseTimeout);
       parseTimeout = setTimeout(() => {
         parseCode();
@@ -449,15 +593,134 @@ Fourth level with \`code\` and :inline:
           result.errors.map(err => 
             `<div class="error-item">${escapeHtml(err)}</div>`
           ).join('');
+        highlightErrorLines(result.errors);
       } else {
         errorsEl.style.display = 'none';
+        highlightErrorLines([]);
       }
       
-      // Display AST as formatted JSON with syntax highlighting
-      renderJsonAst(result.ast);
+      // Display AST as tree
+      renderAst(result.ast);
     }
     
-    // Render AST as formatted JSON with syntax highlighting
+    // Render AST as interactive tree
+    function renderAst(ast) {
+      astTreeEl.innerHTML = '';
+      const tree = createNodeElement({ type: 'Document', children: ast.children }, 0, true);
+      astTreeEl.appendChild(tree);
+    }
+
+    // Create tree node element
+    function createNodeElement(node, depth, expanded = false) {
+      const container = document.createElement('div');
+      container.className = 'ast-node';
+      
+      const header = document.createElement('div');
+      header.className = `ast-node-header node-${node.type}`;
+      
+      const hasChildren = (Array.isArray(node.content) && node.content.length > 0) ||
+                          (Array.isArray(node.children) && node.children.length > 0);
+      
+      const toggleIcon = document.createElement('span');
+      toggleIcon.className = 'toggle-icon';
+      toggleIcon.textContent = hasChildren ? (expanded ? '▼ ' : '▶ ') : '  ';
+      header.appendChild(toggleIcon);
+      
+      const typeSpan = document.createElement('span');
+      typeSpan.textContent = node.type;
+      header.appendChild(typeSpan);
+      
+      // Add metadata
+      const meta = [];
+      if (node.name) meta.push(`name="${node.name}"`);
+      if (node.attributes?.id) meta.push(`id="${node.attributes.id}"`);
+      if (node.attributes?.classes?.length) {
+        meta.push(`classes=[${node.attributes.classes.map(c => `"${c}"`).join(', ')}]`);
+      }
+      if (node.attributes?.options?.length) {
+        meta.push(`options=[${node.attributes.options.map(o => `"${o}"`).join(', ')}]`);
+      }
+      
+      if (meta.length > 0) {
+        const metaSpan = document.createElement('span');
+        metaSpan.className = 'node-meta';
+        metaSpan.textContent = ' { ' + meta.join(', ') + ' }';
+        header.appendChild(metaSpan);
+      }
+      
+      // Add FULL content (no truncation)
+      if (typeof node.content === 'string') {
+        const contentSpan = document.createElement('span');
+        contentSpan.className = 'node-content-preview';
+        contentSpan.textContent = ` content="${escapeHtml(node.content)}"`;
+        header.appendChild(contentSpan);
+      } else if (typeof node.value === 'string') {
+        const valueSpan = document.createElement('span');
+        valueSpan.className = 'node-content-preview';
+        valueSpan.textContent = ` value="${escapeHtml(node.value)}"`;
+        header.appendChild(valueSpan);
+      } else if (Array.isArray(node.content) || Array.isArray(node.children)) {
+        const countSpan = document.createElement('span');
+        countSpan.className = 'node-meta';
+        const count = (node.content || node.children).length;
+        countSpan.textContent = ` [${count} child${count !== 1 ? 'ren' : ''}]`;
+        header.appendChild(countSpan);
+      }
+      
+      container.appendChild(header);
+      
+      // Add children
+      if (hasChildren) {
+        const childrenContainer = document.createElement('div');
+        childrenContainer.className = 'ast-node-children';
+        if (!expanded) childrenContainer.classList.add('collapsed');
+        
+        const children = node.content || node.children || [];
+        children.forEach(child => {
+          if (child && typeof child === 'object') {
+            childrenContainer.appendChild(createNodeElement(child, depth + 1, false));
+          }
+        });
+        
+        container.appendChild(childrenContainer);
+        
+        // Toggle functionality
+        header.addEventListener('click', () => {
+          childrenContainer.classList.toggle('collapsed');
+          toggleIcon.textContent = childrenContainer.classList.contains('collapsed') 
+            ? '▶ ' 
+            : '▼ ';
+        });
+      }
+      
+      return container;
+    }
+
+    // Expand all nodes
+    expandAllBtn.addEventListener('click', () => {
+      document.querySelectorAll('.ast-node-children').forEach(el => {
+        el.classList.remove('collapsed');
+      });
+      document.querySelectorAll('.toggle-icon').forEach(el => {
+        if (el.textContent.trim() === '▶') {
+          el.textContent = '▼ ';
+        }
+      });
+    });
+
+    // Collapse all nodes
+    collapseAllBtn.addEventListener('click', () => {
+      document.querySelectorAll('.ast-node-children').forEach(el => {
+        el.classList.add('collapsed');
+      });
+      document.querySelectorAll('.toggle-icon').forEach(el => {
+        if (el.textContent.trim() === '▼') {
+          el.textContent = '▶ ';
+        }
+      });
+    });
+    
+    // Render AST as formatted JSON with syntax highlighting (kept for reference)
     function renderJsonAst(ast) {
       const json = JSON.stringify(ast, null, 2);
       const highlighted = syntaxHighlightJson(json);
@@ -506,7 +769,8 @@ Fourth level with \`code\` and :inline:
       return div.innerHTML;
     }
     
-    // Initial parse
+    // Initial setup
+    updateLineNumbers();
     parseCode();
   </script>
 </body>

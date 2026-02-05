@@ -1218,7 +1218,7 @@ more text
         (c) => c.type === "GenericInline",
       );
       expect(genericInline).toBeDefined();
-      expect(genericInline.name).toBe("span");
+      expect(genericInline?.name).toBe("span");
     });
 
     it("should handle colon at end of line as text", () => {

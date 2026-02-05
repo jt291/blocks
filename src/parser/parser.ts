@@ -24,19 +24,6 @@ export class BlocksParser extends EmbeddedActionsParser {
     this.performSelfAnalysis();
   }
 
-
-
-  // Helper to check if we should parse name+attributes
-  // Name is consumed if: Identifier [Whitespace]* LBrace
-  private shouldConsumeName(): boolean {
-    let idx = 1;
-    if (this.LA(idx).tokenType !== tokens.Identifier) return false;
-    idx++;
-    // Skip whitespace
-    while (this.LA(idx).tokenType === tokens.Whitespace) idx++;
-    return this.LA(idx).tokenType === tokens.LBrace;
-  }
-
   // Main document rule
   public document = this.RULE('document', (): (BlockNode | InlineNode | TextNode)[] => {
     const children: (BlockNode | InlineNode | TextNode)[] = [];
@@ -127,7 +114,7 @@ export class BlocksParser extends EmbeddedActionsParser {
     return node;
   });
 
-  // Code block: ``` name? attrs? content ```
+  // Code block: ```#name? {attrs?} content ```
   private codeBlock = this.RULE('codeBlock', (): CodeBlockNode => {
     this.CONSUME(tokens.BlockCodeDelim);
     
@@ -136,36 +123,49 @@ export class BlocksParser extends EmbeddedActionsParser {
       this.CONSUME(tokens.Whitespace);
     });
     
-    // Try to consume name
-    let name: IToken | undefined;
-    if (this.shouldConsumeName()) {
-      name = this.CONSUME(tokens.Identifier);
+    let name: string | undefined;
+    let attributes: Attributes | undefined;
+    
+    // Try to consume name if it starts with #
+    this.OPTION(() => {
+      this.CONSUME(tokens.Hash);
+      const nameToken = this.CONSUME(tokens.Identifier);
+      name = nameToken.image;
+      
       // Skip whitespace after name
       this.MANY2(() => {
         this.CONSUME2(tokens.Whitespace);
       });
-    }
+    });
     
-    let attributes: Attributes | undefined;
-    if (this.LA(1).tokenType === tokens.LBrace) {
+    // Try to consume attributes
+    this.OPTION2(() => {
       attributes = this.SUBRULE(this.attributes);
-    }
+    });
+    
+    // Skip whitespace/newline after name or attributes
+    this.MANY3(() => {
+      this.OR([
+        { ALT: () => this.CONSUME3(tokens.Whitespace) },
+        { ALT: () => this.CONSUME(tokens.Newline) }
+      ]);
+    });
     
     // Consume all content until ```
     const contentTokens: IToken[] = [];
-    this.MANY3(() => {
-      const tok = this.OR([
+    this.MANY4(() => {
+      const tok = this.OR2([
         { ALT: () => this.CONSUME2(tokens.Identifier) },
         { ALT: () => this.CONSUME(tokens.Content) },
-        { ALT: () => this.CONSUME3(tokens.Whitespace) },
-        { ALT: () => this.CONSUME(tokens.Newline) },
+        { ALT: () => this.CONSUME4(tokens.Whitespace) },
+        { ALT: () => this.CONSUME2(tokens.Newline) },
         { ALT: () => this.CONSUME(tokens.InlineCommentStart) },
         { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
         { ALT: () => this.CONSUME(tokens.InlineScriptDelim) },
         { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
         { ALT: () => this.CONSUME2(tokens.LBrace) },
         { ALT: () => this.CONSUME(tokens.RBrace) },
-        { ALT: () => this.CONSUME(tokens.Hash) },
+        { ALT: () => this.CONSUME2(tokens.Hash) },
         { ALT: () => this.CONSUME(tokens.Dot) },
         { ALT: () => this.CONSUME(tokens.Percent) },
         { ALT: () => this.CONSUME(tokens.Equals) },
@@ -186,13 +186,13 @@ export class BlocksParser extends EmbeddedActionsParser {
       content: contentTokens.map(t => t.image).join('')
     };
     
-    if (name) node.name = name.image;
+    if (name) node.name = name;
     if (attributes) node.attributes = attributes;
     
     return node;
   });
 
-  // Script block: !!! name? attrs? content !!!
+  // Script block: !!!#name? {attrs?} content !!!
   private scriptBlock = this.RULE('scriptBlock', (): ScriptBlockNode => {
     this.CONSUME(tokens.BlockScriptDelim);
     
@@ -201,36 +201,49 @@ export class BlocksParser extends EmbeddedActionsParser {
       this.CONSUME(tokens.Whitespace);
     });
     
-    // Try to consume name
-    let name: IToken | undefined;
-    if (this.shouldConsumeName()) {
-      name = this.CONSUME(tokens.Identifier);
+    let name: string | undefined;
+    let attributes: Attributes | undefined;
+    
+    // Try to consume name if it starts with #
+    this.OPTION(() => {
+      this.CONSUME(tokens.Hash);
+      const nameToken = this.CONSUME(tokens.Identifier);
+      name = nameToken.image;
+      
       // Skip whitespace after name
       this.MANY2(() => {
         this.CONSUME2(tokens.Whitespace);
       });
-    }
+    });
     
-    let attributes: Attributes | undefined;
-    if (this.LA(1).tokenType === tokens.LBrace) {
+    // Try to consume attributes
+    this.OPTION2(() => {
       attributes = this.SUBRULE(this.attributes);
-    }
+    });
+    
+    // Skip whitespace/newline after name or attributes
+    this.MANY3(() => {
+      this.OR([
+        { ALT: () => this.CONSUME3(tokens.Whitespace) },
+        { ALT: () => this.CONSUME(tokens.Newline) }
+      ]);
+    });
     
     // Consume all content until !!!
     const contentTokens: IToken[] = [];
-    this.MANY3(() => {
-      const tok = this.OR([
+    this.MANY4(() => {
+      const tok = this.OR2([
         { ALT: () => this.CONSUME2(tokens.Identifier) },
         { ALT: () => this.CONSUME(tokens.Content) },
-        { ALT: () => this.CONSUME3(tokens.Whitespace) },
-        { ALT: () => this.CONSUME(tokens.Newline) },
+        { ALT: () => this.CONSUME4(tokens.Whitespace) },
+        { ALT: () => this.CONSUME2(tokens.Newline) },
         { ALT: () => this.CONSUME(tokens.InlineCommentStart) },
         { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
         { ALT: () => this.CONSUME(tokens.InlineScriptDelim) },
         { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
         { ALT: () => this.CONSUME2(tokens.LBrace) },
         { ALT: () => this.CONSUME(tokens.RBrace) },
-        { ALT: () => this.CONSUME(tokens.Hash) },
+        { ALT: () => this.CONSUME2(tokens.Hash) },
         { ALT: () => this.CONSUME(tokens.Dot) },
         { ALT: () => this.CONSUME(tokens.Percent) },
         { ALT: () => this.CONSUME(tokens.Equals) },
@@ -251,13 +264,13 @@ export class BlocksParser extends EmbeddedActionsParser {
       content: contentTokens.map(t => t.image).join('')
     };
     
-    if (name) node.name = name.image;
+    if (name) node.name = name;
     if (attributes) node.attributes = attributes;
     
     return node;
   });
 
-  // Generic block: ::: name? attrs? content :::
+  // Generic block: :::#name? {attrs?} content :::
   private genericBlock = this.RULE('genericBlock', (): GenericBlockNode => {
     const openDelim = this.CONSUME(tokens.BlockGenericDelim);
     const delimLength = openDelim.image.length;
@@ -267,35 +280,51 @@ export class BlocksParser extends EmbeddedActionsParser {
       this.CONSUME(tokens.Whitespace);
     });
     
-    // Try to consume name
-    let name: IToken | undefined;
-    if (this.shouldConsumeName()) {
-      name = this.CONSUME(tokens.Identifier);
+    let name: string | undefined;
+    let attributes: Attributes | undefined;
+    
+    // Try to consume name if it starts with #
+    this.OPTION(() => {
+      this.CONSUME(tokens.Hash);
+      const nameToken = this.CONSUME(tokens.Identifier);
+      name = nameToken.image;
+      
       // Skip whitespace after name
       this.MANY2(() => {
         this.CONSUME2(tokens.Whitespace);
       });
-    }
+    });
     
-    let attributes: Attributes | undefined;
-    if (this.LA(1).tokenType === tokens.LBrace) {
+    // Try to consume attributes
+    this.OPTION2(() => {
       attributes = this.SUBRULE(this.attributes);
-    }
+    });
+    
+    // Skip whitespace/newline after name or attributes
+    this.MANY3(() => {
+      this.OR([
+        { ALT: () => this.CONSUME3(tokens.Whitespace) },
+        { ALT: () => this.CONSUME(tokens.Newline) }
+      ]);
+    });
     
     // Parse content (can contain inlines)
     const content: InlineNode[] = [];
-    this.MANY3(() => {
-      // Check if we've reached the closing delimiter
-      if (this.LA(1).tokenType === tokens.BlockGenericDelim && 
-          (this.LA(1) as IToken).image?.length === delimLength) {
-        return;
+    this.MANY4({
+      GATE: () => {
+        // Check if we've reached the closing delimiter with same length
+        const tok = this.LA(1) as IToken;
+        return !(tok.tokenType === tokens.BlockGenericDelim && 
+                 tok.image !== undefined && 
+                 tok.image.length === delimLength);
+      },
+      DEF: () => {
+        const child = this.OR2([
+          { ALT: () => this.SUBRULE(this.inlineElement) },
+          { ALT: () => this.SUBRULE(this.textElement) }
+        ]);
+        if (child) content.push(child);
       }
-      
-      const child = this.OR([
-        { ALT: () => this.SUBRULE(this.inlineElement) },
-        { ALT: () => this.SUBRULE(this.textElement) }
-      ]);
-      if (child) content.push(child);
     });
     
     const closeDelim = this.CONSUME2(tokens.BlockGenericDelim);
@@ -310,7 +339,7 @@ export class BlocksParser extends EmbeddedActionsParser {
       content
     };
     
-    if (name) node.name = name.image;
+    if (name) node.name = name;
     if (attributes) node.attributes = attributes;
     
     return node;

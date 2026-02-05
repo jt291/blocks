@@ -86,7 +86,7 @@ describe('Parser', () => {
     });
 
     it('should parse code block with name', () => {
-      const result = parse('``` javascript console.log("hello"); ```');
+      const result = parse('```#javascript\nconsole.log("hello");\n```');
       
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
@@ -96,7 +96,7 @@ describe('Parser', () => {
     });
 
     it('should parse code block with multiline content', () => {
-      const result = parse('``` js\nfunction test() {\n  return 42;\n}\n```');
+      const result = parse('```#js\nfunction test() {\n  return 42;\n}\n```');
       
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
@@ -115,12 +115,13 @@ describe('Parser', () => {
       expect(result.ast.children).toHaveLength(1);
       expect(result.ast.children[0]).toMatchObject({
         type: 'ScriptBlock',
-        content: ' script content '
+        // Note: Leading space after delimiter is skipped (consistent with new parser behavior)
+        content: 'script content '
       });
     });
 
     it('should parse script block with name', () => {
-      const result = parse('!!! python print("hello") !!!');
+      const result = parse('!!!#python\nprint("hello")\n!!!');
       
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
@@ -142,7 +143,7 @@ describe('Parser', () => {
     });
 
     it('should parse generic block with name', () => {
-      const result = parse('::: div text :::');
+      const result = parse(':::#div\ntext\n:::');
       
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
@@ -161,7 +162,7 @@ describe('Parser', () => {
     });
 
     it('should parse generic block with attributes', () => {
-      const result = parse('::: section { #main .container } content :::');
+      const result = parse(':::#section {#main .container}\ncontent\n:::');
       
       expect(result.errors).toEqual([]);
       const node = result.ast.children[0];
@@ -405,28 +406,28 @@ describe('Parser', () => {
 
   describe('Attributes parsing', () => {
     it('should parse ID attribute', () => {
-      const result = parse('::: div { #main-id } content :::');
+      const result = parse(':::#div {#main-id}\ncontent\n:::');
       
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0].attributes?.id).toBe('main-id');
     });
 
     it('should parse class attributes', () => {
-      const result = parse('::: div { .class1 .class2 } content :::');
+      const result = parse(':::#div {.class1 .class2}\ncontent\n:::');
       
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0].attributes?.classes).toEqual(['class1', 'class2']);
     });
 
     it('should parse option attributes', () => {
-      const result = parse('::: div { %option1 %option2 } content :::');
+      const result = parse(':::#div {%option1 %option2}\ncontent\n:::');
       
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0].attributes?.options).toEqual(['option1', 'option2']);
     });
 
     it('should parse key-value attributes', () => {
-      const result = parse('::: div { width=100 height=200 } content :::');
+      const result = parse(':::#div {width=100 height=200}\ncontent\n:::');
       
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0].attributes?.keyValues).toEqual({
@@ -436,7 +437,7 @@ describe('Parser', () => {
     });
 
     it('should parse mixed attributes', () => {
-      const result = parse('::: div { #id .class1 .class2 %option key=value } content :::');
+      const result = parse(':::#div {#id .class1 .class2 %option key=value}\ncontent\n:::');
       
       expect(result.errors).toEqual([]);
       const attrs = result.ast.children[0].attributes;
@@ -509,6 +510,116 @@ code
     it('should handle tab after name', () => {
       const result = parse('`#js\talert()`');
       expect(result.ast.children[0].content).toBe('alert()');
+    });
+  });
+
+  describe('Code blocks with #name and attributes', () => {
+    it('should parse code block with #name', () => {
+      const result = parse('```#javascript\nconst x = 1;\n```');
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children[0]).toMatchObject({
+        type: 'CodeBlock',
+        name: 'javascript',
+        content: 'const x = 1;\n'
+      });
+    });
+
+    it('should parse code block with #name and attributes', () => {
+      const result = parse('```#html {#code1 .highlight}\n<p>content</p>\n```');
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children[0]).toMatchObject({
+        type: 'CodeBlock',
+        name: 'html',
+        content: '<p>content</p>\n',
+        attributes: {
+          id: 'code1',
+          classes: ['highlight']
+        }
+      });
+    });
+
+    it('should parse code block with attributes but no #name', () => {
+      const result = parse('``` {.highlight}\ncode\n```');
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children[0]).toMatchObject({
+        type: 'CodeBlock',
+        content: 'code\n',
+        attributes: {
+          classes: ['highlight']
+        }
+      });
+    });
+  });
+
+  describe('Script blocks with #name and attributes', () => {
+    it('should parse script block with #name', () => {
+      const result = parse('!!!#python\nprint("hello")\n!!!');
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children[0]).toMatchObject({
+        type: 'ScriptBlock',
+        name: 'python',
+        content: 'print("hello")\n'
+      });
+    });
+
+    it('should parse script block with #name and attributes', () => {
+      const result = parse('!!!#python {#script1}\nprint("hello")\n!!!');
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children[0]).toMatchObject({
+        type: 'ScriptBlock',
+        name: 'python',
+        content: 'print("hello")\n',
+        attributes: {
+          id: 'script1'
+        }
+      });
+    });
+
+    it('should parse script block with attributes but no #name', () => {
+      const result = parse('!!! {#script1}\nalert();\n!!!');
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children[0]).toMatchObject({
+        type: 'ScriptBlock',
+        content: 'alert();\n',
+        attributes: {
+          id: 'script1'
+        }
+      });
+    });
+  });
+
+  describe('Generic blocks with #name and attributes', () => {
+    it('should parse generic block with #name', () => {
+      const result = parse(':::#container\ncontent\n:::');
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children[0]).toMatchObject({
+        type: 'GenericBlock',
+        name: 'container'
+      });
+    });
+
+    it('should parse generic block with #name and attributes', () => {
+      const result = parse(':::#section {#main .wrapper}\ncontent\n:::');
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children[0]).toMatchObject({
+        type: 'GenericBlock',
+        name: 'section',
+        attributes: {
+          id: 'main',
+          classes: ['wrapper']
+        }
+      });
+    });
+
+    it('should parse generic block with attributes but no #name', () => {
+      const result = parse('::: {.highlight}\ncontent\n:::');
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children[0]).toMatchObject({
+        type: 'GenericBlock',
+        attributes: {
+          classes: ['highlight']
+        }
+      });
     });
   });
 });

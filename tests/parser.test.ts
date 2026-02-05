@@ -340,6 +340,57 @@ describe('Parser', () => {
       expect(node.name).toBe('link');
       expect(node.attributes?.keyValues?.href).toBe('"https://github.com"');
     });
+
+    describe('simple cases', () => {
+      it('should parse simple generic inline without name or attributes', () => {
+        const result = parse(':content:');
+        
+        expect(result.errors).toEqual([]);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0]).toMatchObject({
+          type: 'GenericInline'
+        });
+        expect(result.ast.children[0].name).toBeUndefined();
+        expect(result.ast.children[0].attributes).toBeUndefined();
+      });
+
+      it('should parse generic inline with single word', () => {
+        const result = parse(':bold:');
+        expect(result.errors).toEqual([]);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].type).toBe('GenericInline');
+      });
+
+      it('should parse generic inline with multiple words', () => {
+        const result = parse(':some text here:');
+        expect(result.errors).toEqual([]);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].type).toBe('GenericInline');
+      });
+
+      it('should parse empty generic inline', () => {
+        const result = parse('::');
+        expect(result.errors).toEqual([]);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].type).toBe('GenericInline');
+        expect(result.ast.children[0].content).toEqual([]);
+      });
+
+      it('should parse generic inline with name but no attributes', () => {
+        const result = parse(':#link GitHub:');
+        expect(result.errors).toEqual([]);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].name).toBe('link');
+        expect(result.ast.children[0].attributes).toBeUndefined();
+      });
+
+      it('should parse generic inline with nested code inline', () => {
+        const result = parse(':text with `code` here:');
+        expect(result.errors).toEqual([]);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].type).toBe('GenericInline');
+      });
+    });
   });
 
   describe('Text nodes', () => {

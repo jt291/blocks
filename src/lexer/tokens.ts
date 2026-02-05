@@ -27,12 +27,12 @@ export const BlockCommentEnd = createToken({
 
 export const BlockCodeDelim = createToken({
   name: 'BlockCodeDelim',
-  pattern: /```/
+  pattern: /`{3,}/  // 3 or more backticks
 });
 
 export const BlockScriptDelim = createToken({
   name: 'BlockScriptDelim',
-  pattern: /!!!/
+  pattern: /!{3,}/  // 3 or more exclamation marks
 });
 
 export const BlockGenericDelim = createToken({

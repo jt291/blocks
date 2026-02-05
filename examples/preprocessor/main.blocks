@@ -1,0 +1,16 @@
+/* #include header.txt */
+
+Main content goes here.
+
+```python
+#include utils.py
+
+def main():
+    helper()
+```
+
+!!!javascript
+#include config.js
+
+console.log("Application started");
+!!!

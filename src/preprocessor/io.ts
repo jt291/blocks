@@ -3,7 +3,7 @@ import * as path from "node:path";
 import type { FileReader } from "./types.js";
 
 /**
- * Détecte si on est dans un environnement browser
+ * Detects if we're in a browser environment
  */
 function isBrowser(): boolean {
   return (
@@ -14,7 +14,7 @@ function isBrowser(): boolean {
 }
 
 /**
- * FileReader pour browser utilisant fetch
+ * FileReader for browser using fetch
  */
 class BrowserFileReader implements FileReader {
   constructor(private basePath: string) {}
@@ -33,13 +33,13 @@ class BrowserFileReader implements FileReader {
   }
 
   resolve(basePath: string, includePath: string): string {
-    // Dans le browser, utiliser URL pour résoudre les chemins
+    // In browser, use URL to resolve paths
     if (includePath.startsWith("/")) {
-      // Chemin absolu
+      // Absolute path
       return includePath;
     }
 
-    // Chemin relatif
+    // Relative path
     const baseDir = basePath ? this.getDirectory(basePath) : this.basePath;
     return this.normalizePath(`${baseDir}/${includePath}`);
   }
@@ -50,7 +50,7 @@ class BrowserFileReader implements FileReader {
   }
 
   private normalizePath(path: string): string {
-    // Résoudre les '..' et '.'
+    // Resolve '..' and '.'
     const parts = path.split("/").filter((p) => p !== "");
     const result: string[] = [];
 
@@ -67,7 +67,7 @@ class BrowserFileReader implements FileReader {
 }
 
 /**
- * FileReader pour Node.js utilisant fs
+ * FileReader for Node.js using fs
  */
 class NodeFileReader implements FileReader {
   constructor(private basePath: string) {}
@@ -78,7 +78,7 @@ class NodeFileReader implements FileReader {
   }
 
   resolve(basePath: string, includePath: string): string {
-    // Dans Node, utiliser path.resolve
+    // In Node, use path.resolve
     if (path.isAbsolute(includePath)) {
       return includePath;
     }
@@ -89,7 +89,7 @@ class NodeFileReader implements FileReader {
 }
 
 /**
- * Créer un FileReader adapté à l'environnement
+ * Create a FileReader appropriate for the environment
  */
 export function createFileReader(basePath: string): FileReader {
   if (isBrowser()) {

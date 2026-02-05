@@ -7,7 +7,7 @@ import type {
 } from "./types.js";
 
 /**
- * Préprocesseur pour traiter les directives #include
+ * Preprocessor for handling #include directives
  */
 export class Preprocessor {
   private config: Required<PreprocessorConfig>;
@@ -30,20 +30,20 @@ export class Preprocessor {
   }
 
   /**
-   * Traite le contenu et résout tous les #include
-   * @param content Contenu à traiter
-   * @param currentFile Chemin du fichier actuel (pour la résolution relative)
-   * @returns Résultat du préprocesseur
+   * Process content and resolve all #includes
+   * @param content Content to process
+   * @param currentFile Path of current file (for relative resolution)
+   * @returns Preprocessor result
    */
   async process(
     content: string,
     currentFile = "",
   ): Promise<PreprocessorResult> {
-    // Réinitialiser l'état
+    // Reset state
     this.includedFiles.clear();
     this.errors = [];
 
-    // Traiter le contenu
+    // Process content
     const processedContent = await this.processContent(content, currentFile, 0);
 
     return {
@@ -54,14 +54,14 @@ export class Preprocessor {
   }
 
   /**
-   * Traite le contenu de manière récursive
+   * Process content recursively
    */
   private async processContent(
     content: string,
     currentFile: string,
     depth: number,
   ): Promise<string> {
-    // Vérifier la profondeur maximale
+    // Check maximum depth
     if (depth > this.config.maxDepth) {
       this.errors.push({
         type: "max_depth_exceeded",
@@ -71,14 +71,14 @@ export class Preprocessor {
       return content;
     }
 
-    // Pattern pour détecter les directives #include
-    // Peut apparaître dans des commentaires ou directement dans le code
+    // Pattern to detect #include directives
+    // Can appear in comments or directly in code
     const includePattern = /#include\s+([^\s\n]+)/g;
 
     let result = content;
     const matches = Array.from(content.matchAll(includePattern));
 
-    // Traiter chaque #include trouvé
+    // Process each #include found
     for (const match of matches) {
       const includePath = match[1];
       if (!includePath) {
@@ -86,10 +86,10 @@ export class Preprocessor {
       }
       const fullMatch = match[0];
 
-      // Résoudre le chemin du fichier à inclure
+      // Resolve the path of the file to include
       const resolvedPath = this.fileReader.resolve(currentFile, includePath);
 
-      // Vérifier les includes circulaires
+      // Check for circular includes
       if (this.includedFiles.has(resolvedPath)) {
         this.errors.push({
           type: "circular_include",
@@ -100,7 +100,7 @@ export class Preprocessor {
       }
 
       try {
-        // Lire le contenu du fichier
+        // Read file content
         let includedContent: string;
 
         if (this.config.cache && this.cache.has(resolvedPath)) {
@@ -113,20 +113,20 @@ export class Preprocessor {
           }
         }
 
-        // Ajouter à la liste des fichiers inclus
+        // Add to list of included files
         this.includedFiles.add(resolvedPath);
 
-        // Traiter récursivement le contenu inclus
+        // Recursively process included content
         const processedIncluded = await this.processContent(
           includedContent,
           resolvedPath,
           depth + 1,
         );
 
-        // Remplacer la directive #include par le contenu
+        // Replace the #include directive with content
         result = result.replace(fullMatch, processedIncluded);
       } catch (error) {
-        // Gérer les erreurs de lecture
+        // Handle read errors
         let errorMessage = "Unknown error";
         if (error instanceof Error) {
           errorMessage = error.message;
@@ -147,7 +147,7 @@ export class Preprocessor {
   }
 
   /**
-   * Nettoie le cache
+   * Clear the cache
    */
   clearCache(): void {
     this.cache.clear();

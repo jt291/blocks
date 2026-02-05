@@ -1,49 +1,49 @@
 /**
- * Configuration du préprocesseur
+ * Preprocessor configuration
  */
 export interface PreprocessorConfig {
   /**
-   * Chemin de base pour la résolution des fichiers
-   * - Browser: '/public/' ou '/assets/'
-   * - Node: './content/' ou chemin absolu
+   * Base path for file resolution
+   * - Browser: '/public/' or '/assets/'
+   * - Node: './content/' or absolute path
    */
   basePath: string;
 
   /**
-   * Profondeur maximale d'inclusion pour éviter les boucles infinies
+   * Maximum include depth to prevent infinite loops
    * @default 10
    */
   maxDepth?: number;
 
   /**
-   * Activer le cache des fichiers inclus
+   * Enable file caching
    * @default true
    */
   cache?: boolean;
 }
 
 /**
- * Résultat du préprocesseur
+ * Preprocessor result
  */
 export interface PreprocessorResult {
   /**
-   * Contenu après traitement des includes
+   * Content after processing includes
    */
   content: string;
 
   /**
-   * Liste des fichiers inclus (pour le debug)
+   * List of included files (for debugging)
    */
   includedFiles: string[];
 
   /**
-   * Erreurs rencontrées (non-bloquantes si configuré)
+   * Errors encountered (non-blocking if configured)
    */
   errors: PreprocessorError[];
 }
 
 /**
- * Erreur du préprocesseur
+ * Preprocessor error
  */
 export interface PreprocessorError {
   type:
@@ -57,21 +57,21 @@ export interface PreprocessorError {
 }
 
 /**
- * Interface pour lire des fichiers (abstraction fetch/fs)
+ * Interface for reading files (fetch/fs abstraction)
  */
 export interface FileReader {
   /**
-   * Lire un fichier
-   * @param path Chemin du fichier (peut être relatif ou absolu)
-   * @returns Contenu du fichier en string
+   * Read a file
+   * @param path File path (can be relative or absolute)
+   * @returns File content as string
    */
   read(path: string): Promise<string>;
 
   /**
-   * Résoudre un chemin relatif par rapport à un fichier de base
-   * @param basePath Chemin du fichier qui contient l'include
-   * @param includePath Chemin dans la directive #include
-   * @returns Chemin résolu
+   * Resolve a relative path based on a base file
+   * @param basePath Path of file containing the include
+   * @param includePath Path in the #include directive
+   * @returns Resolved path
    */
   resolve(basePath: string, includePath: string): string;
 }

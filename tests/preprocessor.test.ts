@@ -7,12 +7,12 @@ const TEST_DIR = "/tmp/preprocessor-test";
 
 describe("Preprocessor", () => {
   beforeEach(async () => {
-    // Créer le répertoire de test
+    // Create test directory
     await fs.mkdir(TEST_DIR, { recursive: true });
   });
 
   afterEach(async () => {
-    // Nettoyer le répertoire de test
+    // Clean up test directory
     await fs.rm(TEST_DIR, { recursive: true, force: true });
   });
 

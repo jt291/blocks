@@ -98,9 +98,9 @@ export class BlocksParser extends EmbeddedActionsParser {
           { ALT: () => this.SUBRULE(this.commentInline) },
           { ALT: () => this.SUBRULE(this.codeInline) },
           { ALT: () => this.SUBRULE(this.scriptInline) },
-          { 
+          {
             GATE: () => this.isValidGenericInline(),
-            ALT: () => this.SUBRULE(this.genericInline)
+            ALT: () => this.SUBRULE(this.genericInline),
           },
           { ALT: () => this.SUBRULE(this.textElement) },
         ]);
@@ -420,9 +420,9 @@ export class BlocksParser extends EmbeddedActionsParser {
           { ALT: () => this.SUBRULE2(this.commentInline) },
           { ALT: () => this.SUBRULE2(this.codeInline) },
           { ALT: () => this.SUBRULE2(this.scriptInline) },
-          { 
+          {
             GATE: () => this.isValidGenericInline(),
-            ALT: () => this.SUBRULE2(this.genericInline)
+            ALT: () => this.SUBRULE2(this.genericInline),
           },
           { ALT: () => this.SUBRULE(this.textElement) },
         ]);

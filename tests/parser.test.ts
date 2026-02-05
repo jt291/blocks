@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { parse } from "../src/index";
+import { describe, expect, it } from "vitest";
+import { parse, type TextNode } from "../src/index";
 
 describe("Parser", () => {
   describe("Comment blocks", () => {
@@ -1040,7 +1040,7 @@ more text
       // The colon should be treated as text
       const textContent = result.ast.children
         .filter((c) => c.type === "Text")
-        .map((c) => (c as any).value)
+        .map((c) => (c as TextNode).value)
         .join("");
       expect(textContent).toContain(":");
     });
@@ -1170,7 +1170,7 @@ more text
       expect(result.errors).toHaveLength(0);
       const textContent = result.ast.children
         .filter((c) => c.type === "Text")
-        .map((c) => (c as any).value)
+        .map((c) => (c as TextNode).value)
         .join("");
       expect(textContent).toContain(":");
     });
@@ -1183,7 +1183,7 @@ more text
       expect(result.errors).toHaveLength(0);
       const textContent = result.ast.children
         .filter((c) => c.type === "Text")
-        .map((c) => (c as any).value)
+        .map((c) => (c as TextNode).value)
         .join("");
       expect(textContent).toContain("Block code with attributes:");
     });
@@ -1195,7 +1195,7 @@ more text
       expect(result.errors).toHaveLength(0);
       const textContent = result.ast.children
         .filter((c) => c.type === "Text")
-        .map((c) => (c as any).value)
+        .map((c) => (c as TextNode).value)
         .join("");
       expect(textContent).toContain(":");
     });
@@ -1229,7 +1229,7 @@ more text
       // Title: should be text, not start of inline generic
       const textContent = result.ast.children
         .filter((c) => c.type === "Text")
-        .map((c) => (c as any).value)
+        .map((c) => (c as TextNode).value)
         .join("");
       expect(textContent).toContain("Title:");
     });

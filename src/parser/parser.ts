@@ -82,7 +82,7 @@ function parseInlineCodeToken(tokenImage: string): {
   attributes?: Attributes;
 } {
   // Check if there are attributes at the end: `...`{...}
-  const attrsMatch = tokenImage.match(/^(`[^`]+`)\s*(\{[^}]+\})$/);
+  const attrsMatch = tokenImage.match(/^(`[^`\n]*`)\s*(\{[^}]+\})$/);
   let coreInline: string;
   let attributes: Attributes | undefined;
 
@@ -121,7 +121,7 @@ function parseInlineScriptToken(tokenImage: string): {
   attributes?: Attributes;
 } {
   // Check if there are attributes at the end: !...!{...}
-  const attrsMatch = tokenImage.match(/^(![^!]+!)\s*(\{[^}]+\})$/);
+  const attrsMatch = tokenImage.match(/^(![^!\n]*!)\s*(\{[^}]+\})$/);
   let coreInline: string;
   let attributes: Attributes | undefined;
 
@@ -160,7 +160,7 @@ function parseInlineGenericToken(tokenImage: string): {
   attributes?: Attributes;
 } {
   // Check if there are attributes at the end: :...::{...}
-  const attrsMatch = tokenImage.match(/^(:[^:]+:)\s*(\{[^}]+\})$/);
+  const attrsMatch = tokenImage.match(/^(:[^:\n]*:)\s*(\{[^}]+\})$/);
   let coreInline: string;
   let attributes: Attributes | undefined;
 

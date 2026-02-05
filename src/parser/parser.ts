@@ -43,7 +43,7 @@ export class BlocksParser extends EmbeddedActionsParser {
    * @returns true if a closing delimiter is found, false otherwise
    */
   private hasValidInlineClosing(
-    closingTokenType: any,
+    closingTokenType: typeof tokens.InlineCodeDelim | typeof tokens.InlineScriptDelim | typeof tokens.InlineGenericDelim,
     maxLookahead = 200,
   ): boolean {
     // Start looking from the next token (LA(1) is current, LA(2) is next)

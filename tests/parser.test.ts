@@ -1288,6 +1288,9 @@ Content
 
       expect(result.errors).toHaveLength(0);
       expect(result.ast.children.every((node) => node.type === "Text")).toBe(true);
+      // Verify the delimiters are preserved in the text
+      const fullText = result.ast.children.map((node) => node.value).join("");
+      expect(fullText).toBe("A ` and : and ! all as text");
     });
 
     it("should handle delimiter at start of line as text", () => {
@@ -1296,6 +1299,7 @@ Content
       expect(result.errors).toHaveLength(0);
       expect(result.ast.children).toHaveLength(1);
       expect(result.ast.children[0].type).toBe("Text");
+      expect(result.ast.children[0].value).toBe(":Hello world");
     });
 
     it("should handle delimiter at end of line as text", () => {
@@ -1304,6 +1308,7 @@ Content
       expect(result.errors).toHaveLength(0);
       expect(result.ast.children).toHaveLength(1);
       expect(result.ast.children[0].type).toBe("Text");
+      expect(result.ast.children[0].value).toBe("Hello world:");
     });
 
     it("should parse valid inlines even with punctuation nearby", () => {

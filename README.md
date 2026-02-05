@@ -192,6 +192,9 @@ The parser matches opening and closing delimiters by **exact length only**, allo
 # Build
 pnpm build
 
+# Build with playground
+pnpm build:playground
+
 # Test
 pnpm test
 
@@ -201,6 +204,38 @@ pnpm test:watch
 # Type check
 pnpm lint
 ```
+
+## Interactive Playground
+
+The repository includes an interactive playground (`playground.html`) for testing the Blocks language in real-time.
+
+### Features
+
+- **Live Editor**: Write and edit Blocks code with automatic parsing (300ms debounce)
+- **Interactive AST Viewer**: 
+  - Collapsible/expandable tree structure
+  - Color-coded node types
+  - Shows node metadata (names, IDs, classes)
+  - Content preview for string values
+  - Child count for container nodes
+- **Error Display**: Visual feedback for parsing errors
+- **Control Buttons**:
+  - Expand All: Open all tree nodes
+  - Collapse All: Close all tree nodes  
+  - Copy JSON: Copy the full AST to clipboard
+
+### Usage
+
+1. Build the project (including the playground bundle):
+   ```bash
+   npm run build:playground
+   ```
+
+2. Open `playground.html` in a web browser
+
+3. Start editing code in the left panel and see the AST update in real-time on the right
+
+The playground uses `dist/playground.js` which includes all dependencies bundled together.
 
 ## License
 

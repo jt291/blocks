@@ -390,7 +390,7 @@ Contenu de mon conteneur
         <div class="syntax-item">
           <h4>Bloc générique avec attributs</h4>
           <p>Bloc enrichi avec ID, classes, options et paires clé-valeur.</p>
-          <div class="code-example"><pre>:::#section {#intro .highlight .bordered &amp;active}
+          <div class="code-example"><pre>:::#section {#intro .highlight .bordered %active}
 Contenu avec attributs
 :::</pre></div>
           <div class="result">GenericBlock avec name="section" et attributs complets</div>
@@ -441,8 +441,8 @@ Contenu avec attributs
             </tr>
             <tr>
               <td><strong>Option</strong></td>
-              <td><code>&amp;option</code></td>
-              <td><code>{&amp;active}</code></td>
+              <td><code>%option</code></td>
+              <td><code>{%active}</code></td>
               <td>Drapeau booléen</td>
             </tr>
             <tr>
@@ -454,7 +454,7 @@ Contenu avec attributs
             <tr>
               <td><strong>Combiné</strong></td>
               <td>Plusieurs attributs</td>
-              <td><code>{#main .box &amp;visible size=large}</code></td>
+              <td><code>{#main .box %visible size=large}</code></td>
               <td>Tous les types combinés</td>
             </tr>
           </tbody>
@@ -462,7 +462,7 @@ Contenu avec attributs
 
         <div class="syntax-item">
           <h4>Exemple complet d'attributs</h4>
-          <div class="code-example"><pre>:::#article {#post-1 .featured .highlight &amp;published author=John date=2024}
+          <div class="code-example"><pre>:::#article {#post-1 .featured .highlight %published author=John date=2024}
 Contenu de l'article
 :::</pre></div>
           <div class="result">

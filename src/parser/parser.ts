@@ -36,6 +36,35 @@ export class BlocksParser extends EmbeddedActionsParser {
     this.performSelfAnalysis();
   }
 
+  /**
+   * Generic helper to check if an inline has a valid closing delimiter within a reasonable range
+   * @param closingTokenType - The token type to search for (e.g., InlineCodeDelim, InlineScriptDelim)
+   * @param maxLookahead - Maximum number of tokens to search (default 200 for reasonable inline content)
+   * @returns true if a closing delimiter is found, false otherwise
+   */
+  private hasValidInlineClosing(
+    closingTokenType: any,
+    maxLookahead = 200,
+  ): boolean {
+    // Start looking from the next token (LA(1) is current, LA(2) is next)
+    for (let i = 2; i <= maxLookahead; i++) {
+      const token = this.LA(i);
+      
+      // If we've reached EOF, no closing delimiter found
+      if (!token || token.tokenType.name === "EOF") {
+        return false;
+      }
+      
+      // If we found the closing delimiter, return true
+      if (token.tokenType === closingTokenType) {
+        return true;
+      }
+    }
+    
+    // No closing delimiter found within maxLookahead
+    return false;
+  }
+
   // Main document rule
   public document = this.RULE(
     "document",
@@ -45,7 +74,24 @@ export class BlocksParser extends EmbeddedActionsParser {
       this.MANY(() => {
         const child = this.OR([
           { ALT: () => this.SUBRULE(this.blockElement) },
-          { ALT: () => this.SUBRULE(this.inlineElement) },
+          { 
+            GATE: () => {
+              const tokenType = this.LA(1).tokenType;
+              // Only try to parse as inline if it's NOT a delimiter, OR if it IS a delimiter with valid closing
+              if (tokenType === tokens.InlineCodeDelim) {
+                return this.hasValidInlineClosing(tokens.InlineCodeDelim);
+              }
+              if (tokenType === tokens.InlineScriptDelim) {
+                return this.hasValidInlineClosing(tokens.InlineScriptDelim);
+              }
+              if (tokenType === tokens.InlineGenericDelim) {
+                return this.hasValidInlineClosing(tokens.InlineGenericDelim);
+              }
+              // For InlineCommentStart, always allow (it doesn't need closing on same line check)
+              return tokenType === tokens.InlineCommentStart;
+            },
+            ALT: () => this.SUBRULE(this.inlineElement) 
+          },
           { ALT: () => this.SUBRULE(this.textElement) },
         ]);
         if (child) children.push(child);
@@ -361,7 +407,24 @@ export class BlocksParser extends EmbeddedActionsParser {
       DEF: () => {
         const child = this.OR2([
           { ALT: () => this.SUBRULE(this.blockElement) },
-          { ALT: () => this.SUBRULE(this.inlineElement) },
+          { 
+            GATE: () => {
+              const tokenType = this.LA(1).tokenType;
+              // Only try to parse as inline if it's NOT a delimiter, OR if it IS a delimiter with valid closing
+              if (tokenType === tokens.InlineCodeDelim) {
+                return this.hasValidInlineClosing(tokens.InlineCodeDelim);
+              }
+              if (tokenType === tokens.InlineScriptDelim) {
+                return this.hasValidInlineClosing(tokens.InlineScriptDelim);
+              }
+              if (tokenType === tokens.InlineGenericDelim) {
+                return this.hasValidInlineClosing(tokens.InlineGenericDelim);
+              }
+              // For InlineCommentStart, always allow (it doesn't need closing on same line check)
+              return tokenType === tokens.InlineCommentStart;
+            },
+            ALT: () => this.SUBRULE(this.inlineElement) 
+          },
           { ALT: () => this.SUBRULE(this.textElement) },
         ]);
         if (child) content.push(child);
@@ -639,7 +702,25 @@ export class BlocksParser extends EmbeddedActionsParser {
       GATE: () => this.LA(1).tokenType !== tokens.InlineGenericDelim,
       DEF: () => {
         const child = this.OR([
-          { ALT: () => this.SUBRULE(this.inlineElement) },
+          { 
+            GATE: () => {
+              const tokenType = this.LA(1).tokenType;
+              // Only try to parse as inline if it's NOT a delimiter, OR if it IS a delimiter with valid closing
+              if (tokenType === tokens.InlineCodeDelim) {
+                return this.hasValidInlineClosing(tokens.InlineCodeDelim);
+              }
+              if (tokenType === tokens.InlineScriptDelim) {
+                return this.hasValidInlineClosing(tokens.InlineScriptDelim);
+              }
+              if (tokenType === tokens.InlineGenericDelim) {
+                // For nested generic inlines, we need to check for closing, but the outer GATE already checked for the parent's closing
+                return this.hasValidInlineClosing(tokens.InlineGenericDelim);
+              }
+              // For InlineCommentStart, always allow (it doesn't need closing on same line check)
+              return tokenType === tokens.InlineCommentStart;
+            },
+            ALT: () => this.SUBRULE(this.inlineElement) 
+          },
           { ALT: () => this.SUBRULE(this.textElement) },
         ]);
         if (child) content.push(child);
@@ -685,6 +766,9 @@ export class BlocksParser extends EmbeddedActionsParser {
       { ALT: () => this.CONSUME(tokens.Percent) },
       { ALT: () => this.CONSUME(tokens.Equals) },
       { ALT: () => this.CONSUME(tokens.AnyChar) },
+      { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
+      { ALT: () => this.CONSUME(tokens.InlineScriptDelim) },
+      { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
     ]);
 
     const node: TextNode = {

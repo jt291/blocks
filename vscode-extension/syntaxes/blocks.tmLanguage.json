@@ -1,0 +1,157 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Blocks",
+  "scopeName": "source.blocks",
+  "patterns": [
+    {
+      "include": "#block-comment"
+    },
+    {
+      "include": "#inline-comment"
+    },
+    {
+      "include": "#code-block"
+    },
+    {
+      "include": "#script-block"
+    },
+    {
+      "include": "#generic-block"
+    },
+    {
+      "include": "#code-inline"
+    },
+    {
+      "include": "#script-inline"
+    },
+    {
+      "include": "#generic-inline"
+    }
+  ],
+  "repository": {
+    "block-comment": {
+      "name": "comment.block.blocks",
+      "begin": "/\\*",
+      "end": "\\*/",
+      "patterns": [
+        {
+          "name": "entity.name.tag.blocks",
+          "match": "(?<=/\\*)#[a-zA-Z][a-zA-Z0-9_-]*"
+        }
+      ]
+    },
+    "inline-comment": {
+      "name": "comment.line.double-slash.blocks",
+      "begin": "//",
+      "end": "//",
+      "patterns": [
+        {
+          "name": "entity.name.tag.blocks",
+          "match": "(?<=//)#[a-zA-Z][a-zA-Z0-9_-]*"
+        }
+      ]
+    },
+    "code-block": {
+      "name": "markup.fenced_code.block.blocks",
+      "begin": "```",
+      "end": "```",
+      "patterns": [
+        {
+          "name": "entity.name.function.blocks",
+          "match": "(?<=^```)#[a-zA-Z][a-zA-Z0-9_-]*"
+        },
+        {
+          "include": "#attributes"
+        }
+      ]
+    },
+    "script-block": {
+      "name": "meta.embedded.block.blocks",
+      "begin": "!!!",
+      "end": "!!!",
+      "patterns": [
+        {
+          "name": "entity.name.function.blocks",
+          "match": "(?<=^!!!)#[a-zA-Z][a-zA-Z0-9_-]*"
+        },
+        {
+          "include": "#attributes"
+        }
+      ]
+    },
+    "generic-block": {
+      "name": "meta.block.blocks",
+      "begin": ":::",
+      "end": ":::",
+      "patterns": [
+        {
+          "name": "entity.name.type.blocks",
+          "match": "(?<=^:::)#[a-zA-Z][a-zA-Z0-9_-]*"
+        },
+        {
+          "include": "#attributes"
+        }
+      ]
+    },
+    "code-inline": {
+      "name": "markup.inline.raw.blocks",
+      "begin": "`",
+      "end": "`",
+      "patterns": [
+        {
+          "name": "entity.name.function.blocks",
+          "match": "(?<=`)#[a-zA-Z][a-zA-Z0-9_-]*"
+        }
+      ]
+    },
+    "script-inline": {
+      "name": "meta.embedded.inline.blocks",
+      "begin": "!",
+      "end": "!",
+      "patterns": [
+        {
+          "name": "entity.name.function.blocks",
+          "match": "(?<=!)#[a-zA-Z][a-zA-Z0-9_-]*"
+        }
+      ]
+    },
+    "generic-inline": {
+      "name": "meta.inline.blocks",
+      "begin": ":",
+      "end": ":",
+      "patterns": [
+        {
+          "name": "entity.name.type.blocks",
+          "match": "(?<=:)#[a-zA-Z][a-zA-Z0-9_-]*"
+        }
+      ]
+    },
+    "attributes": {
+      "name": "meta.attributes.blocks",
+      "begin": "\\{",
+      "end": "\\}",
+      "patterns": [
+        {
+          "name": "entity.other.attribute-name.id.blocks",
+          "match": "#[a-zA-Z][a-zA-Z0-9_-]*"
+        },
+        {
+          "name": "entity.other.attribute-name.class.blocks",
+          "match": "\\.[a-zA-Z][a-zA-Z0-9_-]*"
+        },
+        {
+          "name": "entity.other.attribute-name.option.blocks",
+          "match": "%[a-zA-Z][a-zA-Z0-9_-]*"
+        },
+        {
+          "name": "variable.other.blocks",
+          "match": "[a-zA-Z][a-zA-Z0-9_-]*(?==)"
+        },
+        {
+          "name": "string.unquoted.blocks",
+          "match": "(?<==)[a-zA-Z0-9_-]+"
+        }
+      ]
+    }
+  }
+}

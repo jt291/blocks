@@ -1,0 +1,23 @@
+/* Configuration file example */
+
+:::#config {#site-config}
+  
+  :::#general {.settings}
+    ```#json
+    {
+      "title": "My Site",
+      "description": "Built with Blocks"
+    }
+    ```
+  :::
+  
+  :::#theme {.settings}
+    ```#json
+    {
+      "primaryColor": "#667eea",
+      "font": "Inter"
+    }
+    ```
+  :::
+  
+:::

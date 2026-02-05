@@ -24,3 +24,6 @@ Thumbs.db
 
 # Testing
 coverage/
+
+# Include .block example files
+!examples/*.block

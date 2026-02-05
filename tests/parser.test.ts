@@ -1013,31 +1013,28 @@ more text
       expect(result.errors[0]).toContain("exclamation mark");
     });
 
-    it("should provide clear error message for unclosed inline code", () => {
+    it("should treat unclosed inline code as text (no closing delimiter found)", () => {
       const result = parse("Text with `unclosed code");
 
-      expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toContain("Parse error at line");
-      expect(result.errors[0]).toContain("Expected closing backtick");
-      expect(result.errors[0]).toContain("inline code");
+      expect(result.errors).toHaveLength(0);
+      // The backtick should be treated as text since no closing delimiter is found
+      expect(result.ast.children.some((node) => node.type === "Text")).toBe(true);
     });
 
-    it("should provide clear error message for unclosed inline script", () => {
+    it("should treat unclosed inline script as text (no closing delimiter found)", () => {
       const result = parse("Text with !unclosed script");
 
-      expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toContain("Parse error at line");
-      expect(result.errors[0]).toContain("Expected closing exclamation mark");
-      expect(result.errors[0]).toContain("inline script");
+      expect(result.errors).toHaveLength(0);
+      // The exclamation mark should be treated as text since no closing delimiter is found
+      expect(result.ast.children.some((node) => node.type === "Text")).toBe(true);
     });
 
-    it("should provide clear error message for unclosed inline generic", () => {
+    it("should treat unclosed inline generic as text (no closing delimiter found)", () => {
       const result = parse("Text with :unclosed generic");
 
-      expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toContain("Parse error at line");
-      expect(result.errors[0]).toContain("Expected closing colon");
-      expect(result.errors[0]).toContain("inline generic");
+      expect(result.errors).toHaveLength(0);
+      // The colon should be treated as text since no closing delimiter is found
+      expect(result.ast.children.some((node) => node.type === "Text")).toBe(true);
     });
 
     it("should provide specific error for generic block length mismatch", () => {
@@ -1156,33 +1153,34 @@ more text
       expect(types).toContain("GenericInline");
     });
 
-    it("should report correct line numbers for errors", () => {
+    it("should treat unclosed delimiters as text (no error for punctuation)", () => {
       const input = "Line 1\nLine 2\nLine 3\n:unclosed inline";
 
       const result = parse(input);
 
-      expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toMatch(/line 4/i);
+      expect(result.errors).toHaveLength(0);
+      // The colon should be treated as text since no closing delimiter is found
+      expect(result.ast.children.some((node) => node.type === "Text")).toBe(true);
     });
 
-    it("should report correct line number for unclosed code inline", () => {
+    it("should treat unclosed code delimiter as text (no error)", () => {
       const input = "Line 1\nLine 2\n`unclosed code";
 
       const result = parse(input);
 
-      expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toMatch(/line 3/i);
-      expect(result.errors[0]).toContain("backtick");
+      expect(result.errors).toHaveLength(0);
+      // The backtick should be treated as text since no closing delimiter is found
+      expect(result.ast.children.some((node) => node.type === "Text")).toBe(true);
     });
 
-    it("should report correct line number for unclosed script inline", () => {
+    it("should treat unclosed script delimiter as text (no error)", () => {
       const input = "Line 1\n!unclosed script";
 
       const result = parse(input);
 
-      expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toMatch(/line 2/i);
-      expect(result.errors[0]).toContain("exclamation");
+      expect(result.errors).toHaveLength(0);
+      // The exclamation mark should be treated as text since no closing delimiter is found
+      expect(result.ast.children.some((node) => node.type === "Text")).toBe(true);
     });
 
     it("should handle demo complète without errors", () => {
@@ -1209,6 +1207,130 @@ Content
       expect(blocks[0].type).toBe("CodeBlock");
       expect(blocks[1].type).toBe("ScriptBlock");
       expect(blocks[2].type).toBe("GenericBlock");
+    });
+  });
+
+  describe("Delimiter detection and punctuation handling", () => {
+    it("should treat colon punctuation as text, not as delimiter", () => {
+      const result = parse("Hello: world");
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.ast.children).toHaveLength(1);
+      expect(result.ast.children[0].type).toBe("Text");
+      expect(result.ast.children[0].value).toBe("Hello: world");
+    });
+
+    it("should treat exclamation punctuation as text, not as delimiter", () => {
+      const result = parse("Hello! How are you?");
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.ast.children).toHaveLength(1);
+      expect(result.ast.children[0].type).toBe("Text");
+      expect(result.ast.children[0].value).toBe("Hello! How are you?");
+    });
+
+    it("should treat isolated backtick as text, not as delimiter", () => {
+      const result = parse("A lonely ` here");
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.ast.children).toHaveLength(1);
+      expect(result.ast.children[0].type).toBe("Text");
+      expect(result.ast.children[0].value).toBe("A lonely ` here");
+    });
+
+    it("should parse valid inline code correctly", () => {
+      const result = parse("This is `code` here");
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.ast.children).toHaveLength(3);
+      expect(result.ast.children[0].type).toBe("Text");
+      expect(result.ast.children[1].type).toBe("CodeInline");
+      expect(result.ast.children[1].content).toBe("code");
+      expect(result.ast.children[2].type).toBe("Text");
+    });
+
+    it("should parse valid inline script correctly", () => {
+      const result = parse("Execute !script! now");
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.ast.children).toHaveLength(3);
+      expect(result.ast.children[0].type).toBe("Text");
+      expect(result.ast.children[1].type).toBe("ScriptInline");
+      expect(result.ast.children[1].content).toBe("script");
+      expect(result.ast.children[2].type).toBe("Text");
+    });
+
+    it("should parse valid generic inline correctly", () => {
+      const result = parse("This is :text: here");
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.ast.children).toHaveLength(3);
+      expect(result.ast.children[0].type).toBe("Text");
+      expect(result.ast.children[1].type).toBe("GenericInline");
+      expect(result.ast.children[2].type).toBe("Text");
+    });
+
+    it("should handle mixed punctuation and valid inlines", () => {
+      const result = parse("Hello: world with `code` and ! too");
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.ast.children).toHaveLength(3);
+      expect(result.ast.children[0].type).toBe("Text");
+      expect(result.ast.children[0].value).toContain("Hello: world with ");
+      expect(result.ast.children[1].type).toBe("CodeInline");
+      expect(result.ast.children[1].content).toBe("code");
+      expect(result.ast.children[2].type).toBe("Text");
+      expect(result.ast.children[2].value).toContain("and ! too");
+    });
+
+    it("should handle multiple unclosed delimiters as text", () => {
+      const result = parse("A ` and : and ! all as text");
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.ast.children.every((node) => node.type === "Text")).toBe(true);
+      // Verify the delimiters are preserved in the text
+      const fullText = result.ast.children.map((node) => node.value).join("");
+      expect(fullText).toBe("A ` and : and ! all as text");
+    });
+
+    it("should handle delimiter at start of line as text", () => {
+      const result = parse(":Hello world");
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.ast.children).toHaveLength(1);
+      expect(result.ast.children[0].type).toBe("Text");
+      expect(result.ast.children[0].value).toBe(":Hello world");
+    });
+
+    it("should handle delimiter at end of line as text", () => {
+      const result = parse("Hello world:");
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.ast.children).toHaveLength(1);
+      expect(result.ast.children[0].type).toBe("Text");
+      expect(result.ast.children[0].value).toBe("Hello world:");
+    });
+
+    it("should parse valid inlines even with punctuation nearby", () => {
+      const result = parse("Note: use `code` here!");
+
+      expect(result.errors).toHaveLength(0);
+      // Should have Text, CodeInline, Text
+      const types = result.ast.children.map((c) => c.type);
+      expect(types).toContain("Text");
+      expect(types).toContain("CodeInline");
+    });
+
+    it("should handle nested valid inlines in generic block", () => {
+      const result = parse(":::\nHello: world with `code` here\n:::");
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.ast.children).toHaveLength(1);
+      expect(result.ast.children[0].type).toBe("GenericBlock");
+      
+      const content = result.ast.children[0].content;
+      // Should have parsed the colon as text and the backticks as valid inline code
+      expect(content.some((node) => node.type === "CodeInline")).toBe(true);
     });
   });
 });

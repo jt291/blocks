@@ -129,6 +129,63 @@ All inline elements follow a **uniform syntax rule**: if the first token after t
 
 Format: `{ #id .class1 .class2 %option1 %option2 key1=val1 key2=val2 }`
 
+### Nested Generic Blocks
+
+Generic blocks support nesting using delimiters of **different lengths**. Inner blocks must use **strictly more** delimiter characters than their parent blocks.
+
+**Syntax convention**: Similar to Markdown fenced code blocks
+
+```
+:::           (outer block: 3 colons)
+  outer content
+  
+  :::::       (inner block: 5 colons)
+    inner content
+  :::::
+:::
+```
+
+**Rule**: An inner block must have more delimiter characters than its parent.
+
+**Examples**:
+
+```
+# Simple nesting with names
+:::#container
+  Some text here
+  
+  :::::#inner
+    Nested content
+  :::::
+  
+  Back to outer
+:::
+
+# Multiple levels
+:::
+  Level 1
+  :::::
+    Level 2
+    :::::::
+      Level 3
+    :::::::
+  :::::
+:::
+
+# With attributes
+:::{.outer-class}
+  Content with `inline code`
+  
+  :::::{#inner-id .inner-class}
+    Nested block with different styling
+  :::::
+:::
+```
+
+**Valid delimiter sequences**: `:`, `::`, `:::`, `::::`, `:::::`, ... (3 or more for blocks)
+
+The parser matches opening and closing delimiters by **exact length only**, allowing nested blocks with longer delimiters to be parsed as content of outer blocks.
+
 ## Development
 
 ```bash

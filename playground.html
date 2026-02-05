@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blocks Language Playground</title>
+  <style>
+    /* CSS pour le layout et le style */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      padding: 1rem;
+      overflow: hidden;
+    }
+    
+    .panel {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      background: white;
+    }
+    
+    .panel-header {
+      background: #f5f5f5;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #ddd;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .panel-content {
+      flex: 1;
+      overflow: auto;
+      padding: 1rem;
+    }
+    
+    textarea {
+      width: 100%;
+      height: 100%;
+      border: none;
+      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+      font-size: 14px;
+      resize: none;
+      padding: 0;
+      line-height: 1.5;
+    }
+    
+    textarea:focus { outline: none; }
+    
+    .errors {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 4px;
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+      color: #856404;
+    }
+    
+    .error-item {
+      margin: 0.25rem 0;
+      font-size: 0.9rem;
+    }
+    
+    .ast-controls {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    button {
+      padding: 0.375rem 0.75rem;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    
+    button:hover {
+      background: #0056b3;
+    }
+    
+    .ast-tree {
+      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    
+    .ast-node {
+      margin-left: 1rem;
+    }
+    
+    .ast-node-header {
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 3px;
+      user-select: none;
+    }
+    
+    .ast-node-header:hover {
+      background: #f0f0f0;
+    }
+    
+    .ast-node-children {
+      margin-left: 1rem;
+      border-left: 1px solid #ddd;
+      padding-left: 0.5rem;
+    }
+    
+    .ast-node-children.collapsed {
+      display: none;
+    }
+    
+    .toggle-icon {
+      display: inline-block;
+      width: 12px;
+      font-weight: bold;
+      color: #666;
+    }
+    
+    /* Couleurs par type */
+    .node-Document { color: #1e3a8a; font-weight: bold; }
+    .node-GenericBlock { color: #15803d; }
+    .node-CodeBlock { color: #ea580c; }
+    .node-ScriptBlock { color: #dc2626; }
+    .node-CommentBlock { color: #6b7280; }
+    .node-GenericInline { color: #7c3aed; }
+    .node-CodeInline { color: #9333ea; }
+    .node-ScriptInline { color: #a855f7; }
+    .node-CommentInline { color: #8b5cf6; }
+    .node-Text { color: #1f2937; }
+    
+    .node-meta {
+      color: #6b7280;
+      font-style: italic;
+    }
+    
+    .node-content-preview {
+      color: #059669;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🧱 Blocks Language Playground</h1>
+  </header>
+  
+  <main>
+    <!-- Editor Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        Editor
+      </div>
+      <div class="panel-content">
+        <textarea id="editor" spellcheck="false"></textarea>
+      </div>
+      <div id="errors" style="display: none;"></div>
+    </div>
+    
+    <!-- AST Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        AST Tree
+        <div class="ast-controls">
+          <button id="expandAll">Expand All</button>
+          <button id="collapseAll">Collapse All</button>
+          <button id="copyJson">Copy JSON</button>
+        </div>
+      </div>
+      <div class="panel-content">
+        <div id="astTree" class="ast-tree"></div>
+      </div>
+    </div>
+  </main>
+  
+  <script type="module">
+    // Import the parser
+    import { parse } from './dist/playground.js';
+    
+    const editor = document.getElementById('editor');
+    const astTreeEl = document.getElementById('astTree');
+    const errorsEl = document.getElementById('errors');
+    const expandAllBtn = document.getElementById('expandAll');
+    const collapseAllBtn = document.getElementById('collapseAll');
+    const copyJsonBtn = document.getElementById('copyJson');
+    
+    let currentAst = null;
+    let parseTimeout = null;
+    
+    // Default example
+    const defaultCode = `/* #include header.html */
+
+:::#container {#main .wrapper}
+Text with \`code\` and :emphasis:
+
+\`\`\`#javascript
+const x = 1;
+\`\`\`
+
+:::::
+Nested block
+:::::
+:::
+
+!!!#python
+print("Hello World")
+!!!
+
+// This is a comment
+//#todo Add more features`;
+    
+    editor.value = defaultCode;
+    
+    // Debounced parse
+    function handleInput() {
+      clearTimeout(parseTimeout);
+      parseTimeout = setTimeout(() => {
+        parseCode();
+      }, 300);
+    }
+    
+    editor.addEventListener('input', handleInput);
+    
+    // Parse and display
+    function parseCode() {
+      const code = editor.value;
+      const result = parse(code);
+      
+      currentAst = result.ast;
+      
+      // Display errors
+      if (result.errors && result.errors.length > 0) {
+        errorsEl.style.display = 'block';
+        errorsEl.className = 'errors';
+        errorsEl.innerHTML = '<strong>⚠️ Parsing Errors:</strong>' +
+          result.errors.map(err => 
+            `<div class="error-item">${escapeHtml(err)}</div>`
+          ).join('');
+      } else {
+        errorsEl.style.display = 'none';
+      }
+      
+      // Display AST
+      renderAst(result.ast);
+    }
+    
+    // Render AST tree
+    function renderAst(ast) {
+      astTreeEl.innerHTML = '';
+      const tree = createNodeElement(ast, 0);
+      astTreeEl.appendChild(tree);
+    }
+    
+    // Create node element
+    function createNodeElement(node, depth) {
+      const container = document.createElement('div');
+      container.className = 'ast-node';
+      
+      const header = document.createElement('div');
+      header.className = `ast-node-header node-${node.type}`;
+      
+      const hasChildren = (Array.isArray(node.content) && node.content.length > 0) ||
+                          (Array.isArray(node.children) && node.children.length > 0);
+      
+      const toggleIcon = document.createElement('span');
+      toggleIcon.className = 'toggle-icon';
+      toggleIcon.textContent = hasChildren ? '▼ ' : '  ';
+      header.appendChild(toggleIcon);
+      
+      const typeSpan = document.createElement('span');
+      typeSpan.textContent = node.type;
+      header.appendChild(typeSpan);
+      
+      // Add metadata
+      const meta = [];
+      if (node.name) meta.push(`#${node.name}`);
+      if (node.attributes?.id) meta.push(`(#${node.attributes.id})`);
+      if (node.attributes?.classes?.length) {
+        meta.push(`(.${node.attributes.classes.join(' .')})`);
+      }
+      
+      if (meta.length > 0) {
+        const metaSpan = document.createElement('span');
+        metaSpan.className = 'node-meta';
+        metaSpan.textContent = ' ' + meta.join(' ');
+        header.appendChild(metaSpan);
+      }
+      
+      // Add content preview
+      if (typeof node.content === 'string') {
+        const preview = node.content.length > 50 
+          ? node.content.substring(0, 50) + '...'
+          : node.content;
+        const contentSpan = document.createElement('span');
+        contentSpan.className = 'node-content-preview';
+        contentSpan.textContent = ` "${escapeHtml(preview)}"`;
+        header.appendChild(contentSpan);
+      } else if (Array.isArray(node.content)) {
+        const countSpan = document.createElement('span');
+        countSpan.className = 'node-meta';
+        countSpan.textContent = ` [${node.content.length} children]`;
+        header.appendChild(countSpan);
+      } else if (Array.isArray(node.children)) {
+        const countSpan = document.createElement('span');
+        countSpan.className = 'node-meta';
+        countSpan.textContent = ` [${node.children.length} children]`;
+        header.appendChild(countSpan);
+      }
+      
+      container.appendChild(header);
+      
+      // Add children
+      if (hasChildren) {
+        const childrenContainer = document.createElement('div');
+        childrenContainer.className = 'ast-node-children';
+        
+        const children = node.content || node.children || [];
+        children.forEach(child => {
+          if (child && typeof child === 'object') {
+            childrenContainer.appendChild(createNodeElement(child, depth + 1));
+          }
+        });
+        
+        container.appendChild(childrenContainer);
+        
+        // Toggle functionality
+        header.addEventListener('click', () => {
+          childrenContainer.classList.toggle('collapsed');
+          toggleIcon.textContent = childrenContainer.classList.contains('collapsed') 
+            ? '▶ ' 
+            : '▼ ';
+        });
+      }
+      
+      return container;
+    }
+    
+    // Expand all nodes
+    expandAllBtn.addEventListener('click', () => {
+      document.querySelectorAll('.ast-node-children').forEach(el => {
+        el.classList.remove('collapsed');
+      });
+      document.querySelectorAll('.toggle-icon').forEach(el => {
+        if (el.textContent.trim() === '▶') {
+          el.textContent = '▼ ';
+        }
+      });
+    });
+    
+    // Collapse all nodes
+    collapseAllBtn.addEventListener('click', () => {
+      document.querySelectorAll('.ast-node-children').forEach(el => {
+        el.classList.add('collapsed');
+      });
+      document.querySelectorAll('.toggle-icon').forEach(el => {
+        if (el.textContent.trim() === '▼') {
+          el.textContent = '▶ ';
+        }
+      });
+    });
+    
+    // Copy JSON
+    copyJsonBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(JSON.stringify(currentAst, null, 2));
+        copyJsonBtn.textContent = '✓ Copied!';
+        setTimeout(() => {
+          copyJsonBtn.textContent = 'Copy JSON';
+        }, 2000);
+      } catch (err) {
+        alert('Failed to copy to clipboard');
+      }
+    });
+    
+    // Utility functions
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // Initial parse
+    parseCode();
+  </script>
+</body>
+</html>

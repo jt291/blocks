@@ -14,6 +14,7 @@ export * from "./lexer/lexer.js";
 export * from "./lexer/tokens.js";
 export * from "./parser/ast.js";
 export * from "./parser/parser.js";
+export * from "./preprocessor/index.js";
 
 export interface ParseResult {
   ast: DocumentNode;

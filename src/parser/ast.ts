@@ -46,9 +46,11 @@ export interface ScriptBlockNode extends BlockNode {
   content: string;
 }
 
-export interface GenericBlockNode extends BlockNode {
+export interface GenericBlockNode extends Node {
   type: 'GenericBlock';
-  content: InlineNode[];
+  name?: string;
+  attributes?: Attributes;
+  content: (BlockNode | InlineNode | TextNode)[];
 }
 
 // Inline nodes

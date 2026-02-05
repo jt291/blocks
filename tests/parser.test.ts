@@ -712,11 +712,143 @@ code
     it('should parse nested generic blocks with HTML', () => {
       const result = parse(':::::\n:::#inner\n<p>content</p>\n:::\n:::::');
       
-      // Note: The parser currently doesn't support nested generic blocks this way
-      // The inner ::: closes the outer ::::: because delimiter matching is by length
-      // This test documents the current behavior
-      expect(result.errors.length).toBeGreaterThan(0);
-      expect(result.errors[0]).toContain('Generic block delimiters must have the same length');
+      // Now supports nested generic blocks with different delimiter lengths
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children).toHaveLength(1);
+      
+      const outerBlock = result.ast.children[0];
+      expect(outerBlock.type).toBe('GenericBlock');
+      
+      // Find the inner block
+      const innerBlock = outerBlock.content.find(node => node.type === 'GenericBlock');
+      expect(innerBlock).toBeDefined();
+      expect(innerBlock.name).toBe('inner');
+    });
+  });
+
+  describe('Nested generic blocks with different delimiter lengths', () => {
+    it('should parse nested generic blocks with longer inner delimiters', () => {
+      const result = parse(':::\nouter\n:::::\ninner\n:::::\n:::');
+      
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children).toHaveLength(1);
+      
+      const outerBlock = result.ast.children[0];
+      expect(outerBlock.type).toBe('GenericBlock');
+      expect(outerBlock.content.length).toBeGreaterThan(0);
+      
+      // Find the inner block
+      const innerBlock = outerBlock.content.find(node => node.type === 'GenericBlock');
+      expect(innerBlock).toBeDefined();
+    });
+
+    it('should parse multiple levels of nesting', () => {
+      const result = parse(':::\nlevel 1\n:::::\nlevel 2\n:::::::\nlevel 3\n:::::::\n:::::\n:::');
+      
+      expect(result.errors).toEqual([]);
+      const level1 = result.ast.children[0];
+      expect(level1.type).toBe('GenericBlock');
+      
+      // Find level 2
+      const level2 = level1.content.find(node => node.type === 'GenericBlock');
+      expect(level2).toBeDefined();
+      
+      // Find level 3
+      const level3 = level2.content.find(node => node.type === 'GenericBlock');
+      expect(level3).toBeDefined();
+    });
+
+    it('should parse nested blocks with names', () => {
+      const result = parse(':::#outer\ntext\n:::::#inner\ninner text\n:::::\n:::');
+      
+      expect(result.errors).toEqual([]);
+      const outer = result.ast.children[0];
+      expect(outer.name).toBe('outer');
+      
+      const inner = outer.content.find(node => node.type === 'GenericBlock');
+      expect(inner).toBeDefined();
+      expect(inner.name).toBe('inner');
+    });
+
+    it('should parse nested blocks with attributes', () => {
+      const result = parse(':::{.outer}\ntext\n:::::{.inner}\ninner text\n:::::\n:::');
+      
+      expect(result.errors).toEqual([]);
+      const outer = result.ast.children[0];
+      expect(outer.attributes.classes).toContain('outer');
+      
+      const inner = outer.content.find(node => node.type === 'GenericBlock');
+      expect(inner).toBeDefined();
+      expect(inner.attributes.classes).toContain('inner');
+    });
+
+    it('should parse complex nested structure', () => {
+      const result = parse(`:::
+du texte
+
+:::::
+et un autre bloc
+:::::
+
+encore du texte
+:::`);
+      
+      expect(result.errors).toEqual([]);
+      const outer = result.ast.children[0];
+      expect(outer.type).toBe('GenericBlock');
+      
+      // Should contain text and a nested block
+      const hasNestedBlock = outer.content.some(node => node.type === 'GenericBlock');
+      expect(hasNestedBlock).toBe(true);
+    });
+
+    it('should handle mixed content with nested blocks', () => {
+      const result = parse(`:::#container
+text with \`code\`
+
+:::::#inner
+nested content
+:::::
+
+more text
+:::`);
+      
+      expect(result.errors).toEqual([]);
+      const container = result.ast.children[0];
+      expect(container.name).toBe('container');
+      
+      // Should contain text, code inline, and nested block
+      const hasCodeInline = container.content.some(node => node.type === 'CodeInline');
+      const hasNestedBlock = container.content.some(node => node.type === 'GenericBlock');
+      expect(hasCodeInline).toBe(true);
+      expect(hasNestedBlock).toBe(true);
+    });
+
+    it('should parse nested blocks at the same level as siblings', () => {
+      const result = parse(`::::
+::: first inner :::
+::: second inner :::
+::::`);
+      
+      expect(result.errors).toEqual([]);
+      const outer = result.ast.children[0];
+      expect(outer.type).toBe('GenericBlock');
+      
+      // Should contain two nested blocks
+      const innerBlocks = outer.content.filter(node => node.type === 'GenericBlock');
+      expect(innerBlocks.length).toBe(2);
+    });
+
+    it('should correctly match delimiters by exact length', () => {
+      const result = parse(':::\nouter\n::::\nmiddle (should not close outer)\n::::\n:::');
+      
+      expect(result.errors).toEqual([]);
+      const outer = result.ast.children[0];
+      expect(outer.type).toBe('GenericBlock');
+      
+      // The :::: block should be nested inside :::
+      const innerBlock = outer.content.find(node => node.type === 'GenericBlock');
+      expect(innerBlock).toBeDefined();
     });
   });
 });

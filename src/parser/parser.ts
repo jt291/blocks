@@ -31,7 +31,33 @@ export class BlocksParser extends EmbeddedActionsParser {
     this.MANY(() => {
       const child = this.OR([
         { ALT: () => this.SUBRULE(this.blockElement) },
-        { ALT: () => this.SUBRULE(this.inlineElement) },
+        { 
+          // Only try to parse inlineElement if it's actually an inline element
+          // Skip ':' followed by whitespace (likely punctuation, not inline generic)
+          GATE: () => {
+            const la1 = this.LA(1).tokenType;
+            // Always try to parse inline comments, code, and scripts
+            if (la1 === tokens.InlineCommentStart || 
+                la1 === tokens.InlineCodeDelim || 
+                la1 === tokens.InlineScriptDelim) {
+              return true;
+            }
+            // For InlineGenericDelim (':'), only parse if not followed by whitespace
+            // (unless '#' comes after the whitespace for named syntax)
+            if (la1 === tokens.InlineGenericDelim) {
+              const la2 = this.LA(2).tokenType;
+              if (la2 === tokens.Hash) {
+                return true; // ':#name' syntax
+              }
+              if (la2 === tokens.Whitespace) {
+                return false; // 'text: ' likely punctuation
+              }
+              return true; // ':text:' syntax
+            }
+            return false; // Not an inline element starter
+          },
+          ALT: () => this.SUBRULE(this.inlineElement) 
+        },
         { ALT: () => this.SUBRULE(this.textElement) }
       ]);
       if (child) children.push(child);
@@ -340,7 +366,33 @@ export class BlocksParser extends EmbeddedActionsParser {
       DEF: () => {
         const child = this.OR2([
           { ALT: () => this.SUBRULE(this.blockElement) },
-          { ALT: () => this.SUBRULE(this.inlineElement) },
+          {
+            // Only try to parse inlineElement if it's actually an inline element
+            // Skip ':' followed by whitespace (likely punctuation, not inline generic)
+            GATE: () => {
+              const la1 = this.LA(1).tokenType;
+              // Always try to parse inline comments, code, and scripts
+              if (la1 === tokens.InlineCommentStart ||
+                  la1 === tokens.InlineCodeDelim ||
+                  la1 === tokens.InlineScriptDelim) {
+                return true;
+              }
+              // For InlineGenericDelim (':'), only parse if not followed by whitespace
+              // (unless '#' comes after the whitespace for named syntax)
+              if (la1 === tokens.InlineGenericDelim) {
+                const la2 = this.LA(2).tokenType;
+                if (la2 === tokens.Hash) {
+                  return true; // ':#name' syntax
+                }
+                if (la2 === tokens.Whitespace) {
+                  return false; // 'text: ' likely punctuation
+                }
+                return true; // ':text:' syntax
+              }
+              return false; // Not an inline element starter
+            },
+            ALT: () => this.SUBRULE(this.inlineElement)
+          },
           { ALT: () => this.SUBRULE(this.textElement) }
         ]);
         if (child) content.push(child);
@@ -616,7 +668,33 @@ export class BlocksParser extends EmbeddedActionsParser {
       GATE: () => this.LA(1).tokenType !== tokens.InlineGenericDelim,
       DEF: () => {
         const child = this.OR([
-          { ALT: () => this.SUBRULE(this.inlineElement) },
+          {
+            // Only try to parse inlineElement if it's actually an inline element
+            // Skip ':' followed by whitespace (likely punctuation, not inline generic)
+            GATE: () => {
+              const la1 = this.LA(1).tokenType;
+              // Always try to parse inline comments, code, and scripts
+              if (la1 === tokens.InlineCommentStart ||
+                  la1 === tokens.InlineCodeDelim ||
+                  la1 === tokens.InlineScriptDelim) {
+                return true;
+              }
+              // For InlineGenericDelim (':'), only parse if not followed by whitespace
+              // (unless '#' comes after the whitespace for named syntax)
+              if (la1 === tokens.InlineGenericDelim) {
+                const la2 = this.LA(2).tokenType;
+                if (la2 === tokens.Hash) {
+                  return true; // ':#name' syntax
+                }
+                if (la2 === tokens.Whitespace) {
+                  return false; // 'text: ' likely punctuation
+                }
+                return true; // ':text:' syntax
+              }
+              return false; // Not an inline element starter
+            },
+            ALT: () => this.SUBRULE(this.inlineElement)
+          },
           { ALT: () => this.SUBRULE(this.textElement) }
         ]);
         if (child) content.push(child);
@@ -661,6 +739,7 @@ export class BlocksParser extends EmbeddedActionsParser {
       { ALT: () => this.CONSUME(tokens.Dot) },
       { ALT: () => this.CONSUME(tokens.Percent) },
       { ALT: () => this.CONSUME(tokens.Equals) },
+      { ALT: () => this.CONSUME(tokens.InlineGenericDelim) }, // Allow ':' as text when not used as delimiter
       { ALT: () => this.CONSUME(tokens.AnyChar) }
     ]);
 

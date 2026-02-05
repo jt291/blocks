@@ -1,6 +1,6 @@
 import { createLexer } from './lexer/lexer.js';
 import { createParser } from './parser/parser.js';
-import type { DocumentNode } from './parser/ast.js';
+import type { DocumentNode, BlockNode, InlineNode, TextNode, GenericBlockNode, GenericInlineNode } from './parser/ast.js';
 
 export * from './parser/ast.js';
 export * from './lexer/tokens.js';
@@ -10,6 +10,61 @@ export * from './parser/parser.js';
 export interface ParseResult {
   ast: DocumentNode;
   errors: string[];
+}
+
+/**
+ * Merge consecutive Text nodes into single nodes
+ */
+function mergeTextNodes(nodes: (BlockNode | InlineNode | TextNode)[]): (BlockNode | InlineNode | TextNode)[] {
+  const merged: (BlockNode | InlineNode | TextNode)[] = [];
+  let currentText = '';
+  
+  for (const node of nodes) {
+    if (node.type === 'Text') {
+      // Accumulate text
+      currentText += (node as TextNode).value;
+    } else {
+      // Flush accumulated text
+      if (currentText) {
+        merged.push({ type: 'Text', value: currentText });
+        currentText = '';
+      }
+      
+      // Process nested content if it exists
+      if (node.type === 'GenericBlock') {
+        const genericBlock = node as GenericBlockNode;
+        merged.push({
+          ...genericBlock,
+          content: mergeTextNodes(genericBlock.content)
+        });
+      } else if (node.type === 'GenericInline') {
+        const genericInline = node as GenericInlineNode;
+        merged.push({
+          ...genericInline,
+          content: mergeTextNodes(genericInline.content) as (InlineNode | TextNode)[]
+        });
+      } else {
+        merged.push(node);
+      }
+    }
+  }
+  
+  // Flush remaining text
+  if (currentText) {
+    merged.push({ type: 'Text', value: currentText });
+  }
+  
+  return merged;
+}
+
+/**
+ * Merge text nodes in the entire AST
+ */
+function mergeTextNodesInAST(ast: DocumentNode): DocumentNode {
+  return {
+    ...ast,
+    children: mergeTextNodes(ast.children)
+  };
 }
 
 export function parse(input: string): ParseResult {
@@ -33,7 +88,10 @@ export function parse(input: string): ParseResult {
       children
     };
 
-    return { ast, errors };
+    // Merge consecutive Text nodes
+    const mergedAst = mergeTextNodesInAST(ast);
+
+    return { ast: mergedAst, errors };
   } catch (error) {
     return {
       ast: { type: 'Document', children: [] },

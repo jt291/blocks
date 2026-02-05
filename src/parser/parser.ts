@@ -86,7 +86,7 @@ function parseInlineCodeToken(tokenImage: string): {
   let coreInline: string;
   let attributes: Attributes | undefined;
 
-  if (attrsMatch && attrsMatch[1] && attrsMatch[2]) {
+  if (attrsMatch?.[1] && attrsMatch[2]) {
     coreInline = attrsMatch[1]; // The `content` part
     attributes = parseAttributesString(attrsMatch[2]); // The {attrs} part
   } else {
@@ -125,7 +125,7 @@ function parseInlineScriptToken(tokenImage: string): {
   let coreInline: string;
   let attributes: Attributes | undefined;
 
-  if (attrsMatch && attrsMatch[1] && attrsMatch[2]) {
+  if (attrsMatch?.[1] && attrsMatch[2]) {
     coreInline = attrsMatch[1]; // The !content! part
     attributes = parseAttributesString(attrsMatch[2]); // The {attrs} part
   } else {
@@ -164,7 +164,7 @@ function parseInlineGenericToken(tokenImage: string): {
   let coreInline: string;
   let attributes: Attributes | undefined;
 
-  if (attrsMatch && attrsMatch[1] && attrsMatch[2]) {
+  if (attrsMatch?.[1] && attrsMatch[2]) {
     coreInline = attrsMatch[1]; // The :content: part
     attributes = parseAttributesString(attrsMatch[2]); // The {attrs} part
   } else {

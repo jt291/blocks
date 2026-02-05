@@ -253,6 +253,59 @@
     .node-Text {
       color: #22863a;
     }
+
+    /* JSON Tree Viewer Styles */
+    .json-node {
+      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .json-line {
+      white-space: pre;
+    }
+
+    .json-key {
+      color: #881391;
+      font-weight: 500;
+    }
+
+    .json-string {
+      color: #1A1AA6;
+    }
+
+    .json-number {
+      color: #1C00CF;
+    }
+
+    .json-boolean {
+      color: #0000FF;
+    }
+
+    .json-null {
+      color: #808080;
+    }
+
+    .json-punctuation {
+      color: #000000;
+    }
+
+    .json-toggle {
+      display: inline-block;
+      width: 1.2em;
+      font-weight: bold;
+      color: #666;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .json-toggle:hover {
+      color: #000;
+    }
+
+    .json-children {
+      margin-left: 0;
+    }
   </style>
 </head>
 <body>
@@ -301,6 +354,19 @@
             <option value="complex-complete">Exemple complet</option>
             <option value="complex-document">Document complet</option>
             <option value="complex-multiple">Imbrications multiples</option>
+          </optgroup>
+          <optgroup label="Exemples avec erreurs">
+            <option value="error-comment-unclosed">Commentaire bloc non fermé</option>
+            <option value="error-comment-malformed">Commentaire bloc mal formé</option>
+            <option value="error-codeblock-unclosed">Bloc de code non fermé</option>
+            <option value="error-codeblock-mismatch">Bloc de code longueurs différentes</option>
+            <option value="error-scriptblock-unclosed">Bloc de script non fermé</option>
+            <option value="error-scriptblock-mismatch">Bloc de script longueurs différentes</option>
+            <option value="error-generic-unclosed">Bloc générique non fermé</option>
+            <option value="error-generic-mismatch">Bloc générique longueurs différentes</option>
+            <option value="error-generic-attributes">Attributs mal formés</option>
+            <option value="error-inline-code-unclosed">Code inline non fermé</option>
+            <option value="error-inline-generic-unclosed">Inline générique non fermé</option>
           </optgroup>
         </select>
       </div>
@@ -513,7 +579,57 @@ Fourth level with \`code\` and :inline:
 ::::::::::
 ::::::::
 ::::::
-:::`
+:::`,
+      
+      // Erreurs de commentaires
+      'error-comment-unclosed': `/* Ce commentaire n'est pas fermé
+Le parser attend un */`,
+      
+      'error-comment-malformed': `/* Commentaire avec délimiteur mal formé /
+Il manque l'astérisque */`,
+      
+      // Erreurs de blocs de code
+      'error-codeblock-unclosed': `\`\`\`
+Code sans fermeture
+Le parser attend \`\`\``,
+      
+      'error-codeblock-mismatch': `\`\`\`
+Code ici
+\`\`\`\`
+Le délimiteur de fermeture a 4 backticks au lieu de 3`,
+      
+      // Erreurs de blocs de script
+      'error-scriptblock-unclosed': `!!!
+Script sans fermeture
+Le parser attend !!!`,
+      
+      'error-scriptblock-mismatch': `!!!
+Script ici
+!!!!
+Le délimiteur de fermeture a 4 points d'exclamation au lieu de 3`,
+      
+      // Erreurs de blocs génériques
+      'error-generic-unclosed': `:::
+Bloc générique sans fermeture
+Le parser attend :::`,
+      
+      'error-generic-mismatch': `:::
+Bloc externe
+:::
+Bloc qui devrait être imbriqué
+:::
+Sans délimiteur plus long, le premier ::: ferme le bloc trop tôt`,
+      
+      'error-generic-attributes': `:::{#id .class
+Attributs non fermés - il manque }
+:::`,
+      
+      // Erreurs d'inlines
+      'error-inline-code-unclosed': `Texte avec \`code non fermé
+Le parser attend un backtick de fermeture`,
+      
+      'error-inline-generic-unclosed': `Texte avec :inline non fermé
+Le parser attend : de fermeture`
     };
     
     // Default example
@@ -606,8 +722,7 @@ Fourth level with \`code\` and :inline:
     // Render AST as interactive tree
     function renderAst(ast) {
       astTreeEl.innerHTML = '';
-      const tree = createNodeElement({ type: 'Document', children: ast.children }, 0, true);
-      astTreeEl.appendChild(tree);
+      renderJsonTree(ast, astTreeEl);
     }
 
     // Create tree node element
@@ -697,28 +812,10 @@ Fourth level with \`code\` and :inline:
     }
 
     // Expand all nodes
-    expandAllBtn.addEventListener('click', () => {
-      document.querySelectorAll('.ast-node-children').forEach(el => {
-        el.classList.remove('collapsed');
-      });
-      document.querySelectorAll('.toggle-icon').forEach(el => {
-        if (el.textContent.trim() === '▶') {
-          el.textContent = '▼ ';
-        }
-      });
-    });
+    expandAllBtn.addEventListener('click', expandAllJson);
 
     // Collapse all nodes
-    collapseAllBtn.addEventListener('click', () => {
-      document.querySelectorAll('.ast-node-children').forEach(el => {
-        el.classList.add('collapsed');
-      });
-      document.querySelectorAll('.toggle-icon').forEach(el => {
-        if (el.textContent.trim() === '▼') {
-          el.textContent = '▶ ';
-        }
-      });
-    });
+    collapseAllBtn.addEventListener('click', collapseAllJson);
     
     // Render AST as formatted JSON with syntax highlighting (kept for reference)
     function renderJsonAst(ast) {
@@ -767,6 +864,300 @@ Fourth level with \`code\` and :inline:
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+
+    /**
+     * Render interactive JSON tree
+     */
+    function renderJsonTree(data, container, key = null, depth = 0) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'json-node';
+      wrapper.style.marginLeft = `${depth * 1.5}rem`;
+      
+      const type = Array.isArray(data) ? 'array' : typeof data;
+      
+      if (type === 'object' && data !== null) {
+        renderObject(data, wrapper, key, depth);
+      } else if (type === 'array') {
+        renderArray(data, wrapper, key, depth);
+      } else {
+        renderPrimitive(data, wrapper, key, type);
+      }
+      
+      container.appendChild(wrapper);
+    }
+
+    /**
+     * Render an object
+     */
+    function renderObject(obj, container, key, depth) {
+      const keys = Object.keys(obj);
+      const isEmpty = keys.length === 0;
+      
+      const header = document.createElement('div');
+      header.className = 'json-line';
+      
+      if (key !== null) {
+        const keySpan = document.createElement('span');
+        keySpan.className = 'json-key';
+        keySpan.textContent = `"${key}"`;
+        header.appendChild(keySpan);
+        
+        const colon = document.createElement('span');
+        colon.className = 'json-punctuation';
+        colon.textContent = ': ';
+        header.appendChild(colon);
+      }
+      
+      let toggle = null;
+      if (!isEmpty) {
+        toggle = document.createElement('span');
+        toggle.className = 'json-toggle';
+        toggle.textContent = '▼ ';
+        toggle.style.cursor = 'pointer';
+        toggle.style.userSelect = 'none';
+        toggle.style.color = '#666';
+        header.insertBefore(toggle, header.firstChild);
+      }
+      
+      const openBrace = document.createElement('span');
+      openBrace.className = 'json-punctuation';
+      openBrace.textContent = isEmpty ? '{}' : '{';
+      header.appendChild(openBrace);
+      
+      container.appendChild(header);
+      
+      if (!isEmpty) {
+        const childrenContainer = document.createElement('div');
+        childrenContainer.className = 'json-children';
+        
+        keys.forEach((k, index) => {
+          const childWrapper = document.createElement('div');
+          childWrapper.style.marginLeft = '1.5rem';
+          
+          renderJsonTree(obj[k], childWrapper, k, 0);
+          
+          // Add comma if not last
+          if (index < keys.length - 1) {
+            const comma = document.createElement('span');
+            comma.className = 'json-punctuation';
+            comma.textContent = ',';
+            childWrapper.querySelector('.json-line').appendChild(comma);
+          }
+          
+          childrenContainer.appendChild(childWrapper);
+        });
+        
+        const closeBrace = document.createElement('div');
+        closeBrace.className = 'json-line';
+        closeBrace.style.marginLeft = '0';
+        closeBrace.innerHTML = '<span class="json-punctuation">}</span>';
+        childrenContainer.appendChild(closeBrace);
+        
+        container.appendChild(childrenContainer);
+        
+        // Toggle functionality
+        if (toggle) {
+          toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isCollapsed = childrenContainer.style.display === 'none';
+            childrenContainer.style.display = isCollapsed ? 'block' : 'none';
+            toggle.textContent = isCollapsed ? '▼ ' : '▶ ';
+            
+            // Update opening brace
+            if (isCollapsed) {
+              openBrace.textContent = '{';
+              closeBrace.style.display = 'block';
+            } else {
+              openBrace.textContent = `{ ... } (${keys.length} ${keys.length === 1 ? 'property' : 'properties'})`;
+              closeBrace.style.display = 'none';
+            }
+          });
+        }
+      }
+    }
+
+    /**
+     * Render an array
+     */
+    function renderArray(arr, container, key, depth) {
+      const isEmpty = arr.length === 0;
+      
+      const header = document.createElement('div');
+      header.className = 'json-line';
+      
+      if (key !== null) {
+        const keySpan = document.createElement('span');
+        keySpan.className = 'json-key';
+        keySpan.textContent = `"${key}"`;
+        header.appendChild(keySpan);
+        
+        const colon = document.createElement('span');
+        colon.className = 'json-punctuation';
+        colon.textContent = ': ';
+        header.appendChild(colon);
+      }
+      
+      let toggle = null;
+      if (!isEmpty) {
+        toggle = document.createElement('span');
+        toggle.className = 'json-toggle';
+        toggle.textContent = '▼ ';
+        toggle.style.cursor = 'pointer';
+        toggle.style.userSelect = 'none';
+        toggle.style.color = '#666';
+        header.insertBefore(toggle, header.firstChild);
+      }
+      
+      const openBracket = document.createElement('span');
+      openBracket.className = 'json-punctuation';
+      openBracket.textContent = isEmpty ? '[]' : '[';
+      header.appendChild(openBracket);
+      
+      container.appendChild(header);
+      
+      if (!isEmpty) {
+        const childrenContainer = document.createElement('div');
+        childrenContainer.className = 'json-children';
+        
+        arr.forEach((item, index) => {
+          const childWrapper = document.createElement('div');
+          childWrapper.style.marginLeft = '1.5rem';
+          
+          renderJsonTree(item, childWrapper, null, 0);
+          
+          // Add comma if not last
+          if (index < arr.length - 1) {
+            const comma = document.createElement('span');
+            comma.className = 'json-punctuation';
+            comma.textContent = ',';
+            childWrapper.querySelector('.json-line').appendChild(comma);
+          }
+          
+          childrenContainer.appendChild(childWrapper);
+        });
+        
+        const closeBracket = document.createElement('div');
+        closeBracket.className = 'json-line';
+        closeBracket.style.marginLeft = '0';
+        closeBracket.innerHTML = '<span class="json-punctuation">]</span>';
+        childrenContainer.appendChild(closeBracket);
+        
+        container.appendChild(childrenContainer);
+        
+        // Toggle functionality
+        if (toggle) {
+          toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isCollapsed = childrenContainer.style.display === 'none';
+            childrenContainer.style.display = isCollapsed ? 'block' : 'none';
+            toggle.textContent = isCollapsed ? '▼ ' : '▶ ';
+            
+            // Update opening bracket
+            if (isCollapsed) {
+              openBracket.textContent = '[';
+              closeBracket.style.display = 'block';
+            } else {
+              openBracket.textContent = `[ ... ] (${arr.length} ${arr.length === 1 ? 'item' : 'items'})`;
+              closeBracket.style.display = 'none';
+            }
+          });
+        }
+      }
+    }
+
+    /**
+     * Render a primitive value
+     */
+    function renderPrimitive(value, container, key, type) {
+      const line = document.createElement('div');
+      line.className = 'json-line';
+      
+      if (key !== null) {
+        const keySpan = document.createElement('span');
+        keySpan.className = 'json-key';
+        keySpan.textContent = `"${key}"`;
+        line.appendChild(keySpan);
+        
+        const colon = document.createElement('span');
+        colon.className = 'json-punctuation';
+        colon.textContent = ': ';
+        line.appendChild(colon);
+      }
+      
+      const valueSpan = document.createElement('span');
+      
+      if (type === 'string') {
+        valueSpan.className = 'json-string';
+        valueSpan.textContent = `"${escapeJsonString(value)}"`;
+      } else if (type === 'number') {
+        valueSpan.className = 'json-number';
+        valueSpan.textContent = value;
+      } else if (type === 'boolean') {
+        valueSpan.className = 'json-boolean';
+        valueSpan.textContent = value;
+      } else if (value === null) {
+        valueSpan.className = 'json-null';
+        valueSpan.textContent = 'null';
+      } else {
+        valueSpan.textContent = String(value);
+      }
+      
+      line.appendChild(valueSpan);
+      container.appendChild(line);
+    }
+
+    /**
+     * Escape JSON string
+     */
+    function escapeJsonString(str) {
+      return str
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r')
+        .replace(/\t/g, '\\t');
+    }
+
+    /**
+     * Expand all JSON nodes
+     */
+    function expandAllJson() {
+      document.querySelectorAll('.json-children').forEach(el => {
+        el.style.display = 'block';
+      });
+      document.querySelectorAll('.json-toggle').forEach(el => {
+        el.textContent = '▼ ';
+      });
+      // Reset braces/brackets text
+      document.querySelectorAll('.json-punctuation').forEach(el => {
+        if (el.textContent.includes('...')) {
+          if (el.textContent.startsWith('{')) {
+            el.textContent = '{';
+          } else if (el.textContent.startsWith('[')) {
+            el.textContent = '[';
+          }
+        }
+      });
+      // Show closing braces/brackets
+      document.querySelectorAll('.json-children').forEach(childrenContainer => {
+        const closeBrace = childrenContainer.querySelector('.json-line:last-child');
+        if (closeBrace) {
+          closeBrace.style.display = 'block';
+        }
+      });
+    }
+
+    /**
+     * Collapse all JSON nodes
+     */
+    function collapseAllJson() {
+      document.querySelectorAll('.json-children').forEach(el => {
+        el.style.display = 'none';
+      });
+      document.querySelectorAll('.json-toggle').forEach(el => {
+        el.textContent = '▶ ';
+      });
     }
     
     // Initial setup

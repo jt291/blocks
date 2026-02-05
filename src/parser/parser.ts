@@ -308,18 +308,22 @@ export class BlocksParser extends EmbeddedActionsParser {
       ]);
     });
     
-    // Parse content (can contain inlines)
-    const content: InlineNode[] = [];
+    // Parse content (can contain blocks and inlines)
+    const content: (BlockNode | InlineNode | TextNode)[] = [];
     this.MANY4({
       GATE: () => {
-        // Check if we've reached the closing delimiter with same length
-        const tok = this.LA(1) as IToken;
-        return !(tok.tokenType === tokens.BlockGenericDelim && 
-                 tok.image !== undefined && 
-                 tok.image.length === delimLength);
+        // Continue parsing until we find a closing delimiter of EXACTLY the same length
+        // This allows nested generic blocks with different lengths
+        if (this.LA(1).tokenType === tokens.BlockGenericDelim) {
+          const nextDelim = this.LA(1) as IToken;
+          // Only stop if the delimiter has EXACTLY the same length
+          return nextDelim.image.length !== delimLength;
+        }
+        return true; // Continue if it's not a delimiter at all
       },
       DEF: () => {
         const child = this.OR2([
+          { ALT: () => this.SUBRULE(this.blockElement) },
           { ALT: () => this.SUBRULE(this.inlineElement) },
           { ALT: () => this.SUBRULE(this.textElement) }
         ]);
@@ -329,9 +333,9 @@ export class BlocksParser extends EmbeddedActionsParser {
     
     const closeDelim = this.CONSUME2(tokens.BlockGenericDelim);
     
-    // Check that opening and closing delimiters have the same length
-    if (openDelim.image.length !== closeDelim.image.length) {
-      throw new Error(`Generic block delimiters must have the same length: ${openDelim.image} vs ${closeDelim.image}`);
+    // Verify exact length match (shouldn't fail with correct GATE, but safety check)
+    if (closeDelim.image.length !== delimLength) {
+      throw new Error(`Generic block closing delimiter length mismatch: expected ${delimLength} colons but got ${closeDelim.image.length}`);
     }
 
     const node: GenericBlockNode = {

@@ -633,7 +633,15 @@ export class BlocksParser extends EmbeddedActionsParser {
       { ALT: () => this.CONSUME(tokens.Content) },
       { ALT: () => this.CONSUME(tokens.Whitespace) },
       { ALT: () => this.CONSUME(tokens.Newline) },
-      { ALT: () => this.CONSUME(tokens.Identifier) }
+      { ALT: () => this.CONSUME(tokens.Identifier) },
+      { ALT: () => this.CONSUME(tokens.StringValue) },
+      { ALT: () => this.CONSUME(tokens.LBrace) },
+      { ALT: () => this.CONSUME(tokens.RBrace) },
+      { ALT: () => this.CONSUME(tokens.Hash) },
+      { ALT: () => this.CONSUME(tokens.Dot) },
+      { ALT: () => this.CONSUME(tokens.Percent) },
+      { ALT: () => this.CONSUME(tokens.Equals) },
+      { ALT: () => this.CONSUME(tokens.AnyChar) }
     ]);
 
     const node: TextNode = {

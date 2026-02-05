@@ -622,4 +622,101 @@ code
       });
     });
   });
+
+  describe('Generic blocks with HTML/XML content', () => {
+    it('should parse generic block with simple HTML', () => {
+      const result = parse(':::\n<p> content </p>\n:::');
+      
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children).toHaveLength(1);
+      const block = result.ast.children[0];
+      expect(block.type).toBe('GenericBlock');
+      expect(block.content.length).toBeGreaterThan(0);
+      // Check that HTML tags are preserved
+      const contentValues = block.content.map(n => n.value).join('');
+      expect(contentValues).toContain('<p>');
+      expect(contentValues).toContain('</p>');
+    });
+
+    it('should parse generic block with named HTML', () => {
+      const result = parse(':::#html\n<p>content</p>\n:::');
+      
+      expect(result.errors).toEqual([]);
+      const block = result.ast.children[0];
+      expect(block.type).toBe('GenericBlock');
+      expect(block.name).toBe('html');
+      const contentValues = block.content.map(n => n.value).join('');
+      expect(contentValues).toContain('<p>');
+      expect(contentValues).toContain('content');
+      expect(contentValues).toContain('</p>');
+    });
+
+    it('should parse generic block with HTML and attributes', () => {
+      const result = parse(':::#html {#id .class1}\n<p>content</p>\n:::');
+      
+      expect(result.errors).toEqual([]);
+      const block = result.ast.children[0];
+      expect(block).toMatchObject({
+        type: 'GenericBlock',
+        name: 'html',
+        attributes: {
+          id: 'id',
+          classes: ['class1']
+        }
+      });
+      const contentValues = block.content.map(n => n.value).join('');
+      expect(contentValues).toContain('<p>');
+    });
+
+    it('should parse generic block with HTML attributes in tags', () => {
+      const result = parse(':::\n<div class="test" id="main">\n  <p>text</p>\n</div>\n:::');
+      
+      expect(result.errors).toEqual([]);
+      const block = result.ast.children[0];
+      expect(block.type).toBe('GenericBlock');
+      const contentValues = block.content.map(n => n.value).join('');
+      expect(contentValues).toContain('<div');
+      expect(contentValues).toContain('class=');
+      expect(contentValues).toContain('id=');
+      expect(contentValues).toContain('</div>');
+    });
+
+    it('should parse generic block with self-closing tags', () => {
+      const result = parse(':::\n<img src="test.jpg" />\n:::');
+      
+      expect(result.errors).toEqual([]);
+      const block = result.ast.children[0];
+      const contentValues = block.content.map(n => n.value).join('');
+      expect(contentValues).toContain('<img');
+      expect(contentValues).toContain('/>');
+    });
+
+    it('should parse generic block with mixed content', () => {
+      const result = parse(':::#container\ntext with `code` and <strong>HTML</strong>\n:::');
+      
+      expect(result.errors).toEqual([]);
+      const block = result.ast.children[0];
+      expect(block.type).toBe('GenericBlock');
+      expect(block.name).toBe('container');
+      // Should contain text nodes, code inline, and HTML characters
+      expect(block.content.length).toBeGreaterThan(0);
+      // Check for code inline
+      const hasCodeInline = block.content.some(n => n.type === 'CodeInline');
+      expect(hasCodeInline).toBe(true);
+      // Check for HTML tags in text nodes
+      const contentValues = block.content.map(n => n.value || '').join('');
+      expect(contentValues).toContain('<strong>');
+      expect(contentValues).toContain('</strong>');
+    });
+
+    it('should parse nested generic blocks with HTML', () => {
+      const result = parse(':::::\n:::#inner\n<p>content</p>\n:::\n:::::');
+      
+      // Note: The parser currently doesn't support nested generic blocks this way
+      // The inner ::: closes the outer ::::: because delimiter matching is by length
+      // This test documents the current behavior
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors[0]).toContain('Generic block delimiters must have the same length');
+    });
+  });
 });

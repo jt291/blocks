@@ -80,7 +80,23 @@ export function parse(input: string): ParseResult {
 
     const errors: string[] = [];
     if (parser.errors.length > 0) {
-      errors.push(...parser.errors.map(e => e.message));
+      // Safely extract error messages, handling various error formats
+      for (const e of parser.errors) {
+        try {
+          if (typeof e === 'string') {
+            errors.push(e);
+          } else if (e && typeof e === 'object') {
+            // Try to get message from error object
+            const message = (e as any).message || JSON.stringify(e);
+            errors.push(String(message));
+          } else {
+            errors.push(String(e));
+          }
+        } catch (errExtract) {
+          // If error extraction fails, provide a helpful message
+          errors.push('Parser error occurred but could not extract error message');
+        }
+      }
     }
 
     const ast: DocumentNode = {
@@ -93,9 +109,30 @@ export function parse(input: string): ParseResult {
 
     return { ast: mergedAst, errors };
   } catch (error) {
+    // Provide better error messages for common parsing issues
+    let errorMessage = 'Unknown parsing error';
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      
+      // Check for common error patterns and provide helpful messages
+      if (errorMessage.includes('not iterable') || errorMessage.includes('undefined') || errorMessage.includes('not an object')) {
+        // This often indicates an unclosed delimiter or length mismatch
+        errorMessage = 'Parsing error: Unclosed or mismatched delimiter detected. Common issues:\n' +
+          '  - Code block: Missing closing ``` or different number of backticks\n' +
+          '  - Script block: Missing closing !!! or different number of exclamation marks\n' +
+          '  - Generic block: Missing closing ::: or different number of colons\n' +
+          '  - Inline code: Missing closing `\n' +
+          '  - Inline script: Missing closing !\n' +
+          '  - Inline generic: Missing closing :';
+      }
+    } else {
+      errorMessage = String(error);
+    }
+    
     return {
       ast: { type: 'Document', children: [] },
-      errors: [error instanceof Error ? error.message : String(error)]
+      errors: [errorMessage]
     };
   }
 }

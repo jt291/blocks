@@ -116,7 +116,8 @@ export class BlocksParser extends EmbeddedActionsParser {
 
   // Code block: ```#name? {attrs?} content ```
   private codeBlock = this.RULE('codeBlock', (): CodeBlockNode => {
-    this.CONSUME(tokens.BlockCodeDelim);
+    const openDelim = this.CONSUME(tokens.BlockCodeDelim);
+    const openDelimLength = openDelim.image.length;
     
     // Skip leading whitespace
     this.MANY(() => {
@@ -179,7 +180,12 @@ export class BlocksParser extends EmbeddedActionsParser {
       if (tok) contentTokens.push(tok);
     });
     
-    this.CONSUME2(tokens.BlockCodeDelim);
+    const closeDelim = this.CONSUME2(tokens.BlockCodeDelim);
+    
+    // Verify exact length match
+    if (closeDelim.image.length !== openDelimLength) {
+      throw new Error(`Code block closing delimiter length mismatch: expected ${openDelimLength} backticks but got ${closeDelim.image.length}`);
+    }
 
     const node: CodeBlockNode = {
       type: 'CodeBlock',
@@ -194,7 +200,8 @@ export class BlocksParser extends EmbeddedActionsParser {
 
   // Script block: !!!#name? {attrs?} content !!!
   private scriptBlock = this.RULE('scriptBlock', (): ScriptBlockNode => {
-    this.CONSUME(tokens.BlockScriptDelim);
+    const openDelim = this.CONSUME(tokens.BlockScriptDelim);
+    const openDelimLength = openDelim.image.length;
     
     // Skip leading whitespace
     this.MANY(() => {
@@ -257,7 +264,12 @@ export class BlocksParser extends EmbeddedActionsParser {
       if (tok) contentTokens.push(tok);
     });
     
-    this.CONSUME2(tokens.BlockScriptDelim);
+    const closeDelim = this.CONSUME2(tokens.BlockScriptDelim);
+    
+    // Verify exact length match
+    if (closeDelim.image.length !== openDelimLength) {
+      throw new Error(`Script block closing delimiter length mismatch: expected ${openDelimLength} exclamation marks but got ${closeDelim.image.length}`);
+    }
 
     const node: ScriptBlockNode = {
       type: 'ScriptBlock',

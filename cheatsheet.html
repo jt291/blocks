@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blocks Language Cheatsheet</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: #f5f5f5;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+
+    .content {
+      padding: 2rem;
+    }
+
+    .section {
+      margin-bottom: 3rem;
+    }
+
+    .section h2 {
+      font-size: 1.8rem;
+      color: #667eea;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 3px solid #667eea;
+    }
+
+    .section h3 {
+      font-size: 1.3rem;
+      color: #764ba2;
+      margin: 1.5rem 0 1rem 0;
+    }
+
+    .syntax-item {
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border-left: 4px solid #667eea;
+    }
+
+    .syntax-item h4 {
+      font-size: 1.1rem;
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+
+    .syntax-item p {
+      margin-bottom: 1rem;
+      color: #666;
+    }
+
+    .code-example {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 1rem;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .code-example pre {
+      margin: 0;
+    }
+
+    .result {
+      background: #e8f5e9;
+      padding: 1rem;
+      border-radius: 4px;
+      border-left: 4px solid #4caf50;
+      margin-top: 0.5rem;
+    }
+
+    .result::before {
+      content: '→ Résultat : ';
+      font-weight: 600;
+      color: #2e7d32;
+    }
+
+    .note {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 4px;
+    }
+
+    .note::before {
+      content: '💡 ';
+      font-weight: 600;
+    }
+
+    .warning {
+      background: #ffebee;
+      border-left: 4px solid #f44336;
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 4px;
+    }
+
+    .warning::before {
+      content: '⚠️ ';
+      font-weight: 600;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background: #667eea;
+      color: white;
+      font-weight: 600;
+    }
+
+    tr:hover {
+      background: #f5f5f5;
+    }
+
+    code {
+      background: #f4f4f4;
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+      font-size: 0.9em;
+      color: #e83e8c;
+    }
+
+    .toc {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 6px;
+      margin-bottom: 2rem;
+    }
+
+    .toc h3 {
+      margin-bottom: 1rem;
+      color: #667eea;
+    }
+
+    .toc ul {
+      list-style: none;
+    }
+
+    .toc li {
+      margin-bottom: 0.5rem;
+    }
+
+    .toc a {
+      color: #667eea;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .toc a:hover {
+      color: #764ba2;
+      text-decoration: underline;
+    }
+
+    footer {
+      background: #2d2d2d;
+      color: #f8f8f2;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      .container {
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📚 Blocks Language</h1>
+      <p>Guide de référence complet de la syntaxe</p>
+    </header>
+
+    <div class="content">
+      <!-- Table des matières -->
+      <div class="toc">
+        <h3>Table des matières</h3>
+        <ul>
+          <li><a href="#commentaires">1. Commentaires</a></li>
+          <li><a href="#code">2. Blocs et inlines de code</a></li>
+          <li><a href="#script">3. Blocs et inlines de script</a></li>
+          <li><a href="#generic">4. Blocs et inlines génériques</a></li>
+          <li><a href="#attributs">5. Attributs</a></li>
+          <li><a href="#imbrication">6. Imbrication</a></li>
+          <li><a href="#nommage">7. Nommage</a></li>
+        </ul>
+      </div>
+
+      <!-- 1. Commentaires -->
+      <section id="commentaires" class="section">
+        <h2>1. 📝 Commentaires</h2>
+
+        <div class="syntax-item">
+          <h4>Commentaire de bloc</h4>
+          <p>Commentaire multi-lignes qui n'apparaît pas dans le résultat final.</p>
+          <div class="code-example"><pre>/* Ceci est un commentaire
+   sur plusieurs lignes */</pre></div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Commentaire de bloc nommé</h4>
+          <p>Commentaire avec un identifiant pour référence ou traitement spécifique.</p>
+          <div class="code-example"><pre>/*#note Ce commentaire a un nom */</pre></div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Commentaire inline</h4>
+          <p>Commentaire sur une seule ligne, intégré dans le texte.</p>
+          <div class="code-example"><pre>Texte avant // commentaire inline // texte après</pre></div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Commentaire inline nommé</h4>
+          <p>Commentaire inline avec un identifiant.</p>
+          <div class="code-example"><pre>Texte //#todo à compléter // suite</pre></div>
+        </div>
+      </section>
+
+      <!-- 2. Code -->
+      <section id="code" class="section">
+        <h2>2. 💻 Blocs et inlines de code</h2>
+
+        <div class="syntax-item">
+          <h4>Bloc de code simple</h4>
+          <p>Bloc de code avec minimum 3 backticks.</p>
+          <div class="code-example"><pre>```
+const x = 1;
+console.log(x);
+```</pre></div>
+          <div class="result">CodeBlock avec le contenu</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Bloc de code nommé</h4>
+          <p>Bloc de code avec un langage ou un identifiant.</p>
+          <div class="code-example"><pre>```#javascript
+const greet = () =&gt; 'Hello';
+```</pre></div>
+          <div class="result">CodeBlock avec name="javascript"</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Bloc de code avec attributs</h4>
+          <p>Bloc de code enrichi avec des métadonnées.</p>
+          <div class="code-example"><pre>```#python {#example .highlighted}
+print("Hello World")
+```</pre></div>
+          <div class="result">CodeBlock avec name="python" et attributs (id, classes)</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Code inline simple</h4>
+          <p>Code intégré dans une ligne de texte.</p>
+          <div class="code-example"><pre>La variable `count` contient la valeur.</pre></div>
+          <div class="result">Text + CodeInline + Text</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Code inline nommé</h4>
+          <p>Code inline avec un identifiant de langage.</p>
+          <div class="code-example"><pre>Utilisez `#js console.log()` pour déboguer.</pre></div>
+          <div class="result">CodeInline avec name="js"</div>
+        </div>
+
+        <div class="note">
+          Les backticks d'ouverture et de fermeture doivent avoir le <strong>même nombre</strong> de caractères.
+        </div>
+      </section>
+
+      <!-- 3. Script -->
+      <section id="script" class="section">
+        <h2>3. ⚡ Blocs et inlines de script</h2>
+
+        <div class="syntax-item">
+          <h4>Bloc de script simple</h4>
+          <p>Bloc de script exécutable avec minimum 3 points d'exclamation.</p>
+          <div class="code-example"><pre>!!!
+alert('Hello');
+!!!</pre></div>
+          <div class="result">ScriptBlock avec le contenu</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Bloc de script nommé</h4>
+          <p>Bloc de script avec un identifiant.</p>
+          <div class="code-example"><pre>!!!#init
+setupApplication();
+!!!</pre></div>
+          <div class="result">ScriptBlock avec name="init"</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Script inline simple</h4>
+          <p>Script exécutable intégré dans le texte.</p>
+          <div class="code-example"><pre>Cliquez !alert('Bonjour')! pour tester.</pre></div>
+          <div class="result">Text + ScriptInline + Text</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Script inline nommé</h4>
+          <p>Script inline avec un identifiant.</p>
+          <div class="code-example"><pre>Action !#onclick handleClick()! ici.</pre></div>
+          <div class="result">ScriptInline avec name="onclick"</div>
+        </div>
+
+        <div class="warning">
+          Les délimiteurs d'ouverture et de fermeture doivent avoir le <strong>même nombre</strong> de points d'exclamation.
+        </div>
+      </section>
+
+      <!-- 4. Generic -->
+      <section id="generic" class="section">
+        <h2>4. 📦 Blocs et inlines génériques</h2>
+
+        <div class="syntax-item">
+          <h4>Bloc générique simple</h4>
+          <p>Bloc conteneur générique avec minimum 3 deux-points.</p>
+          <div class="code-example"><pre>:::
+Contenu du bloc
+:::</pre></div>
+          <div class="result">GenericBlock avec le contenu</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Bloc générique nommé</h4>
+          <p>Bloc avec un nom de type (div, section, aside, etc.).</p>
+          <div class="code-example"><pre>:::#container
+Contenu de mon conteneur
+:::</pre></div>
+          <div class="result">GenericBlock avec name="container"</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Bloc générique avec attributs</h4>
+          <p>Bloc enrichi avec ID, classes, options et paires clé-valeur.</p>
+          <div class="code-example"><pre>:::#section {#intro .highlight .bordered &amp;active}
+Contenu avec attributs
+:::</pre></div>
+          <div class="result">GenericBlock avec name="section" et attributs complets</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Inline générique simple</h4>
+          <p>Conteneur inline générique.</p>
+          <div class="code-example"><pre>Texte avec :emphase: intégrée.</pre></div>
+          <div class="result">Text + GenericInline + Text</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Inline générique nommé</h4>
+          <p>Inline avec un nom de type.</p>
+          <div class="code-example"><pre>Voici un :#span texte stylé: dans la phrase.</pre></div>
+          <div class="result">GenericInline avec name="span"</div>
+        </div>
+      </section>
+
+      <!-- 5. Attributs -->
+      <section id="attributs" class="section">
+        <h2>5. 🏷️ Attributs</h2>
+
+        <p>Les attributs sont spécifiés entre accolades <code>{}</code> et peuvent être combinés.</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Syntaxe</th>
+              <th>Exemple</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>ID</strong></td>
+              <td><code>#identifiant</code></td>
+              <td><code>{#main}</code></td>
+              <td>Identifiant unique</td>
+            </tr>
+            <tr>
+              <td><strong>Classe</strong></td>
+              <td><code>.classe</code></td>
+              <td><code>{.button}</code></td>
+              <td>Classe CSS</td>
+            </tr>
+            <tr>
+              <td><strong>Option</strong></td>
+              <td><code>&amp;option</code></td>
+              <td><code>{&amp;active}</code></td>
+              <td>Drapeau booléen</td>
+            </tr>
+            <tr>
+              <td><strong>Clé-valeur</strong></td>
+              <td><code>key=value</code></td>
+              <td><code>{data-id=123}</code></td>
+              <td>Paire clé-valeur</td>
+            </tr>
+            <tr>
+              <td><strong>Combiné</strong></td>
+              <td>Plusieurs attributs</td>
+              <td><code>{#main .box &amp;visible size=large}</code></td>
+              <td>Tous les types combinés</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="syntax-item">
+          <h4>Exemple complet d'attributs</h4>
+          <div class="code-example"><pre>:::#article {#post-1 .featured .highlight &amp;published author=John date=2024}
+Contenu de l'article
+:::</pre></div>
+          <div class="result">
+            GenericBlock avec :<br>
+            - name: "article"<br>
+            - id: "post-1"<br>
+            - classes: ["featured", "highlight"]<br>
+            - options: ["published"]<br>
+            - keyValues: {author: "John", date: "2024"}
+          </div>
+        </div>
+
+        <div class="note">
+          Les attributs doivent être fermés avec <code>}</code>. Plusieurs attributs peuvent être séparés par des espaces.
+        </div>
+      </section>
+
+      <!-- 6. Imbrication -->
+      <section id="imbrication" class="section">
+        <h2>6. 🪆 Imbrication</h2>
+
+        <p>Les blocs génériques peuvent être imbriqués en utilisant des délimiteurs de <strong>longueurs différentes</strong>.</p>
+
+        <div class="syntax-item">
+          <h4>Imbrication simple (2 niveaux)</h4>
+          <div class="code-example"><pre>:::
+Bloc externe
+:::::
+Bloc interne (plus de deux-points)
+:::::
+Suite du bloc externe
+:::</pre></div>
+          <div class="result">GenericBlock contenant un GenericBlock imbriqué</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Imbrication multiple (3 niveaux)</h4>
+          <div class="code-example"><pre>:::
+Niveau 1
+:::::
+Niveau 2
+:::::::
+Niveau 3
+:::::::
+Fin niveau 2
+:::::
+Fin niveau 1
+:::</pre></div>
+          <div class="result">Trois niveaux de GenericBlock imbriqués</div>
+        </div>
+
+        <div class="warning">
+          <strong>Important :</strong> Pour imbriquer des blocs, le bloc interne DOIT avoir PLUS de délimiteurs que le bloc externe. Sinon, le premier délimiteur fermera le bloc externe et le reste sera considéré comme du texte.
+        </div>
+
+        <div class="syntax-item">
+          <h4>❌ Erreur courante : même longueur</h4>
+          <div class="code-example"><pre>:::
+Bloc externe
+:::
+Ceci N'EST PAS un bloc interne
+:::
+:::</pre></div>
+          <div class="result">Le premier <code>:::</code> ferme le bloc, le reste est du texte normal</div>
+        </div>
+      </section>
+
+      <!-- 7. Nommage -->
+      <section id="nommage" class="section">
+        <h2>7. 🏷️ Nommage</h2>
+
+        <p>Les blocs et inlines peuvent avoir un nom précédé de <code>#</code>.</p>
+
+        <div class="syntax-item">
+          <h4>Blocs nommés</h4>
+          <div class="code-example"><pre>```#javascript
+code
+```
+
+!!!#init
+script
+!!!
+
+:::#container
+contenu
+:::</pre></div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Inlines nommés</h4>
+          <div class="code-example"><pre>`#js code`
+!#click script!
+:#span texte:</pre></div>
+        </div>
+
+        <div class="note">
+          Le nom peut contenir des lettres, chiffres, tirets et underscores : <code>[a-zA-Z0-9_-]+</code>
+        </div>
+      </section>
+
+    </div>
+
+    <footer>
+      <p><strong>Blocks Language</strong> - Un langage de balisage extensible et lisible</p>
+      <p style="margin-top: 0.5rem; opacity: 0.7;">Pour plus d'informations, consultez la documentation complète</p>
+    </footer>
+  </div>
+</body>
+</html>

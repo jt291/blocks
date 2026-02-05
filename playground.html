@@ -167,6 +167,32 @@
     }
     
     /* Styles for examples select */
+    .editor-controls {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    #cheatsheetBtn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    #cheatsheetBtn:hover {
+      background: #5568d3;
+    }
+
+    #cheatsheetBtn:active {
+      transform: translateY(1px);
+    }
+
     #examplesSelect {
       padding: 0.375rem 0.75rem;
       border: 1px solid #ddd;
@@ -339,8 +365,10 @@
     <div class="panel">
       <div class="panel-header">
         Editor
-        <select id="examplesSelect">
-          <option value="">-- Select an example --</option>
+        <div class="editor-controls">
+          <button id="cheatsheetBtn" title="Open the cheatsheet">📖 Cheatsheet</button>
+          <select id="examplesSelect">
+            <option value="">-- Select an example --</option>
           <optgroup label="Commentaires">
             <option value="comment-block-simple">Commentaire de bloc simple</option>
             <option value="comment-block-named">Commentaire de bloc nommé</option>
@@ -394,6 +422,7 @@
             <option value="error-attributes-invalid-syntax">Attributs syntaxe invalide</option>
           </optgroup>
         </select>
+        </div>
       </div>
       <div class="panel-content">
         <div class="editor-container">
@@ -806,6 +835,12 @@ Contenu
         updateLineNumbers();
         parseCode();
       }
+    });
+
+    // Open cheatsheet in new tab
+    const cheatsheetBtn = document.getElementById('cheatsheetBtn');
+    cheatsheetBtn.addEventListener('click', () => {
+      window.open('cheatsheet.html', '_blank', 'noopener,noreferrer');
     });
     
     // Debounced parse

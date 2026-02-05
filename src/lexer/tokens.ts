@@ -1,117 +1,117 @@
-import { createToken, EOF as ChevrotainEOF } from 'chevrotain';
+import { EOF as ChevrotainEOF, createToken } from "chevrotain";
 
 // Export EOF token from Chevrotain
 export const EOF = ChevrotainEOF;
 
 // Whitespace and structural tokens
 export const Whitespace = createToken({
-  name: 'Whitespace',
-  pattern: /[ \t]+/
+  name: "Whitespace",
+  pattern: /[ \t]+/,
 });
 
 export const Newline = createToken({
-  name: 'Newline',
-  pattern: /\n|\r\n/
+  name: "Newline",
+  pattern: /\n|\r\n/,
 });
 
 // Block delimiters
 export const BlockCommentStart = createToken({
-  name: 'BlockCommentStart',
-  pattern: /\/\*/
+  name: "BlockCommentStart",
+  pattern: /\/\*/,
 });
 
 export const BlockCommentEnd = createToken({
-  name: 'BlockCommentEnd',
-  pattern: /\*\//
+  name: "BlockCommentEnd",
+  pattern: /\*\//,
 });
 
 export const BlockCodeDelim = createToken({
-  name: 'BlockCodeDelim',
-  pattern: /`{3,}/  // 3 or more backticks
+  name: "BlockCodeDelim",
+  pattern: /`{3,}/, // 3 or more backticks
 });
 
 export const BlockScriptDelim = createToken({
-  name: 'BlockScriptDelim',
-  pattern: /!{3,}/  // 3 or more exclamation marks
+  name: "BlockScriptDelim",
+  pattern: /!{3,}/, // 3 or more exclamation marks
 });
 
 export const BlockGenericDelim = createToken({
-  name: 'BlockGenericDelim',
-  pattern: /:{3,}/  // 3 or more colons
+  name: "BlockGenericDelim",
+  pattern: /:{3,}/, // 3 or more colons
 });
 
 // Inline delimiters
 export const InlineCommentStart = createToken({
-  name: 'InlineCommentStart',
-  pattern: /\/\//
+  name: "InlineCommentStart",
+  pattern: /\/\//,
 });
 
 export const InlineCodeDelim = createToken({
-  name: 'InlineCodeDelim',
-  pattern: /`/
+  name: "InlineCodeDelim",
+  pattern: /`/,
 });
 
 export const InlineScriptDelim = createToken({
-  name: 'InlineScriptDelim',
-  pattern: /!/
+  name: "InlineScriptDelim",
+  pattern: /!/,
 });
 
 export const InlineGenericDelim = createToken({
-  name: 'InlineGenericDelim',
-  pattern: /:/
+  name: "InlineGenericDelim",
+  pattern: /:/,
 });
 
 // Attribute tokens
 export const LBrace = createToken({
-  name: 'LBrace',
-  pattern: /{/
+  name: "LBrace",
+  pattern: /{/,
 });
 
 export const RBrace = createToken({
-  name: 'RBrace',
-  pattern: /}/
+  name: "RBrace",
+  pattern: /}/,
 });
 
 export const Hash = createToken({
-  name: 'Hash',
-  pattern: /#/
+  name: "Hash",
+  pattern: /#/,
 });
 
 export const Dot = createToken({
-  name: 'Dot',
-  pattern: /\./
+  name: "Dot",
+  pattern: /\./,
 });
 
 export const Percent = createToken({
-  name: 'Percent',
-  pattern: /%/
+  name: "Percent",
+  pattern: /%/,
 });
 
 export const Equals = createToken({
-  name: 'Equals',
-  pattern: /=/
+  name: "Equals",
+  pattern: /=/,
 });
 
 // Identifier for names, keys, values
 export const Identifier = createToken({
-  name: 'Identifier',
-  pattern: /[a-zA-Z_][a-zA-Z0-9_-]*/
+  name: "Identifier",
+  pattern: /[a-zA-Z_][a-zA-Z0-9_-]*/,
 });
 
 export const StringValue = createToken({
-  name: 'StringValue',
-  pattern: /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^\s{}#.%=`!:]+/
+  name: "StringValue",
+  pattern: /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^\s{}#.%=`!:]+/,
 });
 
 // Content token - matches any character sequence
 export const Content = createToken({
-  name: 'Content',
-  pattern: /[^/*:`!{}\n]+/
+  name: "Content",
+  pattern: /[^/*:`!{}\n]+/,
 });
 
 export const AnyChar = createToken({
-  name: 'AnyChar',
-  pattern: /./
+  name: "AnyChar",
+  pattern: /./,
 });
 
 // All tokens array for the lexer
@@ -136,5 +136,5 @@ export const allTokens = [
   Identifier,
   StringValue,
   Content,
-  AnyChar
+  AnyChar,
 ];

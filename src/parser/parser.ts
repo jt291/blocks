@@ -64,7 +64,7 @@ function parseAttributesString(attrsStr: string): Attributes | undefined {
       const [key, ...valueParts] = part.split("=");
       if (key) {
         const value = valueParts.join("="); // Handle = in value
-        attrs.keyValues[key] = value.replace(/^["']|["']$/g, ""); // Remove quotes if present
+        attrs.keyValues[key] = value; // Keep quotes as-is to match old behavior
       }
     }
   }
@@ -259,6 +259,14 @@ export class BlocksParser extends EmbeddedActionsParser {
         { ALT: () => this.CONSUME2(tokens.Whitespace) },
         { ALT: () => this.CONSUME(tokens.Newline) },
         { ALT: () => this.CONSUME(tokens.InlineCommentStart) },
+        // Complete inline tokens (can appear in block content)
+        { ALT: () => this.CONSUME(tokens.InlineCodeCompleteWithAttrs) },
+        { ALT: () => this.CONSUME(tokens.InlineCodeComplete) },
+        { ALT: () => this.CONSUME(tokens.InlineScriptCompleteWithAttrs) },
+        { ALT: () => this.CONSUME(tokens.InlineScriptComplete) },
+        { ALT: () => this.CONSUME(tokens.InlineGenericCompleteWithAttrs) },
+        { ALT: () => this.CONSUME(tokens.InlineGenericComplete) },
+        // Individual delimiters (punctuation)
         { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
         { ALT: () => this.CONSUME(tokens.InlineScriptDelim) },
         { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
@@ -338,6 +346,14 @@ export class BlocksParser extends EmbeddedActionsParser {
         { ALT: () => this.CONSUME4(tokens.Whitespace) },
         { ALT: () => this.CONSUME2(tokens.Newline) },
         { ALT: () => this.CONSUME(tokens.InlineCommentStart) },
+        // Complete inline tokens (can appear in block content)
+        { ALT: () => this.CONSUME(tokens.InlineCodeCompleteWithAttrs) },
+        { ALT: () => this.CONSUME(tokens.InlineCodeComplete) },
+        { ALT: () => this.CONSUME(tokens.InlineScriptCompleteWithAttrs) },
+        { ALT: () => this.CONSUME(tokens.InlineScriptComplete) },
+        { ALT: () => this.CONSUME(tokens.InlineGenericCompleteWithAttrs) },
+        { ALT: () => this.CONSUME(tokens.InlineGenericComplete) },
+        // Individual delimiters (punctuation)
         { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
         { ALT: () => this.CONSUME(tokens.InlineScriptDelim) },
         { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
@@ -427,6 +443,14 @@ export class BlocksParser extends EmbeddedActionsParser {
         { ALT: () => this.CONSUME4(tokens.Whitespace) },
         { ALT: () => this.CONSUME2(tokens.Newline) },
         { ALT: () => this.CONSUME(tokens.InlineCommentStart) },
+        // Complete inline tokens (can appear in block content)
+        { ALT: () => this.CONSUME(tokens.InlineCodeCompleteWithAttrs) },
+        { ALT: () => this.CONSUME(tokens.InlineCodeComplete) },
+        { ALT: () => this.CONSUME(tokens.InlineScriptCompleteWithAttrs) },
+        { ALT: () => this.CONSUME(tokens.InlineScriptComplete) },
+        { ALT: () => this.CONSUME(tokens.InlineGenericCompleteWithAttrs) },
+        { ALT: () => this.CONSUME(tokens.InlineGenericComplete) },
+        // Individual delimiters (punctuation)
         { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
         { ALT: () => this.CONSUME(tokens.InlineScriptDelim) },
         { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
@@ -589,6 +613,14 @@ export class BlocksParser extends EmbeddedActionsParser {
         { ALT: () => this.CONSUME2(tokens.Identifier) },
         { ALT: () => this.CONSUME(tokens.Content) },
         { ALT: () => this.CONSUME2(tokens.Whitespace) },
+        // Complete inline tokens (can appear in inline comment)
+        { ALT: () => this.CONSUME(tokens.InlineCodeCompleteWithAttrs) },
+        { ALT: () => this.CONSUME(tokens.InlineCodeComplete) },
+        { ALT: () => this.CONSUME(tokens.InlineScriptCompleteWithAttrs) },
+        { ALT: () => this.CONSUME(tokens.InlineScriptComplete) },
+        { ALT: () => this.CONSUME(tokens.InlineGenericCompleteWithAttrs) },
+        { ALT: () => this.CONSUME(tokens.InlineGenericComplete) },
+        // Individual delimiters (punctuation)
         { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
         { ALT: () => this.CONSUME(tokens.InlineScriptDelim) },
         { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },

@@ -51,25 +51,25 @@ describe("Lexer", () => {
     expect(result.tokens[0].tokenType).toBe(tokens.InlineCommentStart);
   });
 
-  it("should tokenize inline code delimiter", () => {
+  it("should tokenize inline code complete", () => {
     const lexer = createLexer();
     const result = lexer.tokenize("`code`");
 
-    expect(result.tokens[0].tokenType).toBe(tokens.InlineCodeDelim);
+    expect(result.tokens[0].tokenType).toBe(tokens.InlineCodeComplete);
   });
 
-  it("should tokenize inline script delimiter", () => {
+  it("should tokenize inline script complete", () => {
     const lexer = createLexer();
     const result = lexer.tokenize("!script!");
 
-    expect(result.tokens[0].tokenType).toBe(tokens.InlineScriptDelim);
+    expect(result.tokens[0].tokenType).toBe(tokens.InlineScriptComplete);
   });
 
-  it("should tokenize inline generic delimiter", () => {
+  it("should tokenize inline generic complete", () => {
     const lexer = createLexer();
     const result = lexer.tokenize(":text:");
 
-    expect(result.tokens[0].tokenType).toBe(tokens.InlineGenericDelim);
+    expect(result.tokens[0].tokenType).toBe(tokens.InlineGenericComplete);
   });
 
   it("should tokenize attributes", () => {

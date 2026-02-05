@@ -43,33 +43,33 @@ export const BlockGenericDelim = createToken({
 // Inline delimiters - Complete patterns with attributes (MUST be before patterns without attributes)
 export const InlineCodeCompleteWithAttrs = createToken({
   name: "InlineCodeCompleteWithAttrs",
-  pattern: /`[^`\n]+`\s*\{[^}]+\}/,
+  pattern: /`[^`\n]*`\s*\{[^}]+\}/,
 });
 
 export const InlineScriptCompleteWithAttrs = createToken({
   name: "InlineScriptCompleteWithAttrs",
-  pattern: /![^!\n]+!\s*\{[^}]+\}/,
+  pattern: /![^!\n]*!\s*\{[^}]+\}/,
 });
 
 export const InlineGenericCompleteWithAttrs = createToken({
   name: "InlineGenericCompleteWithAttrs",
-  pattern: /:[^:\n]+:\s*\{[^}]+\}/,
+  pattern: /:[^:\n]*:\s*\{[^}]+\}/,
 });
 
 // Inline delimiters - Complete patterns without attributes
 export const InlineCodeComplete = createToken({
   name: "InlineCodeComplete",
-  pattern: /`[^`\n]+`/,
+  pattern: /`[^`\n]*`/,
 });
 
 export const InlineScriptComplete = createToken({
   name: "InlineScriptComplete",
-  pattern: /![^!\n]+!/,
+  pattern: /![^!\n]*!/,
 });
 
 export const InlineGenericComplete = createToken({
   name: "InlineGenericComplete",
-  pattern: /:[^:\n]+:/,
+  pattern: /:[^:\n]*:/,
 });
 
 // Inline comment (special case - goes to end of line)

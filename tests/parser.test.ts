@@ -917,7 +917,7 @@ more text
       expect(result.ast.children[1].type).toBe("CodeInline");
       expect(result.ast.children[2]).toEqual({
         type: "Text",
-        value: "text2",
+        value: " text2", // Space is preserved from input
       });
     });
 

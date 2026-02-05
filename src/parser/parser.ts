@@ -18,7 +18,7 @@ import type {
 export class BlocksParser extends EmbeddedActionsParser {
   constructor() {
     super(tokens.allTokens, {
-      recoveryEnabled: true,
+      recoveryEnabled: false,
       nodeLocationTracking: 'full'
     });
     this.performSelfAnalysis();
@@ -186,7 +186,7 @@ export class BlocksParser extends EmbeddedActionsParser {
     // Verify exact length match
     if (openDelimLength !== closeLength) {
       const line = closeDelim.startLine || closeDelim.endLine;
-      throw new Error(`Code block closing delimiter length mismatch: expected ${openDelimLength} backtick${openDelimLength > 1 ? 's' : ''} but got ${closeLength} (line ${line})`);
+      throw new Error(`Code block closing delimiter length mismatch: expected ${openDelimLength} backtick${openDelimLength > 1 ? 's' : ''} but got ${closeLength} at line ${line} (opened at line ${openDelim.startLine})`);
     }
 
     const node: CodeBlockNode = {
@@ -272,7 +272,7 @@ export class BlocksParser extends EmbeddedActionsParser {
     // Verify exact length match
     if (openDelimLength !== closeLength) {
       const line = closeDelim.startLine || closeDelim.endLine;
-      throw new Error(`Script block closing delimiter length mismatch: expected ${openDelimLength} exclamation mark${openDelimLength > 1 ? 's' : ''} but got ${closeLength} (line ${line})`);
+      throw new Error(`Script block closing delimiter length mismatch: expected ${openDelimLength} exclamation mark${openDelimLength > 1 ? 's' : ''} but got ${closeLength} at line ${line} (opened at line ${openDelim.startLine})`);
     }
 
     const node: ScriptBlockNode = {

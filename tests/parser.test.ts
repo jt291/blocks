@@ -942,23 +942,25 @@ more text
       const result = parse('```javascript\nconst x = 1;\n');
       
       expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toContain('Unclosed or mismatched delimiter');
-      expect(result.errors[0]).toContain('Code block');
+      expect(result.errors[0]).toContain('Parse error at line');
+      expect(result.errors[0]).toContain('Expected closing backticks');
+      expect(result.errors[0]).toContain('code block');
     });
 
     it('should provide clear error message for unclosed script block', () => {
       const result = parse('!!!\nalert("test");\n');
       
       expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toContain('Unclosed or mismatched delimiter');
-      expect(result.errors[0]).toContain('Script block');
+      expect(result.errors[0]).toContain('Parse error at line');
+      expect(result.errors[0]).toContain('Expected closing exclamation marks');
+      expect(result.errors[0]).toContain('script block');
     });
 
     it('should provide clear error message for code block length mismatch', () => {
       const result = parse('```\ncode\n````');
       
       expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toContain('Unclosed or mismatched delimiter');
+      expect(result.errors[0]).toContain('delimiter length mismatch');
       expect(result.errors[0]).toContain('backticks');
     });
 
@@ -966,7 +968,7 @@ more text
       const result = parse('!!!\nscript\n!!!!');
       
       expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toContain('Unclosed or mismatched delimiter');
+      expect(result.errors[0]).toContain('delimiter length mismatch');
       expect(result.errors[0]).toContain('exclamation marks');
     });
 
@@ -974,24 +976,27 @@ more text
       const result = parse('Text with `unclosed code');
       
       expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toContain('Unclosed or mismatched delimiter');
-      expect(result.errors[0]).toContain('Inline code');
+      expect(result.errors[0]).toContain('Parse error at line');
+      expect(result.errors[0]).toContain('Expected closing backtick');
+      expect(result.errors[0]).toContain('inline code');
     });
 
     it('should provide clear error message for unclosed inline script', () => {
       const result = parse('Text with !unclosed script');
       
       expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toContain('Unclosed or mismatched delimiter');
-      expect(result.errors[0]).toContain('Inline script');
+      expect(result.errors[0]).toContain('Parse error at line');
+      expect(result.errors[0]).toContain('Expected closing exclamation mark');
+      expect(result.errors[0]).toContain('inline script');
     });
 
     it('should provide clear error message for unclosed inline generic', () => {
       const result = parse('Text with :unclosed generic');
       
       expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toContain('Unclosed or mismatched delimiter');
-      expect(result.errors[0]).toContain('Inline generic');
+      expect(result.errors[0]).toContain('Parse error at line');
+      expect(result.errors[0]).toContain('Expected closing colon');
+      expect(result.errors[0]).toContain('inline generic');
     });
 
     it('should provide specific error for generic block length mismatch', () => {

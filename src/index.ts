@@ -80,15 +80,46 @@ export function parse(input: string): ParseResult {
 
     const errors: string[] = [];
     if (parser.errors.length > 0) {
-      // Safely extract error messages, handling various error formats
+      // Process Chevrotain errors with better formatting
       for (const e of parser.errors) {
         try {
           if (typeof e === 'string') {
             errors.push(e);
           } else if (e && typeof e === 'object') {
-            // Try to get message from error object
-            const message = (e as any).message || JSON.stringify(e);
-            errors.push(String(message));
+            // Extract token information for better error messages
+            const token = (e as any).token;
+            const previousToken = (e as any).previousToken;
+            const message = (e as any).message || '';
+            
+            // Use previous token if current token has NaN line (EOF case)
+            const lineInfo = token && !isNaN(token.startLine) ? token : previousToken;
+            
+            if (lineInfo && !isNaN(lineInfo.startLine)) {
+              // Format error with line number
+              let errorMsg = `Parse error at line ${lineInfo.startLine}`;
+              
+              // Try to make the error message more specific based on what was expected
+              if (message.includes('BlockCodeDelim')) {
+                errorMsg += ': Expected closing backticks (```) for code block';
+              } else if (message.includes('BlockScriptDelim')) {
+                errorMsg += ': Expected closing exclamation marks (!!!) for script block';
+              } else if (message.includes('BlockCommentEnd')) {
+                errorMsg += ': Expected closing */ for comment block';
+              } else if (message.includes('InlineCodeDelim')) {
+                errorMsg += ': Expected closing backtick (`) for inline code';
+              } else if (message.includes('InlineScriptDelim')) {
+                errorMsg += ': Expected closing exclamation mark (!) for inline script';
+              } else if (message.includes('InlineGenericDelim')) {
+                errorMsg += ': Expected closing colon (:) for inline generic';
+              } else if (message) {
+                errorMsg += `: ${message}`;
+              }
+              
+              errors.push(errorMsg);
+            } else {
+              // Fallback if no line info
+              errors.push(String(message || 'Parse error occurred'));
+            }
           } else {
             errors.push(String(e));
           }
@@ -99,33 +130,24 @@ export function parse(input: string): ParseResult {
       }
     }
 
+    // If children is undefined (happens when parser encountered error), use empty array
+    const childrenArray = children || [];
+
     const ast: DocumentNode = {
       type: 'Document',
-      children
+      children: childrenArray
     };
 
-    // Merge consecutive Text nodes
-    const mergedAst = mergeTextNodesInAST(ast);
+    // Merge consecutive Text nodes only if we have valid children
+    const mergedAst = childrenArray.length > 0 ? mergeTextNodesInAST(ast) : ast;
 
     return { ast: mergedAst, errors };
   } catch (error) {
-    // Provide better error messages for common parsing issues
+    // Handle thrown errors (like delimiter length mismatches)
     let errorMessage = 'Unknown parsing error';
     
     if (error instanceof Error) {
       errorMessage = error.message;
-      
-      // Check for common error patterns and provide helpful messages
-      if (errorMessage.includes('not iterable') || errorMessage.includes('undefined') || errorMessage.includes('not an object')) {
-        // This often indicates an unclosed delimiter or length mismatch
-        errorMessage = 'Parsing error: Unclosed or mismatched delimiter detected. Common issues:\n' +
-          '  - Code block: Missing closing ``` or different number of backticks\n' +
-          '  - Script block: Missing closing !!! or different number of exclamation marks\n' +
-          '  - Generic block: Missing closing ::: or different number of colons\n' +
-          '  - Inline code: Missing closing `\n' +
-          '  - Inline script: Missing closing !\n' +
-          '  - Inline generic: Missing closing :';
-      }
     } else {
       errorMessage = String(error);
     }

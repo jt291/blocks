@@ -428,56 +428,56 @@
     // Examples dictionary
     const examples = {
       // Commentaires
-      'comment-block-simple': `/* This is a simple block comment */`,
+      'comment-block-simple': `/* This is a simple block comment */\n`,
       
-      'comment-block-named': `/*#note This is a named block comment */`,
+      'comment-block-named': `/*#note This is a named block comment */\n`,
       
-      'comment-inline-simple': `Text with // inline comment`,
+      'comment-inline-simple': `Text with // inline comment\n`,
       
       'comment-inline-named': `//#todo Add more features
-Text continues here`,
+Text continues here\n`,
       
       // Blocs de code
-      'code-block-simple': '```\nconst x = 1;\nconsole.log(x);\n```',
+      'code-block-simple': '```\nconst x = 1;\nconsole.log(x);\n```\n',
       
-      'code-block-named': '```#javascript\nconst greeting = "Hello";\nconsole.log(greeting);\n```',
+      'code-block-named': '```#javascript\nconst greeting = "Hello";\nconsole.log(greeting);\n```\n',
       
-      'code-block-attrs': '```#python {#code1 .highlight .numbered}\ndef hello():\n    print("Hello World")\n```',
+      'code-block-attrs': '```#python {#code1 .highlight .numbered}\ndef hello():\n    print("Hello World")\n```\n',
       
       // Blocs de script
-      'script-block-simple': '!!!\nalert("Hello");\n!!!',
+      'script-block-simple': '!!!\nalert("Hello");\n!!!\n',
       
-      'script-block-named': '!!!#javascript\nconst data = { key: "value" };\nconsole.log(data);\n!!!',
+      'script-block-named': '!!!#javascript\nconst data = { key: "value" };\nconsole.log(data);\n!!!\n',
       
-      'script-block-attrs': '!!!#python {#script1 .executable}\nimport sys\nprint(sys.version)\n!!!',
+      'script-block-attrs': '!!!#python {#script1 .executable}\nimport sys\nprint(sys.version)\n!!!\n',
       
       // Inlines
-      'inline-code': 'Text with `inline code` and `#javascript const x = 1` examples.',
+      'inline-code': 'Text with `inline code` and `#javascript const x = 1` examples.\n',
       
-      'inline-script': 'Execute !alert("Hi")! or !#javascript console.log("test")! inline.',
+      'inline-script': 'Execute !alert("Hi")! or !#javascript console.log("test")! inline.\n',
       
-      'inline-generic': 'Use :emphasis: or :#strong Bold text: for styling.',
+      'inline-generic': 'Use :emphasis: or :#strong Bold text: for styling.\n',
       
       // Blocs génériques simples
       'generic-block-simple': `:::
 This is a simple generic block
 with multiple lines
-:::`,
+:::\n`,
       
       'generic-block-named': `:::#container
 This is a named generic block
-:::`,
+:::\n`,
       
       'generic-block-attrs': `:::#section {#main .wrapper .highlighted}
 Content with id and classes
-:::`,
+:::\n`,
       
       'generic-block-nested-simple': `:::
 Outer block
 :::::
 Inner block
 :::::
-:::`,
+:::\n`,
       
       'generic-block-nested-complex': `:::#outer {#container}
 Level 1 content
@@ -493,7 +493,7 @@ Level 2 - Second inner
 Level 3 nested
 :::::::
 ::::::
-:::`,
+:::\n`,
       
       'generic-block-html': `:::#article
 <h2>HTML Title</h2>
@@ -502,7 +502,7 @@ Level 3 nested
   <li>Item 1</li>
   <li>Item 2</li>
 </ul>
-:::`,
+:::\n`,
       
       'generic-block-mixed': `:::#wrapper
 Regular text with :emphasis: inline.
@@ -512,7 +512,7 @@ const mixed = true;
 \`\`\`
 
 More text with \`code\` and :#link clickable: {href="#"}.
-:::`,
+:::\n`,
       
       // Exemples complexes
       'complex-complete': `/* #include header.html */
@@ -534,7 +534,7 @@ print("Hello World")
 !!!
 
 // This is a comment
-//#todo Add more features`,
+//#todo Add more features\n`,
       
       'complex-document': `/* Document metadata */
 /*#title My Document */
@@ -565,7 +565,7 @@ Read the documentation.
 :::#footer
 © 2026 - All rights reserved
 // Footer comment
-:::`,
+:::\n`,
       
       'complex-multiple': `:::#level1
 First level
@@ -593,97 +593,99 @@ Fourth level with \`code\` and :inline:
 ::::::::::
 ::::::::
 ::::::
-:::`,
+:::\n`,
       
       // Erreurs de commentaires
       'error-comment-unclosed': `/* Erreur : commentaire de bloc non fermé - il manque le délimiteur de fermeture */
 
-/* Ce commentaire n'est pas fermé`,
+/* Ce commentaire n'est pas fermé\n`,
       
       'error-comment-malformed': `/* Erreur : délimiteur de fermeture mal formé - il manque l'astérisque avant le slash */
 
-/* Commentaire avec délimiteur incorrect /`,
+/* Commentaire avec délimiteur incorrect /\n`,
       
       // Erreurs de blocs de code
       'error-codeblock-unclosed': `/* Erreur : bloc de code non fermé - il manque les trois backticks de fermeture */
 
 \`\`\`javascript
 const x = 1;
-console.log(x);`,
+console.log(x);\n`,
       
       'error-codeblock-mismatch': `/* Erreur : nombre différent de backticks entre ouverture (3) et fermeture (4) */
 
 \`\`\`
 const code = 'example';
-\`\`\`\``,
+\`\`\`\`\n`,
       
       // Erreurs de blocs de script
       'error-scriptblock-unclosed': `/* Erreur : bloc de script non fermé - il manque les trois points d'exclamation de fermeture */
 
 !!!python
-print("Hello")`,
+print("Hello")\n`,
       
       'error-scriptblock-mismatch': `/* Erreur : nombre différent de points d'exclamation entre ouverture (3) et fermeture (4) */
 
 !!!
 alert('test');
-!!!!`,
+!!!!\n`,
       
       // Erreurs de blocs génériques
       'error-generic-unclosed': `/* Erreur : bloc générique non fermé - il manque les trois deux-points de fermeture */
 
 :::#container
 Du contenu ici
-Mais pas de fermeture`,
+Mais pas de fermeture\n`,
       
       'error-generic-mismatch': `/* Erreur : délimiteurs de longueurs différentes sans imbrication correcte */
 /* Ouverture avec 3 deux-points, fermeture avec 5 deux-points */
 
 :::
 Contenu du bloc
-:::::`,
+:::::\n`,
       
-      'error-generic-nested-wrong': `/* Erreur : tentative d'imbrication avec la même longueur de délimiteur */
-/* Pour imbriquer, le bloc interne doit avoir PLUS de délimiteurs */
+      'error-generic-nested-wrong': `/* REMARQUE : Ce n'est PAS une erreur ! */
+/* Comportement normal : Le premier ::: ferme le bloc externe */
+/* Le contenu "interne" devient du texte normal, les ::: suivants ne sont pas parsés comme blocs */
+/* Pour imbriquer correctement, le bloc interne doit avoir PLUS de délimiteurs (ex: ::::: au lieu de :::) */
 
 :::
 Bloc externe
 :::
-Bloc qui devrait être imbriqué
+Ceci est du texte normal (pas un bloc interne car le bloc externe est déjà fermé)
 :::
-:::`,
+:::\n`,
       
       'error-generic-attributes': `/* Erreur : attributs non fermés - il manque l'accolade fermante } */
 
 :::#container {#main .wrapper
 Contenu
-:::`,
+:::\n`,
       
       // Erreurs d'inlines
       'error-inline-code-unclosed': `/* Erreur : code inline non fermé - il manque le backtick de fermeture */
 
-Voici du texte avec \`code non fermé et suite du texte.`,
+Voici du texte avec \`code non fermé et suite du texte.\n`,
       
       'error-inline-script-unclosed': `/* Erreur : script inline non fermé - il manque le point d'exclamation de fermeture */
 
-Texte avec !alert('test') non fermé ici.`,
+Texte avec !alert('test') non fermé ici.\n`,
       
       'error-inline-generic-unclosed': `/* Erreur : inline générique non fermé - il manque les deux-points de fermeture */
 
-Du texte avec :emphasis non fermé dans la phrase.`,
+Du texte avec :emphasis non fermé dans la phrase.\n`,
       
       // Erreurs d'attributs
       'error-attributes-no-closing-brace': `/* Erreur : accolade fermante manquante dans les attributs */
 
 :::{#id .class1 .class2
 Contenu
-:::`,
+:::\n`,
       
       'error-attributes-invalid-syntax': `/* Erreur : syntaxe invalide dans les attributs - esperluette sans option */
 
 :::{#id & .class}
 Contenu
-:::`
+:::\n`
     };
     
     // Default example

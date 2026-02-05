@@ -4,10 +4,37 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Blocks development</title>
+  <script src="https://unpkg.com/@alenaksu/json-viewer@2.1.0/dist/json-viewer.bundle.js"></script>
 </head>
 <body>
   <h3>Langage de blocs</h3>
-  <textarea>
+  <div style="display:flex;gap:0.5rem;justify-content:space-between;">
+<textarea style="flex:1 1 auto;">::: #container
+ligne 1
+ligne 2
+:::</textarea>
+  <json-viewer id="ast" style="flex:1 1 auto;"></json-viewer>
+
+  </div>
+  <script type="module">
+    import { parse } from './src/index.ts';
+    const textarea = document.body.querySelector('textarea');
+    const astContainer = document.getElementById('ast');
+    if (textarea) {
+      const input = textarea.value;
+      const ast = parse(input);
+      if (ast?.errors.length) {
+        console.error('Errors:', ast.errors);
+      } else {
+        astContainer.data = ast.ast;
+      }
+      console.log('ast',ast);
+    }
+  </script>
+</body>
+</html>
+
+<!--
 /* This is a comment block */
 /* #include header.html */
 /* #config { #settings .important %readonly } some content */
@@ -18,18 +45,69 @@
 `#js alert()`{.hl}
 !getValue()!
 !#py script!{#s1}
-:bold:
-:#link text:{href="..."}
-  </textarea>
+:#name content:{.k}
+:content:
+::
+:text with `code`:
 
-  <script type="module">
-    import { parse } from './src/index.ts';
-    const textarea = document.body.querySelector('textarea');
-    if (textarea) {
-      const input = textarea.value;
-      const output = parse(input);
-      console.log(output);
-    }
-  </script>
-</body>
-</html>
+
+!!!
+<p> content </p>
+!!!
+
+!!!#html {#id .class1 .class2 %opt1 %opt2}
+<p> HTML content </p>
+!!!
+
+:::#container
+text with `code` and :emphasis:
+:::
+
+:::#container {#id .class1 .class2 %opt1 %opt2}
+text with `code` and :emphasis:
+:::
+
+un petit texte avec `du code`{#id} et de :lemphase: et du vide :: 
+
+
+:::#container
+text with `code`{#id} and :emphasis:
+et du HTML
+<p> content </p>
+:::
+
+```
+<dfn></dfn>
+```
+
+:::
+bloc externe
+
+::::: #id
+bloc interne (5 deux-points)
+:::::
+
+:::
+
+// Avec noms
+:::#outer
+  :::::#inner
+  contenu
+  :::::
+:::
+
+// Avec attributs
+:::{.wrapper}
+  :::::{.content}
+  text
+  :::::
+:::
+
+// Avec contenu mixte
+:::#container
+text `code`
+:::::
+<p>HTML</p>
+:::::
+:::
+-->

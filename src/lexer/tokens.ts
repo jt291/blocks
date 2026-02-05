@@ -115,26 +115,40 @@ export const AnyChar = createToken({
 });
 
 // All tokens array for the lexer
+// IMPORTANT: Order matters! Specific patterns must be tested BEFORE generic ones.
+// - Block delimiters (3+ chars) BEFORE inline delimiters (1 char)
+// - This prevents single `:` from matching before `:::`
 export const allTokens = [
+  // Whitespace and newlines first
   Whitespace,
   Newline,
-  BlockCommentStart,
-  BlockCommentEnd,
-  BlockCodeDelim,
-  BlockScriptDelim,
-  BlockGenericDelim,
-  InlineCommentStart,
-  InlineCodeDelim,
-  InlineScriptDelim,
-  InlineGenericDelim,
+
+  // === BLOCK DELIMITERS (3+ characters) BEFORE INLINE DELIMITERS ===
+  BlockCommentStart, // /*
+  BlockCommentEnd, // */
+  BlockCodeDelim, // `{3,} must be tested BEFORE `
+  BlockScriptDelim, // !{3,} must be tested BEFORE !
+  BlockGenericDelim, // :{3,} must be tested BEFORE :
+
+  // === INLINE DELIMITERS (1 character) AFTER BLOCK DELIMITERS ===
+  InlineCommentStart, // //
+  InlineCodeDelim, // ` (single backtick)
+  InlineScriptDelim, // ! (single exclamation)
+  InlineGenericDelim, // : (single colon)
+
+  // Attribute tokens
   LBrace,
   RBrace,
   Hash,
   Dot,
   Percent,
   Equals,
+
+  // Identifiers and values
   Identifier,
   StringValue,
+
+  // Catch-all tokens (last)
   Content,
   AnyChar,
 ];

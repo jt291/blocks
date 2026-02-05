@@ -15,6 +15,18 @@ import type {
   TextNode,
 } from "./ast.js";
 
+/**
+ * Helper function to get line number from token
+ * Chevrotain uses 1-based line numbers
+ */
+function getLineNumber(token: IToken | undefined): number | string {
+  if (!token || token.startLine === undefined) {
+    return "unknown";
+  }
+  // Chevrotain uses 1-based line numbering by default
+  return token.startLine;
+}
+
 export class BlocksParser extends EmbeddedActionsParser {
   constructor() {
     super(tokens.allTokens, {
@@ -188,9 +200,10 @@ export class BlocksParser extends EmbeddedActionsParser {
 
     // Verify exact length match
     if (openDelimLength !== closeLength) {
-      const line = closeDelim.startLine || closeDelim.endLine;
+      const closeLine = getLineNumber(closeDelim);
+      const openLine = getLineNumber(openDelim);
       throw new Error(
-        `Code block closing delimiter length mismatch: expected ${openDelimLength} backtick${openDelimLength > 1 ? "s" : ""} but got ${closeLength} at line ${line} (opened at line ${openDelim.startLine})`,
+        `Code block closing delimiter length mismatch: expected ${openDelimLength} backtick${openDelimLength > 1 ? "s" : ""} but got ${closeLength} at line ${closeLine} (opened at line ${openLine})`,
       );
     }
 
@@ -276,9 +289,10 @@ export class BlocksParser extends EmbeddedActionsParser {
 
     // Verify exact length match
     if (openDelimLength !== closeLength) {
-      const line = closeDelim.startLine || closeDelim.endLine;
+      const closeLine = getLineNumber(closeDelim);
+      const openLine = getLineNumber(openDelim);
       throw new Error(
-        `Script block closing delimiter length mismatch: expected ${openDelimLength} exclamation mark${openDelimLength > 1 ? "s" : ""} but got ${closeLength} at line ${line} (opened at line ${openDelim.startLine})`,
+        `Script block closing delimiter length mismatch: expected ${openDelimLength} exclamation mark${openDelimLength > 1 ? "s" : ""} but got ${closeLength} at line ${closeLine} (opened at line ${openLine})`,
       );
     }
 

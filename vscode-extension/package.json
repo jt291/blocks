@@ -10,16 +10,25 @@
     "Programming Languages"
   ],
   "contributes": {
-    "languages": [{
-      "id": "blocks",
-      "aliases": ["Blocks", "blocks"],
-      "extensions": [".block"],
-      "configuration": "./language-configuration.json"
-    }],
-    "grammars": [{
-      "language": "blocks",
-      "scopeName": "source.blocks",
-      "path": "./syntaxes/blocks.tmLanguage.json"
-    }]
+    "languages": [
+      {
+        "id": "blocks",
+        "aliases": [
+          "Blocks",
+          "blocks"
+        ],
+        "extensions": [
+          ".block"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "blocks",
+        "scopeName": "source.blocks",
+        "path": "./syntaxes/blocks.tmLanguage.json"
+      }
+    ]
   }
 }

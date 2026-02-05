@@ -333,9 +333,9 @@ export class BlocksParser extends EmbeddedActionsParser {
     
     const closeDelim = this.CONSUME2(tokens.BlockGenericDelim);
     
-    // Optional: Add a warning if closeDelim is shorter (shouldn't happen with correct GATE)
-    if (closeDelim.image.length < delimLength) {
-      throw new Error(`Generic block closing delimiter is too short: expected ${delimLength} but got ${closeDelim.image.length}`);
+    // Verify exact length match (shouldn't fail with correct GATE, but safety check)
+    if (closeDelim.image.length !== delimLength) {
+      throw new Error(`Generic block closing delimiter length mismatch: expected ${delimLength} colons but got ${closeDelim.image.length}`);
     }
 
     const node: GenericBlockNode = {

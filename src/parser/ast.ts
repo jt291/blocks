@@ -46,6 +46,9 @@ export interface ScriptBlockNode extends BlockNode {
   content: string;
 }
 
+// GenericBlockNode extends Node directly (not BlockNode) to support nested blocks.
+// The content type needs to include BlockNode for nesting, which would conflict
+// with BlockNode's content type of `string | InlineNode[]`.
 export interface GenericBlockNode extends Node {
   type: 'GenericBlock';
   name?: string;

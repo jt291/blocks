@@ -851,4 +851,89 @@ more text
       expect(innerBlock).toBeDefined();
     });
   });
+
+  describe('Text node merging', () => {
+    it('should merge consecutive Text nodes', () => {
+      const result = parse('hello world');
+      
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children).toHaveLength(1);
+      expect(result.ast.children[0]).toEqual({
+        type: 'Text',
+        value: 'hello world'
+      });
+    });
+
+    it('should merge Text nodes around inlines', () => {
+      const result = parse('text1 `code` text2');
+      
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children).toHaveLength(3);
+      expect(result.ast.children[0]).toEqual({
+        type: 'Text',
+        value: 'text1 '
+      });
+      expect(result.ast.children[1].type).toBe('CodeInline');
+      expect(result.ast.children[2]).toEqual({
+        type: 'Text',
+        value: 'text2'
+      });
+    });
+
+    it('should merge Text nodes in generic blocks', () => {
+      const result = parse(':::\nhello world\n:::');
+      
+      expect(result.errors).toEqual([]);
+      const block = result.ast.children[0];
+      expect(block.type).toBe('GenericBlock');
+      
+      // Should have merged Text nodes - expect only 1 text node instead of many
+      const textNodes = block.content.filter(n => n.type === 'Text');
+      expect(textNodes.length).toBe(1);
+      expect(textNodes[0].value).toBe('hello world\n');
+    });
+
+    it('should merge Text nodes recursively in nested blocks', () => {
+      const result = parse(':::\ntext\n:::::\ninner text\n:::::\n:::');
+      
+      expect(result.errors).toEqual([]);
+      const outer = result.ast.children[0];
+      expect(outer.type).toBe('GenericBlock');
+      
+      const inner = outer.content.find(n => n.type === 'GenericBlock');
+      expect(inner).toBeDefined();
+      
+      // Check that inner block also has merged text
+      const innerTextNodes = inner.content.filter(n => n.type === 'Text');
+      expect(innerTextNodes.length).toBe(1);
+      expect(innerTextNodes[0].value).toContain('inner text');
+    });
+
+    it('should preserve non-consecutive Text nodes', () => {
+      const result = parse('text `code` more');
+      
+      expect(result.errors).toEqual([]);
+      // Should have 3 nodes: Text, CodeInline, Text
+      expect(result.ast.children).toHaveLength(3);
+      
+      // First and last should be Text nodes (but separate, not merged)
+      expect(result.ast.children[0].type).toBe('Text');
+      expect(result.ast.children[1].type).toBe('CodeInline');
+      expect(result.ast.children[2].type).toBe('Text');
+    });
+
+    it('should handle multiple inline elements with text between them', () => {
+      const result = parse('start `code1` middle `code2` end');
+      
+      expect(result.errors).toEqual([]);
+      expect(result.ast.children).toHaveLength(5);
+      
+      // Text, Code, Text, Code, Text pattern
+      expect(result.ast.children[0].type).toBe('Text');
+      expect(result.ast.children[1].type).toBe('CodeInline');
+      expect(result.ast.children[2].type).toBe('Text');
+      expect(result.ast.children[3].type).toBe('CodeInline');
+      expect(result.ast.children[4].type).toBe('Text');
+    });
+  });
 });

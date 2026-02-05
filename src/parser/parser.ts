@@ -719,6 +719,51 @@ export class BlocksParser extends EmbeddedActionsParser {
   });
 }
 
+/**
+ * Merge consecutive Text nodes into single nodes
+ */
+function mergeTextNodes(nodes: (BlockNode | InlineNode | TextNode)[]): (BlockNode | InlineNode | TextNode)[] {
+  const merged: (BlockNode | InlineNode | TextNode)[] = [];
+  let currentText = '';
+  
+  for (const node of nodes) {
+    if (node.type === 'Text') {
+      // Accumulate text
+      currentText += (node as TextNode).value;
+    } else {
+      // Flush accumulated text
+      if (currentText) {
+        merged.push({ type: 'Text', value: currentText });
+        currentText = '';
+      }
+      
+      // Process nested content if it exists
+      if (node.type === 'GenericBlock') {
+        const genericBlock = node as GenericBlockNode;
+        merged.push({
+          ...genericBlock,
+          content: mergeTextNodes(genericBlock.content)
+        });
+      } else if (node.type === 'GenericInline') {
+        const genericInline = node as GenericInlineNode;
+        merged.push({
+          ...genericInline,
+          content: mergeTextNodes(genericInline.content as (BlockNode | InlineNode | TextNode)[]) as InlineNode[]
+        });
+      } else {
+        merged.push(node);
+      }
+    }
+  }
+  
+  // Flush remaining text
+  if (currentText) {
+    merged.push({ type: 'Text', value: currentText });
+  }
+  
+  return merged;
+}
+
 export function createParser(): BlocksParser {
   return new BlocksParser();
 }

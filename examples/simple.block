@@ -1,0 +1,11 @@
+/* Simple example file */
+
+:::#container {#main .wrapper}
+  
+  Hello World with `inline code` example.
+  
+  ```#javascript
+  console.log('Hello from Blocks!');
+  ```
+  
+:::

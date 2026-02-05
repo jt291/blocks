@@ -1,7 +1,7 @@
 {
   "name": "blocks",
   "version": "0.1.0",
-  "description": "A block-based markup language parser using Chevrotain",
+  "description": "A flexible block-based markup language",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -12,7 +12,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "scripts": {
     "dev": "vite",
@@ -26,8 +27,16 @@
     "parser",
     "chevrotain",
     "markup",
+    "blocks",
+    "block-language",
+    "markdown-alternative",
     "ast"
   ],
+  "blockLanguage": {
+    "fileExtension": ".block",
+    "extensions": [".block"],
+    "mimeType": "text/x-blocks"
+  },
   "author": "",
   "license": "MIT",
   "dependencies": {

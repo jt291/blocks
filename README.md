@@ -9,10 +9,36 @@ This project implements a parser for a custom block-based markup language that s
 - 4 types of inlines (comment, code, script, generic)
 - Flexible attribute syntax with IDs, classes, options, and key-value pairs
 
+## File Extension
+
+Blocks language files use the **`.block`** extension.
+
+```bash
+# Example files
+example.block
+template.block
+config.block
+```
+
+See [LANGUAGE.md](LANGUAGE.md) for complete language specification.
+
 ## Installation
 
 ```bash
 pnpm install
+```
+
+## Quick Start
+
+```javascript
+import { parse } from 'blocks';
+import fs from 'fs';
+
+// Parse a .block file
+const content = fs.readFileSync('document.block', 'utf-8');
+const result = parse(content);
+
+console.log(result.ast);
 ```
 
 ## Usage

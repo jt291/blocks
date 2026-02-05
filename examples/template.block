@@ -1,0 +1,30 @@
+/* Website template example */
+
+/*#include header.block */
+
+:::#layout {.main-layout %responsive}
+  
+  :::#header {#site-header .sticky}
+    ```#html
+    <h1>My Website</h1>
+    ```
+  :::
+  
+  :::#main {.content}
+    
+    Welcome to my site with inline elements.
+    
+    :::::#sidebar {.widget-area}
+      Sidebar content
+    :::::
+    
+  :::
+  
+  :::#footer {#site-footer}
+    !!!#init
+    setupFooter();
+    !!!
+  :::
+  
+:::
+

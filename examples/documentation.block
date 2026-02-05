@@ -1,0 +1,32 @@
+/* Documentation example */
+
+:::#article {#getting-started .doc-page}
+
+/* Section: Introduction */
+
+:::::#section {#intro}
+
+## Getting Started
+
+The Blocks language uses file extension .block for all files.
+
+To parse a file with code blocks and backticks.
+
+::::#subsection
+Example code here
+::::
+
+:::::
+
+/* Section: Syntax */
+
+:::::#section {#syntax}
+
+## Syntax Overview
+
+Supports comments, code blocks, script blocks, and generic blocks.
+
+:::::
+
+:::
+

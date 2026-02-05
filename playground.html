@@ -268,7 +268,7 @@ Text continues here`,
       // Inlines
       'inline-code': 'Text with `inline code` and `#javascript const x = 1` examples.',
       
-      'inline-script': 'Execute :alert("Hi"): or :#javascript console.log("test"): inline.',
+      'inline-script': 'Execute !alert("Hi")! or !#javascript console.log("test")! inline.',
       
       'inline-generic': 'Use :emphasis: or :#strong Bold text: for styling.',
       
@@ -325,7 +325,7 @@ Regular text with :emphasis: inline.
 const mixed = true;
 \`\`\`
 
-More text with \`code\` and :#link href="#": clickable:.
+More text with \`code\` and :#link clickable: {href="#"}.
 :::`,
       
       // Exemples complexes
@@ -390,7 +390,7 @@ Second level A
 ::::::::#level3
 Third level
 ::::::::
-:::::
+::::::
 
 ::::::#level2b
 Second level B
@@ -406,7 +406,7 @@ Third level B
 Fourth level with \`code\` and :inline:
 ::::::::::
 ::::::::
-:::::
+::::::
 :::`
     };
     

@@ -917,7 +917,7 @@ more text
       expect(result.ast.children[1].type).toBe("CodeInline");
       expect(result.ast.children[2]).toEqual({
         type: "Text",
-        value: "text2",
+        value: " text2", // Leading space is preserved in the new implementation
       });
     });
 
@@ -1331,6 +1331,39 @@ Content
       const content = result.ast.children[0].content;
       // Should have parsed the colon as text and the backticks as valid inline code
       expect(content.some((node) => node.type === "CodeInline")).toBe(true);
+    });
+
+    it("should handle French punctuation correctly", () => {
+      const result = parse("Bonjour: comment ça va?");
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.ast.children).toHaveLength(1);
+      expect(result.ast.children[0].type).toBe("Text");
+      expect(result.ast.children[0].value).toBe("Bonjour: comment ça va?");
+    });
+
+    it("should handle colons in JavaScript objects inside code blocks", () => {
+      const result = parse("```#js\nconst obj = { a: 1, b: 2 };\n```");
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.ast.children).toHaveLength(1);
+      expect(result.ast.children[0].type).toBe("CodeBlock");
+      expect(result.ast.children[0].name).toBe("js");
+      // The colons should be preserved as part of the content, not parsed as inline delimiters
+      expect(result.ast.children[0].content).toContain("a: 1");
+      expect(result.ast.children[0].content).toContain("b: 2");
+    });
+
+    it("should handle colons in JavaScript objects inside script blocks", () => {
+      const result = parse("!!!#js\nconst obj = { a: 1, b: 2 };\n!!!");
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.ast.children).toHaveLength(1);
+      expect(result.ast.children[0].type).toBe("ScriptBlock");
+      expect(result.ast.children[0].name).toBe("js");
+      // The colons should be preserved as part of the content, not parsed as inline delimiters
+      expect(result.ast.children[0].content).toContain("a: 1");
+      expect(result.ast.children[0].content).toContain("b: 2");
     });
   });
 });

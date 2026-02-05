@@ -40,12 +40,45 @@ export const BlockGenericDelim = createToken({
   pattern: /:{3,}/, // 3 or more colons
 });
 
-// Inline delimiters
+// Inline delimiters - Complete patterns with attributes (MUST be before patterns without attributes)
+export const InlineCodeCompleteWithAttrs = createToken({
+  name: "InlineCodeCompleteWithAttrs",
+  pattern: /`[^`\n]*`\s*\{[^}]+\}/,
+});
+
+export const InlineScriptCompleteWithAttrs = createToken({
+  name: "InlineScriptCompleteWithAttrs",
+  pattern: /![^!\n]*!\s*\{[^}]+\}/,
+});
+
+export const InlineGenericCompleteWithAttrs = createToken({
+  name: "InlineGenericCompleteWithAttrs",
+  pattern: /:[^:\n]*:\s*\{[^}]+\}/,
+});
+
+// Inline delimiters - Complete patterns without attributes
+export const InlineCodeComplete = createToken({
+  name: "InlineCodeComplete",
+  pattern: /`[^`\n]*`/,
+});
+
+export const InlineScriptComplete = createToken({
+  name: "InlineScriptComplete",
+  pattern: /![^!\n]*!/,
+});
+
+export const InlineGenericComplete = createToken({
+  name: "InlineGenericComplete",
+  pattern: /:[^:\n]*:/,
+});
+
+// Inline comment (special case - goes to end of line)
 export const InlineCommentStart = createToken({
   name: "InlineCommentStart",
   pattern: /\/\//,
 });
 
+// Individual delimiter tokens (for fallback/punctuation)
 export const InlineCodeDelim = createToken({
   name: "InlineCodeDelim",
   pattern: /`/,
@@ -116,8 +149,9 @@ export const AnyChar = createToken({
 
 // All tokens array for the lexer
 // IMPORTANT: Order matters! Specific patterns must be tested BEFORE generic ones.
-// - Block delimiters (3+ chars) BEFORE inline delimiters (1 char)
-// - This prevents single `:` from matching before `:::`
+// - Block delimiters (3+ chars) BEFORE inline delimiters
+// - Complete inline patterns WITH attributes BEFORE patterns WITHOUT attributes
+// - Complete inline patterns BEFORE individual delimiters
 export const allTokens = [
   // Whitespace and newlines first
   Whitespace,
@@ -130,11 +164,23 @@ export const allTokens = [
   BlockScriptDelim, // !{3,} must be tested BEFORE !
   BlockGenericDelim, // :{3,} must be tested BEFORE :
 
-  // === INLINE DELIMITERS (1 character) AFTER BLOCK DELIMITERS ===
+  // === COMPLETE INLINE PATTERNS (WITH ATTRIBUTES) - Highest priority ===
+  InlineCodeCompleteWithAttrs, // `content`{attrs}
+  InlineScriptCompleteWithAttrs, // !content!{attrs}
+  InlineGenericCompleteWithAttrs, // :content:{attrs}
+
+  // === COMPLETE INLINE PATTERNS (WITHOUT ATTRIBUTES) ===
+  InlineCodeComplete, // `content`
+  InlineScriptComplete, // !content!
+  InlineGenericComplete, // :content:
+
+  // === INLINE COMMENT (special case) ===
   InlineCommentStart, // //
-  InlineCodeDelim, // ` (single backtick)
-  InlineScriptDelim, // ! (single exclamation)
-  InlineGenericDelim, // : (single colon)
+
+  // === INDIVIDUAL DELIMITERS (for punctuation fallback) ===
+  InlineCodeDelim, // ` (single backtick as punctuation)
+  InlineScriptDelim, // ! (single exclamation as punctuation)
+  InlineGenericDelim, // : (single colon as punctuation)
 
   // Attribute tokens
   LBrace,

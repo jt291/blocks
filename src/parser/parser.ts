@@ -81,6 +81,10 @@ export class BlocksParser extends EmbeddedActionsParser {
       this.CONSUME(tokens.Hash);
       const nameToken = this.CONSUME(tokens.Identifier);
       name = nameToken.image;
+      // Skip whitespace after name (should not be part of content)
+      this.MANY2(() => {
+        this.CONSUME3(tokens.Whitespace);
+      });
     });
     
     // Consume all remaining content until */
@@ -339,6 +343,10 @@ export class BlocksParser extends EmbeddedActionsParser {
       this.CONSUME(tokens.Hash);
       const nameToken = this.CONSUME(tokens.Identifier);
       name = nameToken.image;
+      // Skip whitespace after name (should not be part of content)
+      this.MANY3(() => {
+        this.CONSUME3(tokens.Whitespace);
+      });
     });
     
     // Consume all remaining content until newline or EOF
@@ -398,6 +406,10 @@ export class BlocksParser extends EmbeddedActionsParser {
       this.CONSUME(tokens.Hash);
       const nameToken = this.CONSUME(tokens.Identifier);
       name = nameToken.image;
+      // Skip whitespace after name (should not be part of content)
+      this.MANY4(() => {
+        this.CONSUME4(tokens.Whitespace);
+      });
     });
     
     // Consume all content until `
@@ -468,6 +480,10 @@ export class BlocksParser extends EmbeddedActionsParser {
       this.CONSUME(tokens.Hash);
       const nameToken = this.CONSUME(tokens.Identifier);
       name = nameToken.image;
+      // Skip whitespace after name (should not be part of content)
+      this.MANY4(() => {
+        this.CONSUME4(tokens.Whitespace);
+      });
     });
     
     // Consume all content until !
@@ -537,6 +553,10 @@ export class BlocksParser extends EmbeddedActionsParser {
       this.CONSUME(tokens.Hash);
       const nameToken = this.CONSUME(tokens.Identifier);
       name = nameToken.image;
+      // Skip whitespace after name (should not be part of content)
+      this.MANY4(() => {
+        this.CONSUME4(tokens.Whitespace);
+      });
     });
     
     // Parse content (can contain nested inlines)

@@ -22,7 +22,7 @@ describe('Parser', () => {
       expect(result.ast.children[0]).toMatchObject({
         type: 'CommentBlock',
         name: 'include',
-        content: ' header.html '
+        content: 'header.html '
       });
     });
 
@@ -33,7 +33,7 @@ describe('Parser', () => {
       expect(result.ast.children[0]).toMatchObject({
         type: 'CommentBlock',
         name: 'config',
-        content: ' some important content '
+        content: 'some important content '
       });
     });
 
@@ -81,7 +81,7 @@ describe('Parser', () => {
       expect(result.ast.children).toHaveLength(1);
       expect(result.ast.children[0]).toMatchObject({
         type: 'CodeBlock',
-        content: ' code content '
+        content: 'code content '
       });
     });
 
@@ -194,7 +194,7 @@ describe('Parser', () => {
       expect(result.ast.children[0]).toMatchObject({
         type: 'CommentInline',
         name: 'todo',
-        content: ' Fix this later'
+        content: 'Fix this later'
       });
     });
 
@@ -205,7 +205,7 @@ describe('Parser', () => {
       expect(result.ast.children[0]).toMatchObject({
         type: 'CommentInline',
         name: 'note',
-        content: ' Important detail here'
+        content: 'Important detail here'
       });
     });
   });
@@ -230,7 +230,7 @@ describe('Parser', () => {
       expect(result.ast.children[0]).toMatchObject({
         type: 'CodeInline',
         name: 'js',
-        content: ' console.log()'
+        content: 'console.log()'
       });
     });
 
@@ -250,7 +250,7 @@ describe('Parser', () => {
       const node = result.ast.children[0];
       expect(node.type).toBe('CodeInline');
       expect(node.name).toBe('js');
-      expect(node.content).toBe(' code');
+      expect(node.content).toBe('code');
       expect(node.attributes?.classes).toContain('highlight');
     });
   });
@@ -275,7 +275,7 @@ describe('Parser', () => {
       expect(result.ast.children[0]).toMatchObject({
         type: 'ScriptInline',
         name: 'js',
-        content: ' alert()'
+        content: 'alert()'
       });
     });
 
@@ -295,7 +295,7 @@ describe('Parser', () => {
       const node = result.ast.children[0];
       expect(node.type).toBe('ScriptInline');
       expect(node.name).toBe('py');
-      expect(node.content).toBe(' script');
+      expect(node.content).toBe('script');
       expect(node.attributes?.classes).toContain('external');
     });
   });
@@ -465,6 +465,50 @@ code
         n.type === 'CommentBlock' || n.type === 'GenericBlock' || n.type === 'CodeBlock'
       );
       expect(blocks.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Whitespace handling after name', () => {
+    it('should not include space after name in comment block', () => {
+      const result = parse('/* #include header.html */');
+      expect(result.ast.children[0].content).toBe('header.html ');
+    });
+
+    it('should not include space after name in inline comment', () => {
+      const result = parse('//#todo Fix later\n');
+      expect(result.ast.children[0].content).toBe('Fix later');
+    });
+
+    it('should not include space after name in code inline', () => {
+      const result = parse('`#js alert()`');
+      expect(result.ast.children[0].content).toBe('alert()');
+    });
+
+    it('should not include space after name in script inline', () => {
+      const result = parse('!#py script!');
+      expect(result.ast.children[0].content).toBe('script');
+    });
+
+    it('should not include space after name in generic inline', () => {
+      const result = parse(':#name content:');
+      const firstContent = result.ast.children[0].content[0];
+      expect(firstContent.type).toBe('Text');
+      expect(firstContent.value).toBe('content');
+    });
+
+    it('should preserve spaces within content', () => {
+      const result = parse('/* #include my file.txt */');
+      expect(result.ast.children[0].content).toBe('my file.txt ');
+    });
+
+    it('should handle multiple spaces after name', () => {
+      const result = parse('`#js    alert()`');
+      expect(result.ast.children[0].content).toBe('alert()');
+    });
+
+    it('should handle tab after name', () => {
+      const result = parse('`#js\talert()`');
+      expect(result.ast.children[0].content).toBe('alert()');
     });
   });
 });

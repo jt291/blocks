@@ -961,7 +961,7 @@ more text
       
       expect(result.errors).toHaveLength(1);
       expect(result.errors[0]).toContain('delimiter length mismatch');
-      expect(result.errors[0]).toContain('backticks');
+      expect(result.errors[0]).toContain('backtick');
     });
 
     it('should provide clear error message for script block length mismatch', () => {
@@ -969,7 +969,7 @@ more text
       
       expect(result.errors).toHaveLength(1);
       expect(result.errors[0]).toContain('delimiter length mismatch');
-      expect(result.errors[0]).toContain('exclamation marks');
+      expect(result.errors[0]).toContain('exclamation mark');
     });
 
     it('should provide clear error message for unclosed inline code', () => {

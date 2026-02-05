@@ -100,9 +100,9 @@ export function parse(input: string): ParseResult {
               
               // Try to make the error message more specific based on what was expected
               if (message.includes('BlockCodeDelim')) {
-                errorMsg += ': Expected closing backticks (```) for code block';
+                errorMsg += ': Expected closing backticks for code block';
               } else if (message.includes('BlockScriptDelim')) {
-                errorMsg += ': Expected closing exclamation marks (!!!) for script block';
+                errorMsg += ': Expected closing exclamation marks for script block';
               } else if (message.includes('BlockCommentEnd')) {
                 errorMsg += ': Expected closing */ for comment block';
               } else if (message.includes('InlineCodeDelim')) {

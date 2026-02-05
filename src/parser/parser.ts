@@ -18,7 +18,7 @@ import type {
 export class BlocksParser extends EmbeddedActionsParser {
   constructor() {
     super(tokens.allTokens, {
-      recoveryEnabled: false,
+      recoveryEnabled: true,
       nodeLocationTracking: 'full'
     });
     this.performSelfAnalysis();

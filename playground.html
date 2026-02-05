@@ -88,15 +88,18 @@
     }
 
     .line-number.error {
-      background: #fee;
-      color: #c00;
+      background: #ffebee;
+      color: #c62828;
       font-weight: bold;
+      position: relative;
+      cursor: help;
     }
 
     .line-number.error::before {
-      content: '⚠️ ';
+      content: '⚠️';
       position: absolute;
-      left: -1.5rem;
+      left: -1.2rem;
+      font-size: 0.9em;
     }
     
     textarea {
@@ -122,8 +125,15 @@
     }
     
     .error-item {
-      margin: 0.25rem 0;
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      background: white;
+      border-left: 3px solid #f44336;
       font-size: 0.9rem;
+    }
+    
+    .error-item strong {
+      color: #c62828;
     }
     
     .ast-controls {
@@ -364,9 +374,13 @@
             <option value="error-scriptblock-mismatch">Bloc de script longueurs différentes</option>
             <option value="error-generic-unclosed">Bloc générique non fermé</option>
             <option value="error-generic-mismatch">Bloc générique longueurs différentes</option>
+            <option value="error-generic-nested-wrong">Bloc générique imbrication incorrecte</option>
             <option value="error-generic-attributes">Attributs mal formés</option>
             <option value="error-inline-code-unclosed">Code inline non fermé</option>
+            <option value="error-inline-script-unclosed">Script inline non fermé</option>
             <option value="error-inline-generic-unclosed">Inline générique non fermé</option>
+            <option value="error-attributes-no-closing-brace">Attributs sans accolade fermante</option>
+            <option value="error-attributes-invalid-syntax">Attributs syntaxe invalide</option>
           </optgroup>
         </select>
       </div>
@@ -582,54 +596,94 @@ Fourth level with \`code\` and :inline:
 :::`,
       
       // Erreurs de commentaires
-      'error-comment-unclosed': `/* Ce commentaire n'est pas fermé
-Le parser attend un */`,
+      'error-comment-unclosed': `/* Erreur : commentaire de bloc non fermé - il manque le délimiteur de fermeture */
+
+/* Ce commentaire n'est pas fermé`,
       
-      'error-comment-malformed': `/* Commentaire avec délimiteur mal formé /
-Il manque l'astérisque */`,
+      'error-comment-malformed': `/* Erreur : délimiteur de fermeture mal formé - il manque l'astérisque avant le slash */
+
+/* Commentaire avec délimiteur incorrect /`,
       
       // Erreurs de blocs de code
-      'error-codeblock-unclosed': `\`\`\`
-Code sans fermeture
-Le parser attend \`\`\``,
+      'error-codeblock-unclosed': `/* Erreur : bloc de code non fermé - il manque les trois backticks de fermeture */
+
+\`\`\`javascript
+const x = 1;
+console.log(x);`,
       
-      'error-codeblock-mismatch': `\`\`\`
-Code ici
-\`\`\`\`
-Le délimiteur de fermeture a 4 backticks au lieu de 3`,
+      'error-codeblock-mismatch': `/* Erreur : nombre différent de backticks entre ouverture (3) et fermeture (4) */
+
+\`\`\`
+const code = 'example';
+\`\`\`\``,
       
       // Erreurs de blocs de script
-      'error-scriptblock-unclosed': `!!!
-Script sans fermeture
-Le parser attend !!!`,
+      'error-scriptblock-unclosed': `/* Erreur : bloc de script non fermé - il manque les trois points d'exclamation de fermeture */
+
+!!!python
+print("Hello")`,
       
-      'error-scriptblock-mismatch': `!!!
-Script ici
-!!!!
-Le délimiteur de fermeture a 4 points d'exclamation au lieu de 3`,
+      'error-scriptblock-mismatch': `/* Erreur : nombre différent de points d'exclamation entre ouverture (3) et fermeture (4) */
+
+!!!
+alert('test');
+!!!!`,
       
       // Erreurs de blocs génériques
-      'error-generic-unclosed': `:::
-Bloc générique sans fermeture
-Le parser attend :::`,
+      'error-generic-unclosed': `/* Erreur : bloc générique non fermé - il manque les trois deux-points de fermeture */
+
+:::#container
+Du contenu ici
+Mais pas de fermeture`,
       
-      'error-generic-mismatch': `:::
+      'error-generic-mismatch': `/* Erreur : délimiteurs de longueurs différentes sans imbrication correcte */
+/* Ouverture avec 3 deux-points, fermeture avec 5 deux-points */
+
+:::
+Contenu du bloc
+:::::`,
+      
+      'error-generic-nested-wrong': `/* Erreur : tentative d'imbrication avec la même longueur de délimiteur */
+/* Pour imbriquer, le bloc interne doit avoir PLUS de délimiteurs */
+
+:::
 Bloc externe
 :::
 Bloc qui devrait être imbriqué
 :::
-Sans délimiteur plus long, le premier ::: ferme le bloc trop tôt`,
+:::`,
       
-      'error-generic-attributes': `:::{#id .class
-Attributs non fermés - il manque }
+      'error-generic-attributes': `/* Erreur : attributs non fermés - il manque l'accolade fermante } */
+
+:::#container {#main .wrapper
+Contenu
 :::`,
       
       // Erreurs d'inlines
-      'error-inline-code-unclosed': `Texte avec \`code non fermé
-Le parser attend un backtick de fermeture`,
+      'error-inline-code-unclosed': `/* Erreur : code inline non fermé - il manque le backtick de fermeture */
+
+Voici du texte avec \`code non fermé et suite du texte.`,
       
-      'error-inline-generic-unclosed': `Texte avec :inline non fermé
-Le parser attend : de fermeture`
+      'error-inline-script-unclosed': `/* Erreur : script inline non fermé - il manque le point d'exclamation de fermeture */
+
+Texte avec !alert('test') non fermé ici.`,
+      
+      'error-inline-generic-unclosed': `/* Erreur : inline générique non fermé - il manque les deux-points de fermeture */
+
+Du texte avec :emphasis non fermé dans la phrase.`,
+      
+      // Erreurs d'attributs
+      'error-attributes-no-closing-brace': `/* Erreur : accolade fermante manquante dans les attributs */
+
+:::{#id .class1 .class2
+Contenu
+:::`,
+      
+      'error-attributes-invalid-syntax': `/* Erreur : syntaxe invalide dans les attributs - esperluette sans option */
+
+:::{#id & .class}
+Contenu
+:::`
     };
     
     // Default example
@@ -646,23 +700,68 @@ Le parser attend : de fermeture`
       lineNumbers.innerHTML = lineNumbersHtml;
     }
 
-    // Highlight error lines
+    // Extract line number from error message or token
+    function extractLineNumber(error) {
+      // Try to extract from error message
+      // Chevrotain errors might contain: "Expecting... at offset: X" or similar
+      
+      // Pattern 1: "line N"
+      let match = error.match(/line[:\s]+(\d+)/i);
+      if (match) return parseInt(match[1]);
+      
+      // Pattern 2: "offset: N" - we need to convert offset to line
+      match = error.match(/offset[:\s]+(\d+)/i);
+      if (match) {
+        const offset = parseInt(match[1]);
+        return offsetToLine(offset);
+      }
+      
+      // Pattern 3: Look for token information
+      match = error.match(/token.*line[:\s]+(\d+)/i);
+      if (match) return parseInt(match[1]);
+      
+      // If no line number found, return null
+      return null;
+    }
+
+    // Convert character offset to line number
+    function offsetToLine(offset) {
+      const text = editor.value;
+      let line = 1;
+      for (let i = 0; i < offset && i < text.length; i++) {
+        if (text[i] === '\n') line++;
+      }
+      return line;
+    }
+
+    // Highlight error lines with better extraction
     function highlightErrorLines(errors) {
       // Clear previous errors
       document.querySelectorAll('.line-number.error').forEach(el => {
         el.classList.remove('error');
+        el.title = '';
       });
       
-      // Extract line numbers from errors
+      if (!errors || errors.length === 0) return;
+      
       errors.forEach(error => {
-        // Try to extract line number from error message
-        // Chevrotain errors might contain position info
-        const lineMatch = error.match(/line (\d+)/i);
-        if (lineMatch) {
-          const lineNum = parseInt(lineMatch[1]);
+        const lineNum = extractLineNumber(error);
+        
+        if (lineNum) {
           const lineEl = document.querySelector(`.line-number[data-line="${lineNum}"]`);
           if (lineEl) {
             lineEl.classList.add('error');
+            lineEl.title = error; // Show error on hover
+          }
+        } else {
+          // If we can't determine the line, try to guess from last line
+          // or highlight the last line as a fallback
+          const lines = editor.value.split('\n');
+          const lastLineNum = lines.length;
+          const lineEl = document.querySelector(`.line-number[data-line="${lastLineNum}"]`);
+          if (lineEl) {
+            lineEl.classList.add('error');
+            lineEl.title = error;
           }
         }
       });
@@ -694,6 +793,25 @@ Le parser attend : de fermeture`
     
     editor.addEventListener('input', handleInput);
     
+    // Display errors with line numbers
+    function displayErrors(errors) {
+      if (!errors || errors.length === 0) {
+        errorsEl.style.display = 'none';
+        return;
+      }
+      
+      errorsEl.style.display = 'block';
+      errorsEl.className = 'errors';
+      
+      const errorItems = errors.map(error => {
+        const lineNum = extractLineNumber(error);
+        const lineInfo = lineNum ? `<strong>Ligne ${lineNum}:</strong> ` : '';
+        return `<div class="error-item">${lineInfo}${escapeHtml(error)}</div>`;
+      }).join('');
+      
+      errorsEl.innerHTML = '<div style="font-weight: 600; margin-bottom: 0.5rem;">⚠️ Erreurs de parsing:</div>' + errorItems;
+    }
+    
     // Parse and display
     function parseCode() {
       const code = editor.value;
@@ -701,21 +819,16 @@ Le parser attend : de fermeture`
       
       currentAst = result.ast;
       
-      // Display errors
+      // Display and highlight errors
       if (result.errors && result.errors.length > 0) {
-        errorsEl.style.display = 'block';
-        errorsEl.className = 'errors';
-        errorsEl.innerHTML = '<strong>⚠️ Parsing Errors:</strong>' +
-          result.errors.map(err => 
-            `<div class="error-item">${escapeHtml(err)}</div>`
-          ).join('');
+        displayErrors(result.errors);
         highlightErrorLines(result.errors);
       } else {
         errorsEl.style.display = 'none';
-        highlightErrorLines([]);
+        highlightErrorLines([]); // Clear error highlights
       }
       
-      // Display AST as tree
+      // Display AST
       renderAst(result.ast);
     }
     

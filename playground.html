@@ -102,6 +102,17 @@
       font-size: 0.9em;
     }
     
+    /* Textarea error line highlighting */
+    textarea.has-error-line {
+      background: linear-gradient(
+        transparent calc(var(--error-line, 1) * 1.5em - 1.5em),
+        rgba(255, 0, 0, 0.1) calc(var(--error-line, 1) * 1.5em - 1.5em),
+        rgba(255, 0, 0, 0.1) calc(var(--error-line, 1) * 1.5em),
+        transparent calc(var(--error-line, 1) * 1.5em)
+      );
+      background-attachment: local;
+    }
+    
     textarea {
       flex: 1;
       border: none;
@@ -707,18 +718,26 @@ Contenu
       // Try to extract from error message
       // Chevrotain errors might contain: "Expecting... at offset: X" or similar
       
-      // Pattern 1: "line N"
-      let match = error.match(/line[:\s]+(\d+)/i);
+      // Pattern 1: "(line N)" at the end of message
+      let match = error.match(/\(line (\d+)\)/);
       if (match) return parseInt(match[1]);
       
-      // Pattern 2: "offset: N" - we need to convert offset to line
+      // Pattern 2: "line N:" or "line N "
+      match = error.match(/line[:\s]+(\d+)/i);
+      if (match) return parseInt(match[1]);
+      
+      // Pattern 3: "at line N"
+      match = error.match(/at line (\d+)/i);
+      if (match) return parseInt(match[1]);
+      
+      // Pattern 4: "offset: N" - we need to convert offset to line
       match = error.match(/offset[:\s]+(\d+)/i);
       if (match) {
         const offset = parseInt(match[1]);
         return offsetToLine(offset);
       }
       
-      // Pattern 3: Look for token information
+      // Pattern 5: Look for token information
       match = error.match(/token.*line[:\s]+(\d+)/i);
       if (match) return parseInt(match[1]);
       
@@ -744,29 +763,34 @@ Contenu
         el.title = '';
       });
       
+      // Remove textarea highlighting
+      editor.classList.remove('has-error-line');
+      editor.style.removeProperty('--error-line');
+      
       if (!errors || errors.length === 0) return;
+      
+      const errorLines = [];
       
       errors.forEach(error => {
         const lineNum = extractLineNumber(error);
         
         if (lineNum) {
+          errorLines.push(lineNum);
+          
+          // Highlight line number
           const lineEl = document.querySelector(`.line-number[data-line="${lineNum}"]`);
           if (lineEl) {
             lineEl.classList.add('error');
             lineEl.title = error; // Show error on hover
           }
-        } else {
-          // If we can't determine the line, try to guess from last line
-          // or highlight the last line as a fallback
-          const lines = editor.value.split('\n');
-          const lastLineNum = lines.length;
-          const lineEl = document.querySelector(`.line-number[data-line="${lastLineNum}"]`);
-          if (lineEl) {
-            lineEl.classList.add('error');
-            lineEl.title = error;
-          }
         }
       });
+      
+      // Highlight first error line in textarea
+      if (errorLines.length > 0) {
+        editor.classList.add('has-error-line');
+        editor.style.setProperty('--error-line', errorLines[0]);
+      }
     }
 
     // Sync scroll between textarea and line numbers
@@ -806,9 +830,32 @@ Contenu
       errorsEl.className = 'errors';
       
       const errorItems = errors.map(error => {
-        const lineNum = extractLineNumber(error);
-        const lineInfo = lineNum ? `<strong>Ligne ${lineNum}:</strong> ` : '';
-        return `<div class="error-item">${lineInfo}${escapeHtml(error)}</div>`;
+        // Replace cryptic errors with better messages
+        let message = error;
+        
+        if (error.includes('undefined is not an object')) {
+          message = 'Parsing error: likely an unclosed block or inline, or mismatched delimiter lengths. Check that all opening delimiters have matching closing delimiters.';
+        }
+        
+        const lineNum = extractLineNumber(message);
+        
+        // Add line context
+        let lineInfo = '';
+        if (lineNum) {
+          const lines = editor.value.split('\n');
+          const lineContent = lines[lineNum - 1];
+          const preview = lineContent ? lineContent.trim().substring(0, 50) : '';
+          
+          lineInfo = `<div style="margin-top: 0.25rem;">
+            <strong style="color: #c62828;">Ligne ${lineNum}:</strong> 
+            <code style="background: #f5f5f5; padding: 2px 4px; border-radius: 3px;">${escapeHtml(preview)}${preview.length >= 50 ? '...' : ''}</code>
+          </div>`;
+        }
+        
+        return `<div class="error-item">
+          <div>${escapeHtml(message)}</div>
+          ${lineInfo}
+        </div>`;
       }).join('');
       
       errorsEl.innerHTML = '<div style="font-weight: 600; margin-bottom: 0.5rem;">⚠️ Erreurs de parsing:</div>' + errorItems;
@@ -984,7 +1031,7 @@ Contenu
     /**
      * Render interactive JSON tree
      */
-    function renderJsonTree(data, container, key = null, depth = 0) {
+    function renderJsonTree(data, container, key = null, depth = 0, isLast = false) {
       const wrapper = document.createElement('div');
       wrapper.className = 'json-node';
       wrapper.style.marginLeft = `${depth * 1.5}rem`;
@@ -992,11 +1039,11 @@ Contenu
       const type = Array.isArray(data) ? 'array' : typeof data;
       
       if (type === 'object' && data !== null) {
-        renderObject(data, wrapper, key, depth);
+        renderObject(data, wrapper, key, depth, isLast);
       } else if (type === 'array') {
-        renderArray(data, wrapper, key, depth);
+        renderArray(data, wrapper, key, depth, isLast);
       } else {
-        renderPrimitive(data, wrapper, key, type);
+        renderPrimitive(data, wrapper, key, type, isLast);
       }
       
       container.appendChild(wrapper);
@@ -1005,7 +1052,7 @@ Contenu
     /**
      * Render an object
      */
-    function renderObject(obj, container, key, depth) {
+    function renderObject(obj, container, key, depth, isLast = false) {
       const keys = Object.keys(obj);
       const isEmpty = keys.length === 0;
       
@@ -1024,9 +1071,8 @@ Contenu
         header.appendChild(colon);
       }
       
-      let toggle = null;
       if (!isEmpty) {
-        toggle = document.createElement('span');
+        const toggle = document.createElement('span');
         toggle.className = 'json-toggle';
         toggle.textContent = '▼ ';
         toggle.style.cursor = 'pointer';
@@ -1040,6 +1086,14 @@ Contenu
       openBrace.textContent = isEmpty ? '{}' : '{';
       header.appendChild(openBrace);
       
+      // Add comma AFTER the object if it's empty and not the last element
+      if (!isLast && isEmpty) {
+        const comma = document.createElement('span');
+        comma.className = 'json-punctuation';
+        comma.textContent = ',';
+        header.appendChild(comma);
+      }
+      
       container.appendChild(header);
       
       if (!isEmpty) {
@@ -1050,15 +1104,8 @@ Contenu
           const childWrapper = document.createElement('div');
           childWrapper.style.marginLeft = '1.5rem';
           
-          renderJsonTree(obj[k], childWrapper, k, 0);
-          
-          // Add comma if not last
-          if (index < keys.length - 1) {
-            const comma = document.createElement('span');
-            comma.className = 'json-punctuation';
-            comma.textContent = ',';
-            childWrapper.querySelector('.json-line').appendChild(comma);
-          }
+          const isLastChild = index === keys.length - 1;
+          renderJsonTree(obj[k], childWrapper, k, 0, isLastChild);
           
           childrenContainer.appendChild(childWrapper);
         });
@@ -1066,36 +1113,45 @@ Contenu
         const closeBrace = document.createElement('div');
         closeBrace.className = 'json-line';
         closeBrace.style.marginLeft = '0';
-        closeBrace.innerHTML = '<span class="json-punctuation">}</span>';
-        childrenContainer.appendChild(closeBrace);
+        const closeBraceSpan = document.createElement('span');
+        closeBraceSpan.className = 'json-punctuation';
+        closeBraceSpan.textContent = '}';
+        closeBrace.appendChild(closeBraceSpan);
         
+        // Add comma AFTER the closing brace if not the last element
+        if (!isLast) {
+          const comma = document.createElement('span');
+          comma.className = 'json-punctuation';
+          comma.textContent = ',';
+          closeBrace.appendChild(comma);
+        }
+        
+        childrenContainer.appendChild(closeBrace);
         container.appendChild(childrenContainer);
         
         // Toggle functionality
-        if (toggle) {
-          toggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isCollapsed = childrenContainer.style.display === 'none';
-            childrenContainer.style.display = isCollapsed ? 'block' : 'none';
-            toggle.textContent = isCollapsed ? '▼ ' : '▶ ';
-            
-            // Update opening brace
-            if (isCollapsed) {
-              openBrace.textContent = '{';
-              closeBrace.style.display = 'block';
-            } else {
-              openBrace.textContent = `{ ... } (${keys.length} ${keys.length === 1 ? 'property' : 'properties'})`;
-              closeBrace.style.display = 'none';
-            }
-          });
-        }
+        const toggle = header.querySelector('.json-toggle');
+        toggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isCollapsed = childrenContainer.style.display === 'none';
+          childrenContainer.style.display = isCollapsed ? 'block' : 'none';
+          toggle.textContent = isCollapsed ? '▼ ' : '▶ ';
+          
+          if (isCollapsed) {
+            openBrace.textContent = '{';
+            closeBrace.style.display = 'block';
+          } else {
+            openBrace.textContent = `{ ... } (${keys.length} ${keys.length === 1 ? 'property' : 'properties'})`;
+            closeBrace.style.display = 'none';
+          }
+        });
       }
     }
 
     /**
      * Render an array
      */
-    function renderArray(arr, container, key, depth) {
+    function renderArray(arr, container, key, depth, isLast = false) {
       const isEmpty = arr.length === 0;
       
       const header = document.createElement('div');
@@ -1113,9 +1169,8 @@ Contenu
         header.appendChild(colon);
       }
       
-      let toggle = null;
       if (!isEmpty) {
-        toggle = document.createElement('span');
+        const toggle = document.createElement('span');
         toggle.className = 'json-toggle';
         toggle.textContent = '▼ ';
         toggle.style.cursor = 'pointer';
@@ -1129,6 +1184,14 @@ Contenu
       openBracket.textContent = isEmpty ? '[]' : '[';
       header.appendChild(openBracket);
       
+      // Add comma AFTER the array if it's empty and not the last element
+      if (!isLast && isEmpty) {
+        const comma = document.createElement('span');
+        comma.className = 'json-punctuation';
+        comma.textContent = ',';
+        header.appendChild(comma);
+      }
+      
       container.appendChild(header);
       
       if (!isEmpty) {
@@ -1139,15 +1202,8 @@ Contenu
           const childWrapper = document.createElement('div');
           childWrapper.style.marginLeft = '1.5rem';
           
-          renderJsonTree(item, childWrapper, null, 0);
-          
-          // Add comma if not last
-          if (index < arr.length - 1) {
-            const comma = document.createElement('span');
-            comma.className = 'json-punctuation';
-            comma.textContent = ',';
-            childWrapper.querySelector('.json-line').appendChild(comma);
-          }
+          const isLastChild = index === arr.length - 1;
+          renderJsonTree(item, childWrapper, null, 0, isLastChild);
           
           childrenContainer.appendChild(childWrapper);
         });
@@ -1155,36 +1211,45 @@ Contenu
         const closeBracket = document.createElement('div');
         closeBracket.className = 'json-line';
         closeBracket.style.marginLeft = '0';
-        closeBracket.innerHTML = '<span class="json-punctuation">]</span>';
-        childrenContainer.appendChild(closeBracket);
+        const closeBracketSpan = document.createElement('span');
+        closeBracketSpan.className = 'json-punctuation';
+        closeBracketSpan.textContent = ']';
+        closeBracket.appendChild(closeBracketSpan);
         
+        // Add comma AFTER the closing bracket if not the last element
+        if (!isLast) {
+          const comma = document.createElement('span');
+          comma.className = 'json-punctuation';
+          comma.textContent = ',';
+          closeBracket.appendChild(comma);
+        }
+        
+        childrenContainer.appendChild(closeBracket);
         container.appendChild(childrenContainer);
         
         // Toggle functionality
-        if (toggle) {
-          toggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isCollapsed = childrenContainer.style.display === 'none';
-            childrenContainer.style.display = isCollapsed ? 'block' : 'none';
-            toggle.textContent = isCollapsed ? '▼ ' : '▶ ';
-            
-            // Update opening bracket
-            if (isCollapsed) {
-              openBracket.textContent = '[';
-              closeBracket.style.display = 'block';
-            } else {
-              openBracket.textContent = `[ ... ] (${arr.length} ${arr.length === 1 ? 'item' : 'items'})`;
-              closeBracket.style.display = 'none';
-            }
-          });
-        }
+        const toggle = header.querySelector('.json-toggle');
+        toggle.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isCollapsed = childrenContainer.style.display === 'none';
+          childrenContainer.style.display = isCollapsed ? 'block' : 'none';
+          toggle.textContent = isCollapsed ? '▼ ' : '▶ ';
+          
+          if (isCollapsed) {
+            openBracket.textContent = '[';
+            closeBracket.style.display = 'block';
+          } else {
+            openBracket.textContent = `[ ... ] (${arr.length} ${arr.length === 1 ? 'item' : 'items'})`;
+            closeBracket.style.display = 'none';
+          }
+        });
       }
     }
 
     /**
      * Render a primitive value
      */
-    function renderPrimitive(value, container, key, type) {
+    function renderPrimitive(value, container, key, type, isLast = false) {
       const line = document.createElement('div');
       line.className = 'json-line';
       
@@ -1219,6 +1284,15 @@ Contenu
       }
       
       line.appendChild(valueSpan);
+      
+      // Add comma if not the last element
+      if (!isLast) {
+        const comma = document.createElement('span');
+        comma.className = 'json-punctuation';
+        comma.textContent = ',';
+        line.appendChild(comma);
+      }
+      
       container.appendChild(line);
     }
 

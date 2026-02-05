@@ -180,11 +180,19 @@ export class BlocksParser extends EmbeddedActionsParser {
       if (tok) contentTokens.push(tok);
     });
     
+    if (this.LA(1).tokenType !== tokens.BlockCodeDelim) {
+      const lastToken = this.LA(0) || this.LA(1);
+      const line = lastToken.startLine || lastToken.endLine || 'unknown';
+      throw new Error(`Code block not closed: expected ${openDelimLength} backtick${openDelimLength > 1 ? 's' : ''} to close the block (line ${line})`);
+    }
+    
     const closeDelim = this.CONSUME2(tokens.BlockCodeDelim);
+    const closeLength = closeDelim.image.length;
     
     // Verify exact length match
-    if (closeDelim.image.length !== openDelimLength) {
-      throw new Error(`Code block closing delimiter length mismatch: expected ${openDelimLength} backticks but got ${closeDelim.image.length}`);
+    if (openDelimLength !== closeLength) {
+      const line = closeDelim.startLine || closeDelim.endLine;
+      throw new Error(`Code block closing delimiter length mismatch: expected ${openDelimLength} backtick${openDelimLength > 1 ? 's' : ''} but got ${closeLength} (line ${line})`);
     }
 
     const node: CodeBlockNode = {
@@ -264,11 +272,19 @@ export class BlocksParser extends EmbeddedActionsParser {
       if (tok) contentTokens.push(tok);
     });
     
+    if (this.LA(1).tokenType !== tokens.BlockScriptDelim) {
+      const lastToken = this.LA(0) || this.LA(1);
+      const line = lastToken.startLine || lastToken.endLine || 'unknown';
+      throw new Error(`Script block not closed: expected ${openDelimLength} exclamation mark${openDelimLength > 1 ? 's' : ''} to close the block (line ${line})`);
+    }
+    
     const closeDelim = this.CONSUME2(tokens.BlockScriptDelim);
+    const closeLength = closeDelim.image.length;
     
     // Verify exact length match
-    if (closeDelim.image.length !== openDelimLength) {
-      throw new Error(`Script block closing delimiter length mismatch: expected ${openDelimLength} exclamation marks but got ${closeDelim.image.length}`);
+    if (openDelimLength !== closeLength) {
+      const line = closeDelim.startLine || closeDelim.endLine;
+      throw new Error(`Script block closing delimiter length mismatch: expected ${openDelimLength} exclamation mark${openDelimLength > 1 ? 's' : ''} but got ${closeLength} (line ${line})`);
     }
 
     const node: ScriptBlockNode = {
@@ -484,6 +500,12 @@ export class BlocksParser extends EmbeddedActionsParser {
       if (tok) contentTokens.push(tok);
     });
     
+    if (this.LA(1).tokenType !== tokens.InlineCodeDelim) {
+      const lastToken = this.LA(0) || this.LA(1);
+      const line = lastToken.startLine || lastToken.endLine || 'unknown';
+      throw new Error(`Code inline not closed: expected a closing backtick \` (line ${line})`);
+    }
+    
     this.CONSUME2(tokens.InlineCodeDelim);
     
     let attributes: Attributes | undefined;
@@ -558,6 +580,12 @@ export class BlocksParser extends EmbeddedActionsParser {
       if (tok) contentTokens.push(tok);
     });
     
+    if (this.LA(1).tokenType !== tokens.InlineScriptDelim) {
+      const lastToken = this.LA(0) || this.LA(1);
+      const line = lastToken.startLine || lastToken.endLine || 'unknown';
+      throw new Error(`Script inline not closed: expected a closing exclamation mark ! (line ${line})`);
+    }
+    
     this.CONSUME2(tokens.InlineScriptDelim);
     
     let attributes: Attributes | undefined;
@@ -618,6 +646,12 @@ export class BlocksParser extends EmbeddedActionsParser {
         if (child) content.push(child);
       }
     });
+    
+    if (this.LA(1).tokenType !== tokens.InlineGenericDelim) {
+      const lastToken = this.LA(0) || this.LA(1);
+      const line = lastToken.startLine || lastToken.endLine || 'unknown';
+      throw new Error(`Generic inline not closed: expected a closing colon : (line ${line})`);
+    }
     
     this.CONSUME2(tokens.InlineGenericDelim);
     

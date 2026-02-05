@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src/index';
 
-describe('Full demo parsing', () => {
+describe('Full demo parsing - Issue #debug-parser', () => {
   it('should parse the complete demo without errors', () => {
     const demoComplete = `/* #metadata Demo showing ALL Blocks syntax features */
 
@@ -96,15 +96,13 @@ Content with full attributes
     
     const result = parse(demoComplete);
     
-    console.log('Number of errors:', result.errors.length);
-    if (result.errors.length > 0) {
-      console.log('\nErrors found:');
-      result.errors.forEach((err, i) => {
-        console.log(`  ${i + 1}. ${err}`);
-      });
-    }
+    // Should parse without any errors
+    expect(result.errors).toEqual([]);
     
-    // For now, we expect errors until we fix the issue
-    // expect(result.errors).toEqual([]);
+    // Should have parsed the document with children
+    expect(result.ast.children.length).toBeGreaterThan(0);
+    
+    // The first child should be the metadata comment
+    expect(result.ast.children[0].type).toBe('CommentBlock');
   });
 });

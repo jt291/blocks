@@ -33,7 +33,7 @@ export class BlocksParser extends EmbeddedActionsParser {
         { ALT: () => this.SUBRULE(this.blockElement) },
         { 
           // Only try to parse inlineElement if it's actually an inline element
-          // Skip ':' followed by whitespace (likely punctuation, not inline generic)
+          // Skip ':' followed by whitespace/newline (likely punctuation, not inline generic)
           GATE: () => {
             const la1 = this.LA(1).tokenType;
             // Always try to parse inline comments, code, and scripts
@@ -42,15 +42,15 @@ export class BlocksParser extends EmbeddedActionsParser {
                 la1 === tokens.InlineScriptDelim) {
               return true;
             }
-            // For InlineGenericDelim (':'), only parse if not followed by whitespace
-            // (unless '#' comes after the whitespace for named syntax)
+            // For InlineGenericDelim (':'), only parse if not followed by whitespace/newline
+            // (unless '#' comes after for named syntax)
             if (la1 === tokens.InlineGenericDelim) {
               const la2 = this.LA(2).tokenType;
               if (la2 === tokens.Hash) {
                 return true; // ':#name' syntax
               }
-              if (la2 === tokens.Whitespace) {
-                return false; // 'text: ' likely punctuation
+              if (la2 === tokens.Whitespace || la2 === tokens.Newline) {
+                return false; // 'text: ' or 'text:\n' likely punctuation
               }
               return true; // ':text:' syntax
             }
@@ -368,7 +368,7 @@ export class BlocksParser extends EmbeddedActionsParser {
           { ALT: () => this.SUBRULE(this.blockElement) },
           {
             // Only try to parse inlineElement if it's actually an inline element
-            // Skip ':' followed by whitespace (likely punctuation, not inline generic)
+            // Skip ':' followed by whitespace/newline (likely punctuation, not inline generic)
             GATE: () => {
               const la1 = this.LA(1).tokenType;
               // Always try to parse inline comments, code, and scripts
@@ -377,15 +377,15 @@ export class BlocksParser extends EmbeddedActionsParser {
                   la1 === tokens.InlineScriptDelim) {
                 return true;
               }
-              // For InlineGenericDelim (':'), only parse if not followed by whitespace
-              // (unless '#' comes after the whitespace for named syntax)
+              // For InlineGenericDelim (':'), only parse if not followed by whitespace/newline
+              // (unless '#' comes after for named syntax)
               if (la1 === tokens.InlineGenericDelim) {
                 const la2 = this.LA(2).tokenType;
                 if (la2 === tokens.Hash) {
                   return true; // ':#name' syntax
                 }
-                if (la2 === tokens.Whitespace) {
-                  return false; // 'text: ' likely punctuation
+                if (la2 === tokens.Whitespace || la2 === tokens.Newline) {
+                  return false; // 'text: ' or 'text:\n' likely punctuation
                 }
                 return true; // ':text:' syntax
               }
@@ -670,7 +670,7 @@ export class BlocksParser extends EmbeddedActionsParser {
         const child = this.OR([
           {
             // Only try to parse inlineElement if it's actually an inline element
-            // Skip ':' followed by whitespace (likely punctuation, not inline generic)
+            // Skip ':' followed by whitespace/newline (likely punctuation, not inline generic)
             GATE: () => {
               const la1 = this.LA(1).tokenType;
               // Always try to parse inline comments, code, and scripts
@@ -679,15 +679,15 @@ export class BlocksParser extends EmbeddedActionsParser {
                   la1 === tokens.InlineScriptDelim) {
                 return true;
               }
-              // For InlineGenericDelim (':'), only parse if not followed by whitespace
-              // (unless '#' comes after the whitespace for named syntax)
+              // For InlineGenericDelim (':'), only parse if not followed by whitespace/newline
+              // (unless '#' comes after for named syntax)
               if (la1 === tokens.InlineGenericDelim) {
                 const la2 = this.LA(2).tokenType;
                 if (la2 === tokens.Hash) {
                   return true; // ':#name' syntax
                 }
-                if (la2 === tokens.Whitespace) {
-                  return false; // 'text: ' likely punctuation
+                if (la2 === tokens.Whitespace || la2 === tokens.Newline) {
+                  return false; // 'text: ' or 'text:\n' likely punctuation
                 }
                 return true; // ':text:' syntax
               }

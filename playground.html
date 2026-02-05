@@ -744,14 +744,18 @@ Contenu
       
       if (!errors || errors.length === 0) return;
       
-      errors.forEach(error => {
-        const lineNum = extractLineNumber(error);
+      // Ensure errors is an array
+      const errorArray = Array.isArray(errors) ? errors : [errors];
+      
+      errorArray.forEach(error => {
+        const errorStr = String(error);
+        const lineNum = extractLineNumber(errorStr);
         
         if (lineNum) {
           const lineEl = document.querySelector(`.line-number[data-line="${lineNum}"]`);
           if (lineEl) {
             lineEl.classList.add('error');
-            lineEl.title = error; // Show error on hover
+            lineEl.title = errorStr; // Show error on hover
           }
         } else {
           // If we can't determine the line, try to guess from last line
@@ -761,7 +765,7 @@ Contenu
           const lineEl = document.querySelector(`.line-number[data-line="${lastLineNum}"]`);
           if (lineEl) {
             lineEl.classList.add('error');
-            lineEl.title = error;
+            lineEl.title = errorStr;
           }
         }
       });
@@ -803,10 +807,14 @@ Contenu
       errorsEl.style.display = 'block';
       errorsEl.className = 'errors';
       
-      const errorItems = errors.map(error => {
-        const lineNum = extractLineNumber(error);
+      // Ensure errors is an array
+      const errorArray = Array.isArray(errors) ? errors : [errors];
+      
+      const errorItems = errorArray.map(error => {
+        const errorStr = String(error);
+        const lineNum = extractLineNumber(errorStr);
         const lineInfo = lineNum ? `<strong>Ligne ${lineNum}:</strong> ` : '';
-        return `<div class="error-item">${lineInfo}${escapeHtml(error)}</div>`;
+        return `<div class="error-item">${lineInfo}${escapeHtml(errorStr)}</div>`;
       }).join('');
       
       errorsEl.innerHTML = '<div style="font-weight: 600; margin-bottom: 0.5rem;">⚠️ Erreurs de parsing:</div>' + errorItems;

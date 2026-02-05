@@ -366,7 +366,7 @@
       <div class="panel-header">
         Editor
         <div class="editor-controls">
-          <button id="cheatsheetBtn" title="Ouvrir le cheatsheet">📖 Cheatsheet</button>
+          <button id="cheatsheetBtn" title="Open the cheatsheet">📖 Cheatsheet</button>
           <select id="examplesSelect">
             <option value="">-- Select an example --</option>
           <optgroup label="Commentaires">
@@ -840,7 +840,7 @@ Contenu
     // Open cheatsheet in new tab
     const cheatsheetBtn = document.getElementById('cheatsheetBtn');
     cheatsheetBtn.addEventListener('click', () => {
-      window.open('cheatsheet.html', '_blank');
+      window.open('cheatsheet.html', '_blank', 'noopener,noreferrer');
     });
     
     // Debounced parse

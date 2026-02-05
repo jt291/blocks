@@ -541,12 +541,17 @@ export class BlocksParser extends EmbeddedActionsParser {
     
     // Parse content (can contain nested inlines)
     const content: InlineNode[] = [];
-    this.MANY2(() => {
-      const child = this.OR([
-        { ALT: () => this.SUBRULE(this.inlineElement) },
-        { ALT: () => this.SUBRULE(this.textElement) }
-      ]);
-      if (child) content.push(child);
+    
+    // Use MANY with GATE to check for closing delimiter
+    this.MANY2({
+      GATE: () => this.LA(1).tokenType !== tokens.InlineGenericDelim,
+      DEF: () => {
+        const child = this.OR([
+          { ALT: () => this.SUBRULE(this.inlineElement) },
+          { ALT: () => this.SUBRULE(this.textElement) }
+        ]);
+        if (child) content.push(child);
+      }
     });
     
     this.CONSUME2(tokens.InlineGenericDelim);

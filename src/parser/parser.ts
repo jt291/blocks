@@ -36,6 +36,56 @@ export class BlocksParser extends EmbeddedActionsParser {
     this.performSelfAnalysis();
   }
 
+  /**
+   * Helper function to check if current colon is part of a valid generic inline
+   * by looking ahead for a closing colon within a reasonable distance
+   */
+  private isValidGenericInline(): boolean {
+    // Check if we're at an InlineGenericDelim token
+    if (this.LA(1).tokenType !== tokens.InlineGenericDelim) {
+      return false;
+    }
+
+    let newlineCount = 0;
+    const maxLookahead = 100;
+
+    // Look ahead for a closing colon
+    for (let i = 2; i <= maxLookahead; i++) {
+      const token = this.LA(i);
+
+      // EOF - no closing colon found
+      if (!token || token.tokenType === tokens.EOF) {
+        return false;
+      }
+
+      // Don't traverse too many newlines (inline shouldn't span many lines)
+      if (token.tokenType === tokens.Newline) {
+        newlineCount++;
+        if (newlineCount > 2) {
+          return false;
+        }
+        continue;
+      }
+
+      // An inline cannot contain block delimiters
+      if (
+        token.tokenType === tokens.BlockCodeDelim ||
+        token.tokenType === tokens.BlockScriptDelim ||
+        token.tokenType === tokens.BlockGenericDelim ||
+        token.tokenType === tokens.BlockCommentStart
+      ) {
+        return false;
+      }
+
+      // Found closing colon
+      if (token.tokenType === tokens.InlineGenericDelim) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   // Main document rule
   public document = this.RULE(
     "document",
@@ -45,7 +95,13 @@ export class BlocksParser extends EmbeddedActionsParser {
       this.MANY(() => {
         const child = this.OR([
           { ALT: () => this.SUBRULE(this.blockElement) },
-          { ALT: () => this.SUBRULE(this.inlineElement) },
+          { ALT: () => this.SUBRULE(this.commentInline) },
+          { ALT: () => this.SUBRULE(this.codeInline) },
+          { ALT: () => this.SUBRULE(this.scriptInline) },
+          { 
+            GATE: () => this.isValidGenericInline(),
+            ALT: () => this.SUBRULE(this.genericInline)
+          },
           { ALT: () => this.SUBRULE(this.textElement) },
         ]);
         if (child) children.push(child);
@@ -361,7 +417,13 @@ export class BlocksParser extends EmbeddedActionsParser {
       DEF: () => {
         const child = this.OR2([
           { ALT: () => this.SUBRULE(this.blockElement) },
-          { ALT: () => this.SUBRULE(this.inlineElement) },
+          { ALT: () => this.SUBRULE2(this.commentInline) },
+          { ALT: () => this.SUBRULE2(this.codeInline) },
+          { ALT: () => this.SUBRULE2(this.scriptInline) },
+          { 
+            GATE: () => this.isValidGenericInline(),
+            ALT: () => this.SUBRULE2(this.genericInline)
+          },
           { ALT: () => this.SUBRULE(this.textElement) },
         ]);
         if (child) content.push(child);
@@ -386,16 +448,6 @@ export class BlocksParser extends EmbeddedActionsParser {
     if (attributes) node.attributes = attributes;
 
     return node;
-  });
-
-  // Inline elements
-  private inlineElement = this.RULE("inlineElement", (): InlineNode => {
-    return this.OR([
-      { ALT: () => this.SUBRULE(this.commentInline) },
-      { ALT: () => this.SUBRULE(this.codeInline) },
-      { ALT: () => this.SUBRULE(this.scriptInline) },
-      { ALT: () => this.SUBRULE(this.genericInline) },
-    ]);
   });
 
   // Comment inline: // #name? content\n
@@ -639,7 +691,9 @@ export class BlocksParser extends EmbeddedActionsParser {
       GATE: () => this.LA(1).tokenType !== tokens.InlineGenericDelim,
       DEF: () => {
         const child = this.OR([
-          { ALT: () => this.SUBRULE(this.inlineElement) },
+          { ALT: () => this.SUBRULE2(this.commentInline) },
+          { ALT: () => this.SUBRULE3(this.codeInline) },
+          { ALT: () => this.SUBRULE3(this.scriptInline) },
           { ALT: () => this.SUBRULE(this.textElement) },
         ]);
         if (child) content.push(child);
@@ -684,6 +738,7 @@ export class BlocksParser extends EmbeddedActionsParser {
       { ALT: () => this.CONSUME(tokens.Dot) },
       { ALT: () => this.CONSUME(tokens.Percent) },
       { ALT: () => this.CONSUME(tokens.Equals) },
+      { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
       { ALT: () => this.CONSUME(tokens.AnyChar) },
     ]);
 

@@ -1031,13 +1031,18 @@ more text
       expect(result.errors[0]).toContain("inline script");
     });
 
-    it("should provide clear error message for unclosed inline generic", () => {
+    it("should treat unclosed colon as text, not inline generic", () => {
       const result = parse("Text with :unclosed generic");
 
-      expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toContain("Parse error at line");
-      expect(result.errors[0]).toContain("Expected closing colon");
-      expect(result.errors[0]).toContain("inline generic");
+      // With lookahead, this is treated as text, not an error
+      expect(result.errors).toHaveLength(0);
+      expect(result.ast.children.length).toBeGreaterThan(0);
+      // The colon should be treated as text
+      const textContent = result.ast.children
+        .filter((c) => c.type === "Text")
+        .map((c) => (c as any).value)
+        .join("");
+      expect(textContent).toContain(":");
     });
 
     it("should provide specific error for generic block length mismatch", () => {
@@ -1156,13 +1161,101 @@ more text
       expect(types).toContain("GenericInline");
     });
 
-    it("should report correct line numbers for errors", () => {
+    it("should treat unclosed colon as text on any line", () => {
       const input = "Line 1\nLine 2\nLine 3\n:unclosed inline";
 
       const result = parse(input);
 
-      expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toMatch(/line 4/i);
+      // With lookahead, unclosed colons are treated as text, not errors
+      expect(result.errors).toHaveLength(0);
+      const textContent = result.ast.children
+        .filter((c) => c.type === "Text")
+        .map((c) => (c as any).value)
+        .join("");
+      expect(textContent).toContain(":");
+    });
+
+    // New tests for colon punctuation detection
+    it("should treat single colon as text, not inline generic", () => {
+      const input = "Block code with attributes:";
+      const result = parse(input);
+
+      expect(result.errors).toHaveLength(0);
+      const textContent = result.ast.children
+        .filter((c) => c.type === "Text")
+        .map((c) => (c as any).value)
+        .join("");
+      expect(textContent).toContain("Block code with attributes:");
+    });
+
+    it("should treat colon in list items as text", () => {
+      const input = "List item: value";
+      const result = parse(input);
+
+      expect(result.errors).toHaveLength(0);
+      const textContent = result.ast.children
+        .filter((c) => c.type === "Text")
+        .map((c) => (c as any).value)
+        .join("");
+      expect(textContent).toContain(":");
+    });
+
+    it("should parse valid generic inline correctly", () => {
+      const input = "Text with :emphasis: inline.";
+      const result = parse(input);
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.ast.children).toHaveLength(3); // Text + GenericInline + Text
+      expect(result.ast.children[1].type).toBe("GenericInline");
+    });
+
+    it("should parse named generic inline", () => {
+      const input = "Text with :#span styled: inline.";
+      const result = parse(input);
+
+      expect(result.errors).toHaveLength(0);
+      const genericInline = result.ast.children.find(
+        (c) => c.type === "GenericInline",
+      );
+      expect(genericInline).toBeDefined();
+      expect(genericInline.name).toBe("span");
+    });
+
+    it("should handle colon at end of line as text", () => {
+      const input = "Title:\nContent here";
+      const result = parse(input);
+
+      expect(result.errors).toHaveLength(0);
+      // Title: should be text, not start of inline generic
+      const textContent = result.ast.children
+        .filter((c) => c.type === "Text")
+        .map((c) => (c as any).value)
+        .join("");
+      expect(textContent).toContain("Title:");
+    });
+
+    it("should parse the complete demo without errors", () => {
+      const input = `Block code with attributes:
+
+\`\`\`#python {#example1 .highlight %numbered}
+def greet(name):
+    return f"Hello, {name}!"
+\`\`\`
+
+Script block with attributes:
+
+!!!#init {.executable}
+setupApp();
+!!!`;
+
+      const result = parse(input);
+
+      expect(result.errors).toHaveLength(0);
+      // Should have text nodes and block nodes
+      const blocks = result.ast.children.filter(
+        (c) => c.type === "CodeBlock" || c.type === "ScriptBlock",
+      );
+      expect(blocks).toHaveLength(2);
     });
 
     it("should report correct line number for unclosed code inline", () => {

@@ -115,6 +115,7 @@ describe('Parser', () => {
       expect(result.ast.children).toHaveLength(1);
       expect(result.ast.children[0]).toMatchObject({
         type: 'ScriptBlock',
+        // Note: Leading space after delimiter is skipped (consistent with new parser behavior)
         content: 'script content '
       });
     });

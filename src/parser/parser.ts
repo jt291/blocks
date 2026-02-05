@@ -313,8 +313,10 @@ export class BlocksParser extends EmbeddedActionsParser {
     this.MANY4({
       GATE: () => {
         // Check if we've reached the closing delimiter with same length
-        return !(this.LA(1).tokenType === tokens.BlockGenericDelim && 
-                 (this.LA(1) as IToken).image?.length === delimLength);
+        const tok = this.LA(1) as IToken;
+        return !(tok.tokenType === tokens.BlockGenericDelim && 
+                 tok.image !== undefined && 
+                 tok.image.length === delimLength);
       },
       DEF: () => {
         const child = this.OR2([

@@ -32,17 +32,17 @@ export interface BlockNode extends Node {
 }
 
 export interface CommentBlockNode extends BlockNode {
-  type: 'CommentBlock';
+  type: "CommentBlock";
   content: string;
 }
 
 export interface CodeBlockNode extends BlockNode {
-  type: 'CodeBlock';
+  type: "CodeBlock";
   content: string;
 }
 
 export interface ScriptBlockNode extends BlockNode {
-  type: 'ScriptBlock';
+  type: "ScriptBlock";
   content: string;
 }
 
@@ -50,7 +50,7 @@ export interface ScriptBlockNode extends BlockNode {
 // The content type needs to include BlockNode for nesting, which would conflict
 // with BlockNode's content type of `string | InlineNode[]`.
 export interface GenericBlockNode extends Node {
-  type: 'GenericBlock';
+  type: "GenericBlock";
   name?: string;
   attributes?: Attributes;
   content: (BlockNode | InlineNode | TextNode)[];
@@ -64,37 +64,46 @@ export interface InlineNode extends Node {
 }
 
 export interface CommentInlineNode extends InlineNode {
-  type: 'CommentInline';
+  type: "CommentInline";
   content: string;
 }
 
 export interface CodeInlineNode extends InlineNode {
-  type: 'CodeInline';
+  type: "CodeInline";
   content: string;
 }
 
 export interface ScriptInlineNode extends InlineNode {
-  type: 'ScriptInline';
+  type: "ScriptInline";
   content: string;
 }
 
 export interface GenericInlineNode extends InlineNode {
-  type: 'GenericInline';
+  type: "GenericInline";
   content: (InlineNode | TextNode)[];
 }
 
 export interface TextNode extends Node {
-  type: 'Text';
+  type: "Text";
   value: string;
 }
 
 // Root document
 export interface DocumentNode extends Node {
-  type: 'Document';
+  type: "Document";
   children: (BlockNode | InlineNode | TextNode)[];
 }
 
 // Type unions
-export type AnyBlockNode = CommentBlockNode | CodeBlockNode | ScriptBlockNode | GenericBlockNode;
-export type AnyInlineNode = CommentInlineNode | CodeInlineNode | ScriptInlineNode | GenericInlineNode | TextNode;
+export type AnyBlockNode =
+  | CommentBlockNode
+  | CodeBlockNode
+  | ScriptBlockNode
+  | GenericBlockNode;
+export type AnyInlineNode =
+  | CommentInlineNode
+  | CodeInlineNode
+  | ScriptInlineNode
+  | GenericInlineNode
+  | TextNode;
 export type AnyNode = DocumentNode | AnyBlockNode | AnyInlineNode;

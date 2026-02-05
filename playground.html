@@ -107,64 +107,53 @@
       background: #0056b3;
     }
     
-    .ast-tree {
+    /* Styles for examples select */
+    #examplesSelect {
+      padding: 0.375rem 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: white;
+      font-size: 0.875rem;
+      cursor: pointer;
+      min-width: 200px;
+    }
+    
+    #examplesSelect:focus {
+      outline: 2px solid #007bff;
+      outline-offset: 1px;
+    }
+    
+    /* Styles for JSON display */
+    .json-display {
       font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
       font-size: 13px;
       line-height: 1.6;
+      overflow: auto;
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 4px;
+      margin: 0;
     }
     
-    .ast-node {
-      margin-left: 1rem;
-    }
-    
-    .ast-node-header {
-      cursor: pointer;
-      padding: 2px 4px;
-      border-radius: 3px;
-      user-select: none;
-    }
-    
-    .ast-node-header:hover {
-      background: #f0f0f0;
-    }
-    
-    .ast-node-children {
-      margin-left: 1rem;
-      border-left: 1px solid #ddd;
-      padding-left: 0.5rem;
-    }
-    
-    .ast-node-children.collapsed {
-      display: none;
-    }
-    
-    .toggle-icon {
-      display: inline-block;
-      width: 12px;
+    .json-key {
+      color: #0066cc;
       font-weight: bold;
-      color: #666;
     }
     
-    /* Couleurs par type */
-    .node-Document { color: #1e3a8a; font-weight: bold; }
-    .node-GenericBlock { color: #15803d; }
-    .node-CodeBlock { color: #ea580c; }
-    .node-ScriptBlock { color: #dc2626; }
-    .node-CommentBlock { color: #6b7280; }
-    .node-GenericInline { color: #7c3aed; }
-    .node-CodeInline { color: #9333ea; }
-    .node-ScriptInline { color: #a855f7; }
-    .node-CommentInline { color: #8b5cf6; }
-    .node-Text { color: #1f2937; }
-    
-    .node-meta {
-      color: #6b7280;
-      font-style: italic;
+    .json-string {
+      color: #22863a;
     }
     
-    .node-content-preview {
-      color: #059669;
-      font-size: 0.9em;
+    .json-number {
+      color: #005cc5;
+    }
+    
+    .json-boolean {
+      color: #d73a49;
+    }
+    
+    .json-null {
+      color: #6f42c1;
     }
   </style>
 </head>
@@ -178,6 +167,44 @@
     <div class="panel">
       <div class="panel-header">
         Editor
+        <select id="examplesSelect">
+          <option value="">-- Select an example --</option>
+          <optgroup label="Commentaires">
+            <option value="comment-block-simple">Commentaire de bloc simple</option>
+            <option value="comment-block-named">Commentaire de bloc nommé</option>
+            <option value="comment-inline-simple">Commentaire inline simple</option>
+            <option value="comment-inline-named">Commentaire inline nommé</option>
+          </optgroup>
+          <optgroup label="Blocs de code">
+            <option value="code-block-simple">Bloc de code simple</option>
+            <option value="code-block-named">Bloc de code nommé</option>
+            <option value="code-block-attrs">Bloc de code nommé avec attributs</option>
+          </optgroup>
+          <optgroup label="Blocs de script">
+            <option value="script-block-simple">Bloc de script simple</option>
+            <option value="script-block-named">Bloc de script nommé</option>
+            <option value="script-block-attrs">Bloc de script nommé avec attributs</option>
+          </optgroup>
+          <optgroup label="Inlines">
+            <option value="inline-code">Code inline simple et nommé</option>
+            <option value="inline-script">Script inline simple et nommé</option>
+            <option value="inline-generic">Générique inline simple et nommé</option>
+          </optgroup>
+          <optgroup label="Blocs génériques">
+            <option value="generic-block-simple">Bloc générique simple</option>
+            <option value="generic-block-named">Bloc générique nommé</option>
+            <option value="generic-block-attrs">Bloc générique avec attributs</option>
+            <option value="generic-block-nested-simple">Blocs génériques imbriqués simples</option>
+            <option value="generic-block-nested-complex">Blocs génériques imbriqués complexes</option>
+            <option value="generic-block-html">Bloc générique avec HTML</option>
+            <option value="generic-block-mixed">Bloc générique avec contenu mixte</option>
+          </optgroup>
+          <optgroup label="Exemples complexes">
+            <option value="complex-complete">Exemple complet</option>
+            <option value="complex-document">Document complet</option>
+            <option value="complex-multiple">Imbrications multiples</option>
+          </optgroup>
+        </select>
       </div>
       <div class="panel-content">
         <textarea id="editor" spellcheck="false"></textarea>
@@ -188,15 +215,13 @@
     <!-- AST Panel -->
     <div class="panel">
       <div class="panel-header">
-        AST Tree
+        AST (JSON)
         <div class="ast-controls">
-          <button id="expandAll">Expand All</button>
-          <button id="collapseAll">Collapse All</button>
           <button id="copyJson">Copy JSON</button>
         </div>
       </div>
       <div class="panel-content">
-        <div id="astTree" class="ast-tree"></div>
+        <pre id="astTree" class="json-display"></pre>
       </div>
     </div>
   </main>
@@ -208,15 +233,103 @@
     const editor = document.getElementById('editor');
     const astTreeEl = document.getElementById('astTree');
     const errorsEl = document.getElementById('errors');
-    const expandAllBtn = document.getElementById('expandAll');
-    const collapseAllBtn = document.getElementById('collapseAll');
+    const examplesSelect = document.getElementById('examplesSelect');
     const copyJsonBtn = document.getElementById('copyJson');
     
     let currentAst = null;
     let parseTimeout = null;
     
-    // Default example
-    const defaultCode = `/* #include header.html */
+    // Examples dictionary
+    const examples = {
+      // Commentaires
+      'comment-block-simple': `/* This is a simple block comment */`,
+      
+      'comment-block-named': `/*#note This is a named block comment */`,
+      
+      'comment-inline-simple': `Text with // inline comment`,
+      
+      'comment-inline-named': `//#todo Add more features
+Text continues here`,
+      
+      // Blocs de code
+      'code-block-simple': '```\nconst x = 1;\nconsole.log(x);\n```',
+      
+      'code-block-named': '```#javascript\nconst greeting = "Hello";\nconsole.log(greeting);\n```',
+      
+      'code-block-attrs': '```#python {#code1 .highlight .numbered}\ndef hello():\n    print("Hello World")\n```',
+      
+      // Blocs de script
+      'script-block-simple': '!!!\nalert("Hello");\n!!!',
+      
+      'script-block-named': '!!!#javascript\nconst data = { key: "value" };\nconsole.log(data);\n!!!',
+      
+      'script-block-attrs': '!!!#python {#script1 .executable}\nimport sys\nprint(sys.version)\n!!!',
+      
+      // Inlines
+      'inline-code': 'Text with `inline code` and `#javascript const x = 1` examples.',
+      
+      'inline-script': 'Execute :alert("Hi"): or :#javascript console.log("test"): inline.',
+      
+      'inline-generic': 'Use :emphasis: or :#strong Bold text: for styling.',
+      
+      // Blocs génériques simples
+      'generic-block-simple': `:::
+This is a simple generic block
+with multiple lines
+:::`,
+      
+      'generic-block-named': `:::#container
+This is a named generic block
+:::`,
+      
+      'generic-block-attrs': `:::#section {#main .wrapper .highlighted}
+Content with id and classes
+:::`,
+      
+      'generic-block-nested-simple': `:::
+Outer block
+:::::
+Inner block
+:::::
+:::`,
+      
+      'generic-block-nested-complex': `:::#outer {#container}
+Level 1 content
+
+::::::#inner1 {.box}
+Level 2 - First inner
+::::::
+
+::::::#inner2 {.box}
+Level 2 - Second inner
+
+:::::::
+Level 3 nested
+:::::::
+::::::
+:::`,
+      
+      'generic-block-html': `:::#article
+<h2>HTML Title</h2>
+<p>Paragraph with <strong>bold</strong> text.</p>
+<ul>
+  <li>Item 1</li>
+  <li>Item 2</li>
+</ul>
+:::`,
+      
+      'generic-block-mixed': `:::#wrapper
+Regular text with :emphasis: inline.
+
+\`\`\`#javascript
+const mixed = true;
+\`\`\`
+
+More text with \`code\` and :#link href="#": clickable:.
+:::`,
+      
+      // Exemples complexes
+      'complex-complete': `/* #include header.html */
 
 :::#container {#main .wrapper}
 Text with \`code\` and :emphasis:
@@ -235,9 +348,81 @@ print("Hello World")
 !!!
 
 // This is a comment
-//#todo Add more features`;
+//#todo Add more features`,
+      
+      'complex-document': `/* Document metadata */
+/*#title My Document */
+/*#author John Doe */
+
+:::#header {.top-bar}
+Main Title
+
+Welcome to the document.
+:::
+
+:::#content {#main}
+This is the main content area.
+
+\`\`\`#python {.code-sample}
+def example():
+    return "Hello"
+\`\`\`
+
+Text with :emphasis: and \`inline code\`.
+:::
+
+:::#sidebar {.info-box}
+Important information
+Read the documentation.
+:::
+
+:::#footer
+© 2026 - All rights reserved
+// Footer comment
+:::`,
+      
+      'complex-multiple': `:::#level1
+First level
+
+::::::#level2a
+Second level A
+
+::::::::#level3
+Third level
+::::::::
+:::::
+
+::::::#level2b
+Second level B
+
+::::::::#level3a
+Third level A
+::::::::
+
+::::::::#level3b
+Third level B
+
+::::::::::#level4
+Fourth level with \`code\` and :inline:
+::::::::::
+::::::::
+:::::
+:::`
+    };
+    
+    // Default example
+    const defaultCode = examples['complex-complete'];
     
     editor.value = defaultCode;
+    
+    // Handle example selection
+    examplesSelect.addEventListener('change', (e) => {
+      const exampleKey = e.target.value;
+      if (exampleKey && examples[exampleKey]) {
+        editor.value = examples[exampleKey];
+        parseCode();
+      }
+    });
     
     // Debounced parse
     function handleInput() {
@@ -268,124 +453,38 @@ print("Hello World")
         errorsEl.style.display = 'none';
       }
       
-      // Display AST
-      renderAst(result.ast);
+      // Display AST as formatted JSON with syntax highlighting
+      renderJsonAst(result.ast);
     }
     
-    // Render AST tree
-    function renderAst(ast) {
-      astTreeEl.innerHTML = '';
-      const tree = createNodeElement(ast, 0);
-      astTreeEl.appendChild(tree);
+    // Render AST as formatted JSON with syntax highlighting
+    function renderJsonAst(ast) {
+      const json = JSON.stringify(ast, null, 2);
+      const highlighted = syntaxHighlightJson(json);
+      astTreeEl.innerHTML = highlighted;
     }
     
-    // Create node element
-    function createNodeElement(node, depth) {
-      const container = document.createElement('div');
-      container.className = 'ast-node';
+    // Syntax highlight JSON
+    function syntaxHighlightJson(json) {
+      // Escape HTML entities first
+      json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       
-      const header = document.createElement('div');
-      header.className = `ast-node-header node-${node.type}`;
-      
-      const hasChildren = (Array.isArray(node.content) && node.content.length > 0) ||
-                          (Array.isArray(node.children) && node.children.length > 0);
-      
-      const toggleIcon = document.createElement('span');
-      toggleIcon.className = 'toggle-icon';
-      toggleIcon.textContent = hasChildren ? '▼ ' : '  ';
-      header.appendChild(toggleIcon);
-      
-      const typeSpan = document.createElement('span');
-      typeSpan.textContent = node.type;
-      header.appendChild(typeSpan);
-      
-      // Add metadata
-      const meta = [];
-      if (node.name) meta.push(`#${node.name}`);
-      if (node.attributes?.id) meta.push(`(#${node.attributes.id})`);
-      if (node.attributes?.classes?.length) {
-        meta.push(`(.${node.attributes.classes.join(' .')})`);
-      }
-      
-      if (meta.length > 0) {
-        const metaSpan = document.createElement('span');
-        metaSpan.className = 'node-meta';
-        metaSpan.textContent = ' ' + meta.join(' ');
-        header.appendChild(metaSpan);
-      }
-      
-      // Add content preview
-      if (typeof node.content === 'string') {
-        const preview = node.content.length > 50 
-          ? node.content.substring(0, 50) + '...'
-          : node.content;
-        const contentSpan = document.createElement('span');
-        contentSpan.className = 'node-content-preview';
-        contentSpan.textContent = ` "${escapeHtml(preview)}"`;
-        header.appendChild(contentSpan);
-      } else if (Array.isArray(node.content)) {
-        const countSpan = document.createElement('span');
-        countSpan.className = 'node-meta';
-        countSpan.textContent = ` [${node.content.length} children]`;
-        header.appendChild(countSpan);
-      } else if (Array.isArray(node.children)) {
-        const countSpan = document.createElement('span');
-        countSpan.className = 'node-meta';
-        countSpan.textContent = ` [${node.children.length} children]`;
-        header.appendChild(countSpan);
-      }
-      
-      container.appendChild(header);
-      
-      // Add children
-      if (hasChildren) {
-        const childrenContainer = document.createElement('div');
-        childrenContainer.className = 'ast-node-children';
-        
-        const children = node.content || node.children || [];
-        children.forEach(child => {
-          if (child && typeof child === 'object') {
-            childrenContainer.appendChild(createNodeElement(child, depth + 1));
+      return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+        let cls = 'json-number';
+        if (/^"/.test(match)) {
+          if (/:$/.test(match)) {
+            cls = 'json-key';
+          } else {
+            cls = 'json-string';
           }
-        });
-        
-        container.appendChild(childrenContainer);
-        
-        // Toggle functionality
-        header.addEventListener('click', () => {
-          childrenContainer.classList.toggle('collapsed');
-          toggleIcon.textContent = childrenContainer.classList.contains('collapsed') 
-            ? '▶ ' 
-            : '▼ ';
-        });
-      }
-      
-      return container;
+        } else if (/true|false/.test(match)) {
+          cls = 'json-boolean';
+        } else if (/null/.test(match)) {
+          cls = 'json-null';
+        }
+        return '<span class="' + cls + '">' + match + '</span>';
+      });
     }
-    
-    // Expand all nodes
-    expandAllBtn.addEventListener('click', () => {
-      document.querySelectorAll('.ast-node-children').forEach(el => {
-        el.classList.remove('collapsed');
-      });
-      document.querySelectorAll('.toggle-icon').forEach(el => {
-        if (el.textContent.trim() === '▶') {
-          el.textContent = '▼ ';
-        }
-      });
-    });
-    
-    // Collapse all nodes
-    collapseAllBtn.addEventListener('click', () => {
-      document.querySelectorAll('.ast-node-children').forEach(el => {
-        el.classList.add('collapsed');
-      });
-      document.querySelectorAll('.toggle-icon').forEach(el => {
-        if (el.textContent.trim() === '▼') {
-          el.textContent = '▶ ';
-        }
-      });
-    });
     
     // Copy JSON
     copyJsonBtn.addEventListener('click', async () => {

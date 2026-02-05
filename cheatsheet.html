@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,42 +11,101 @@
       box-sizing: border-box;
     }
 
+    /* Theme variables - Light (default) */
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --bg-tertiary: #f5f5f5;
+      --text-primary: #333;
+      --text-secondary: #666;
+      --border-color: #ddd;
+      --code-bg: #2d2d2d;
+      --code-text: #f8f8f2;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       line-height: 1.6;
-      color: #333;
-      background: #f5f5f5;
+      color: var(--text-primary);
+      background: var(--bg-secondary);
       padding: 2rem;
+      transition: background 0.3s, color 0.3s;
     }
 
     .container {
       max-width: 1200px;
       margin: 0 auto;
-      background: white;
+      background: var(--bg-primary);
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
       overflow: hidden;
     }
 
+    /* Header with controls */
     header {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       padding: 2rem;
-      text-align: center;
     }
 
-    header h1 {
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .header-main h1 {
       font-size: 2.5rem;
       margin-bottom: 0.5rem;
     }
 
-    header p {
+    .header-main p {
       font-size: 1.1rem;
       opacity: 0.9;
     }
 
+    .header-controls {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+    }
+
+    .control-group label {
+      font-size: 1.2rem;
+    }
+
+    .control-group select {
+      background: white;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: #333;
+    }
+
+    .control-group select:hover {
+      background: #f5f5f5;
+    }
+
     .content {
       padding: 2rem;
+      color: var(--text-primary);
     }
 
     .section {
@@ -70,25 +129,26 @@
     .syntax-item {
       margin-bottom: 2rem;
       padding: 1.5rem;
-      background: #f8f9fa;
+      background: var(--bg-secondary);
       border-radius: 6px;
       border-left: 4px solid #667eea;
     }
 
     .syntax-item h4 {
       font-size: 1.1rem;
-      color: #333;
+      color: var(--text-primary);
       margin-bottom: 0.5rem;
     }
 
     .syntax-item p {
       margin-bottom: 1rem;
-      color: #666;
+      color: var(--text-secondary);
     }
 
+    /* Code blocks - INVERTED THEME */
     .code-example {
-      background: #2d2d2d;
-      color: #f8f8f2;
+      background: var(--code-bg);
+      color: var(--code-text);
       padding: 1rem;
       border-radius: 4px;
       overflow-x: auto;
@@ -164,7 +224,7 @@
     }
 
     code {
-      background: #f4f4f4;
+      background: var(--bg-tertiary);
       padding: 0.2rem 0.4rem;
       border-radius: 3px;
       font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
@@ -173,7 +233,7 @@
     }
 
     .toc {
-      background: #f8f9fa;
+      background: var(--bg-secondary);
       padding: 1.5rem;
       border-radius: 6px;
       margin-bottom: 2rem;
@@ -210,6 +270,138 @@
       text-align: center;
     }
 
+    /* Theme Dark */
+    [data-theme="dark"] {
+      --bg-primary: #1e1e1e;
+      --bg-secondary: #252525;
+      --bg-tertiary: #2d2d2d;
+      --text-primary: #e0e0e0;
+      --text-secondary: #a0a0a0;
+      --border-color: #404040;
+      --code-bg: #f5f5f5;
+      --code-text: #2d2d2d;
+    }
+
+    [data-theme="dark"] body {
+      background: var(--bg-secondary);
+    }
+
+    [data-theme="dark"] .container {
+      background: var(--bg-primary);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    [data-theme="dark"] th {
+      background: #764ba2;
+    }
+
+    [data-theme="dark"] tr:hover {
+      background: var(--bg-tertiary);
+    }
+
+    [data-theme="dark"] code {
+      background: var(--bg-tertiary);
+      color: #e83e8c;
+    }
+
+    [data-theme="dark"] .toc {
+      background: var(--bg-secondary);
+    }
+
+    [data-theme="dark"] .note {
+      background: #3a3a2a;
+      border-left-color: #ffc107;
+    }
+
+    [data-theme="dark"] .warning {
+      background: #3a2a2a;
+      border-left-color: #f44336;
+    }
+
+    [data-theme="dark"] .result {
+      background: #2a3a2a;
+      border-left-color: #4caf50;
+      color: #a0e0a0;
+    }
+
+    /* Theme Auto - uses prefers-color-scheme */
+    @media (prefers-color-scheme: dark) {
+      [data-theme="auto"] {
+        --bg-primary: #1e1e1e;
+        --bg-secondary: #252525;
+        --bg-tertiary: #2d2d2d;
+        --text-primary: #e0e0e0;
+        --text-secondary: #a0a0a0;
+        --border-color: #404040;
+        --code-bg: #f5f5f5;
+        --code-text: #2d2d2d;
+      }
+      
+      [data-theme="auto"] body {
+        background: var(--bg-secondary);
+      }
+      
+      [data-theme="auto"] .container {
+        background: var(--bg-primary);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+      }
+      
+      [data-theme="auto"] th {
+        background: #764ba2;
+      }
+      
+      [data-theme="auto"] tr:hover {
+        background: var(--bg-tertiary);
+      }
+      
+      [data-theme="auto"] code {
+        background: var(--bg-tertiary);
+        color: #e83e8c;
+      }
+      
+      [data-theme="auto"] .toc {
+        background: var(--bg-secondary);
+      }
+      
+      [data-theme="auto"] .note {
+        background: #3a3a2a;
+        border-left-color: #ffc107;
+      }
+      
+      [data-theme="auto"] .warning {
+        background: #3a2a2a;
+        border-left-color: #f44336;
+      }
+      
+      [data-theme="auto"] .result {
+        background: #2a3a3a;
+        border-left-color: #4caf50;
+        color: #a0e0a0;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .header-main h1 {
+        font-size: 2rem;
+      }
+      
+      .header-controls {
+        flex-direction: column;
+        width: 100%;
+      }
+      
+      .control-group {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
     @media print {
       body {
         background: white;
@@ -218,68 +410,92 @@
       .container {
         box-shadow: none;
       }
+      .header-controls {
+        display: none;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>📚 Blocks Language</h1>
-      <p>Guide de référence complet de la syntaxe</p>
+      <div class="header-content">
+        <div class="header-main">
+          <h1>📚 <span id="pageTitle">Blocks Language</span></h1>
+          <p id="pageSubtitle">Complete syntax reference guide</p>
+        </div>
+        <div class="header-controls">
+          <div class="control-group">
+            <label for="langSelect">🌐</label>
+            <select id="langSelect">
+              <option value="en">English</option>
+              <option value="fr">Français</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="themeSelect">🎨</label>
+            <select id="themeSelect">
+              <option value="auto">Auto</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </header>
 
     <div class="content">
       <!-- Table des matières -->
       <div class="toc">
-        <h3>Table des matières</h3>
+        <h3 data-i18n="toc">Table of Contents</h3>
         <ul>
-          <li><a href="#commentaires">1. Commentaires</a></li>
-          <li><a href="#code">2. Blocs et inlines de code</a></li>
-          <li><a href="#script">3. Blocs et inlines de script</a></li>
-          <li><a href="#generic">4. Blocs et inlines génériques</a></li>
-          <li><a href="#attributs">5. Attributs</a></li>
-          <li><a href="#imbrication">6. Imbrication</a></li>
-          <li><a href="#nommage">7. Nommage</a></li>
+          <li><a href="#commentaires" data-i18n="sections.comments.title">1. Comments</a></li>
+          <li><a href="#code" data-i18n="sections.code.title">2. Code Blocks and Inlines</a></li>
+          <li><a href="#script" data-i18n="sections.script.title">3. Script Blocks and Inlines</a></li>
+          <li><a href="#generic" data-i18n="sections.generic.title">4. Generic Blocks and Inlines</a></li>
+          <li><a href="#attributs" data-i18n="sections.attributes.title">5. Attributes</a></li>
+          <li><a href="#imbrication" data-i18n="sections.nesting.title">6. Nesting</a></li>
+          <li><a href="#nommage" data-i18n="sections.naming.title">7. Naming</a></li>
         </ul>
       </div>
 
       <!-- 1. Commentaires -->
       <section id="commentaires" class="section">
-        <h2>1. 📝 Commentaires</h2>
+        <h2>1. 📝 <span data-i18n="sections.comments.title">Comments</span></h2>
 
         <div class="syntax-item">
-          <h4>Commentaire de bloc</h4>
-          <p>Commentaire multi-lignes qui n'apparaît pas dans le résultat final.</p>
+          <h4 data-i18n="sections.comments.blockComment.title">Block comment</h4>
+          <p data-i18n="sections.comments.blockComment.desc">Multi-line comment that doesn't appear in final output.</p>
           <div class="code-example"><pre>/* Ceci est un commentaire
    sur plusieurs lignes */</pre></div>
         </div>
 
         <div class="syntax-item">
-          <h4>Commentaire de bloc nommé</h4>
-          <p>Commentaire avec un identifiant pour référence ou traitement spécifique.</p>
+          <h4 data-i18n="sections.comments.blockCommentNamed.title">Named block comment</h4>
+          <p data-i18n="sections.comments.blockCommentNamed.desc">Comment with an identifier for reference or specific processing.</p>
           <div class="code-example"><pre>/*#note Ce commentaire a un nom */</pre></div>
         </div>
 
         <div class="syntax-item">
-          <h4>Commentaire inline</h4>
-          <p>Commentaire sur une seule ligne, intégré dans le texte.</p>
+          <h4 data-i18n="sections.comments.inlineComment.title">Inline comment</h4>
+          <p data-i18n="sections.comments.inlineComment.desc">Single-line comment, integrated in text.</p>
           <div class="code-example"><pre>Texte avant // commentaire inline // texte après</pre></div>
         </div>
 
         <div class="syntax-item">
-          <h4>Commentaire inline nommé</h4>
-          <p>Commentaire inline avec un identifiant.</p>
+          <h4 data-i18n="sections.comments.inlineCommentNamed.title">Named inline comment</h4>
+          <p data-i18n="sections.comments.inlineCommentNamed.desc">Inline comment with an identifier.</p>
           <div class="code-example"><pre>Texte //#todo à compléter // suite</pre></div>
         </div>
       </section>
 
       <!-- 2. Code -->
       <section id="code" class="section">
-        <h2>2. 💻 Blocs et inlines de code</h2>
+        <h2>2. 💻 <span data-i18n="sections.code.title">Code Blocks and Inlines</span></h2>
 
         <div class="syntax-item">
-          <h4>Bloc de code simple</h4>
-          <p>Bloc de code avec minimum 3 backticks.</p>
+          <h4 data-i18n="sections.code.simpleBlock.title">Simple code block</h4>
+          <p data-i18n="sections.code.simpleBlock.desc">Code block with minimum 3 backticks.</p>
           <div class="code-example"><pre>```
 const x = 1;
 console.log(x);
@@ -288,8 +504,8 @@ console.log(x);
         </div>
 
         <div class="syntax-item">
-          <h4>Bloc de code nommé</h4>
-          <p>Bloc de code avec un langage ou un identifiant.</p>
+          <h4 data-i18n="sections.code.namedBlock.title">Named code block</h4>
+          <p data-i18n="sections.code.namedBlock.desc">Code block with a language or identifier.</p>
           <div class="code-example"><pre>```#javascript
 const greet = () =&gt; 'Hello';
 ```</pre></div>
@@ -297,8 +513,8 @@ const greet = () =&gt; 'Hello';
         </div>
 
         <div class="syntax-item">
-          <h4>Bloc de code avec attributs</h4>
-          <p>Bloc de code enrichi avec des métadonnées.</p>
+          <h4 data-i18n="sections.code.blockWithAttrs.title">Code block with attributes</h4>
+          <p data-i18n="sections.code.blockWithAttrs.desc">Code block enriched with metadata.</p>
           <div class="code-example"><pre>```#python {#example .highlighted}
 print("Hello World")
 ```</pre></div>
@@ -306,31 +522,31 @@ print("Hello World")
         </div>
 
         <div class="syntax-item">
-          <h4>Code inline simple</h4>
-          <p>Code intégré dans une ligne de texte.</p>
+          <h4 data-i18n="sections.code.simpleInline.title">Simple inline code</h4>
+          <p data-i18n="sections.code.simpleInline.desc">Code integrated in a line of text.</p>
           <div class="code-example"><pre>La variable `count` contient la valeur.</pre></div>
           <div class="result">Text + CodeInline + Text</div>
         </div>
 
         <div class="syntax-item">
-          <h4>Code inline nommé</h4>
-          <p>Code inline avec un identifiant de langage.</p>
+          <h4 data-i18n="sections.code.namedInline.title">Named inline code</h4>
+          <p data-i18n="sections.code.namedInline.desc">Inline code with a language identifier.</p>
           <div class="code-example"><pre>Utilisez `#js console.log()` pour déboguer.</pre></div>
           <div class="result">CodeInline avec name="js"</div>
         </div>
 
-        <div class="note">
-          Les backticks d'ouverture et de fermeture doivent avoir le <strong>même nombre</strong> de caractères.
+        <div class="note" data-i18n="sections.code.note">
+          Opening and closing backticks must have the <strong>same number</strong> of characters.
         </div>
       </section>
 
       <!-- 3. Script -->
       <section id="script" class="section">
-        <h2>3. ⚡ Blocs et inlines de script</h2>
+        <h2>3. ⚡ <span data-i18n="sections.script.title">Script Blocks and Inlines</span></h2>
 
         <div class="syntax-item">
-          <h4>Bloc de script simple</h4>
-          <p>Bloc de script exécutable avec minimum 3 points d'exclamation.</p>
+          <h4 data-i18n="sections.script.simpleBlock.title">Simple script block</h4>
+          <p data-i18n="sections.script.simpleBlock.desc">Executable script block with minimum 3 exclamation marks.</p>
           <div class="code-example"><pre>!!!
 alert('Hello');
 !!!</pre></div>
@@ -338,8 +554,8 @@ alert('Hello');
         </div>
 
         <div class="syntax-item">
-          <h4>Bloc de script nommé</h4>
-          <p>Bloc de script avec un identifiant.</p>
+          <h4 data-i18n="sections.script.namedBlock.title">Named script block</h4>
+          <p data-i18n="sections.script.namedBlock.desc">Script block with an identifier.</p>
           <div class="code-example"><pre>!!!#init
 setupApplication();
 !!!</pre></div>
@@ -347,31 +563,31 @@ setupApplication();
         </div>
 
         <div class="syntax-item">
-          <h4>Script inline simple</h4>
-          <p>Script exécutable intégré dans le texte.</p>
+          <h4 data-i18n="sections.script.simpleInline.title">Simple inline script</h4>
+          <p data-i18n="sections.script.simpleInline.desc">Executable script integrated in text.</p>
           <div class="code-example"><pre>Cliquez !alert('Bonjour')! pour tester.</pre></div>
           <div class="result">Text + ScriptInline + Text</div>
         </div>
 
         <div class="syntax-item">
-          <h4>Script inline nommé</h4>
-          <p>Script inline avec un identifiant.</p>
+          <h4 data-i18n="sections.script.namedInline.title">Named inline script</h4>
+          <p data-i18n="sections.script.namedInline.desc">Inline script with an identifier.</p>
           <div class="code-example"><pre>Action !#onclick handleClick()! ici.</pre></div>
           <div class="result">ScriptInline avec name="onclick"</div>
         </div>
 
-        <div class="warning">
-          Les délimiteurs d'ouverture et de fermeture doivent avoir le <strong>même nombre</strong> de points d'exclamation.
+        <div class="warning" data-i18n="sections.script.warning">
+          Opening and closing delimiters must have the <strong>same number</strong> of exclamation marks.
         </div>
       </section>
 
       <!-- 4. Generic -->
       <section id="generic" class="section">
-        <h2>4. 📦 Blocs et inlines génériques</h2>
+        <h2>4. 📦 <span data-i18n="sections.generic.title">Generic Blocks and Inlines</span></h2>
 
         <div class="syntax-item">
-          <h4>Bloc générique simple</h4>
-          <p>Bloc conteneur générique avec minimum 3 deux-points.</p>
+          <h4 data-i18n="sections.generic.simpleBlock.title">Simple generic block</h4>
+          <p data-i18n="sections.generic.simpleBlock.desc">Generic container block with minimum 3 colons.</p>
           <div class="code-example"><pre>:::
 Contenu du bloc
 :::</pre></div>
@@ -379,8 +595,8 @@ Contenu du bloc
         </div>
 
         <div class="syntax-item">
-          <h4>Bloc générique nommé</h4>
-          <p>Bloc avec un nom de type (div, section, aside, etc.).</p>
+          <h4 data-i18n="sections.generic.namedBlock.title">Named generic block</h4>
+          <p data-i18n="sections.generic.namedBlock.desc">Block with a type name (div, section, aside, etc.).</p>
           <div class="code-example"><pre>:::#container
 Contenu de mon conteneur
 :::</pre></div>
@@ -388,8 +604,8 @@ Contenu de mon conteneur
         </div>
 
         <div class="syntax-item">
-          <h4>Bloc générique avec attributs</h4>
-          <p>Bloc enrichi avec ID, classes, options et paires clé-valeur.</p>
+          <h4 data-i18n="sections.generic.blockWithAttrs.title">Generic block with attributes</h4>
+          <p data-i18n="sections.generic.blockWithAttrs.desc">Block enriched with ID, classes, options and key-value pairs.</p>
           <div class="code-example"><pre>:::#section {#intro .highlight .bordered %active}
 Contenu avec attributs
 :::</pre></div>
@@ -397,15 +613,15 @@ Contenu avec attributs
         </div>
 
         <div class="syntax-item">
-          <h4>Inline générique simple</h4>
-          <p>Conteneur inline générique.</p>
+          <h4 data-i18n="sections.generic.simpleInline.title">Simple generic inline</h4>
+          <p data-i18n="sections.generic.simpleInline.desc">Generic inline container.</p>
           <div class="code-example"><pre>Texte avec :emphase: intégrée.</pre></div>
           <div class="result">Text + GenericInline + Text</div>
         </div>
 
         <div class="syntax-item">
-          <h4>Inline générique nommé</h4>
-          <p>Inline avec un nom de type.</p>
+          <h4 data-i18n="sections.generic.namedInline.title">Named generic inline</h4>
+          <p data-i18n="sections.generic.namedInline.desc">Inline with a type name.</p>
           <div class="code-example"><pre>Voici un :#span texte stylé: dans la phrase.</pre></div>
           <div class="result">GenericInline avec name="span"</div>
         </div>
@@ -413,55 +629,55 @@ Contenu avec attributs
 
       <!-- 5. Attributs -->
       <section id="attributs" class="section">
-        <h2>5. 🏷️ Attributs</h2>
+        <h2>5. 🏷️ <span data-i18n="sections.attributes.title">Attributes</span></h2>
 
-        <p>Les attributs sont spécifiés entre accolades <code>{}</code> et peuvent être combinés.</p>
+        <p data-i18n="sections.attributes.intro">Attributes are specified between braces <code>{}</code> and can be combined.</p>
 
         <table>
           <thead>
             <tr>
-              <th>Type</th>
-              <th>Syntaxe</th>
-              <th>Exemple</th>
-              <th>Description</th>
+              <th data-i18n="sections.attributes.table.type">Type</th>
+              <th data-i18n="sections.attributes.table.syntax">Syntax</th>
+              <th data-i18n="sections.attributes.table.example">Example</th>
+              <th data-i18n="sections.attributes.table.description">Description</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td><strong>ID</strong></td>
+              <td><strong data-i18n="sections.attributes.table.id">ID</strong></td>
               <td><code>#identifiant</code></td>
               <td><code>{#main}</code></td>
-              <td>Identifiant unique</td>
+              <td data-i18n="sections.attributes.table.idDesc">Unique identifier</td>
             </tr>
             <tr>
-              <td><strong>Classe</strong></td>
+              <td><strong data-i18n="sections.attributes.table.class">Class</strong></td>
               <td><code>.classe</code></td>
               <td><code>{.button}</code></td>
-              <td>Classe CSS</td>
+              <td data-i18n="sections.attributes.table.classDesc">CSS class</td>
             </tr>
             <tr>
-              <td><strong>Option</strong></td>
+              <td><strong data-i18n="sections.attributes.table.option">Option</strong></td>
               <td><code>%option</code></td>
               <td><code>{%active}</code></td>
-              <td>Drapeau booléen</td>
+              <td data-i18n="sections.attributes.table.optionDesc">Boolean flag</td>
             </tr>
             <tr>
-              <td><strong>Clé-valeur</strong></td>
+              <td><strong data-i18n="sections.attributes.table.keyValue">Key-value</strong></td>
               <td><code>key=value</code></td>
               <td><code>{data-id=123}</code></td>
-              <td>Paire clé-valeur</td>
+              <td data-i18n="sections.attributes.table.keyValueDesc">Key-value pair</td>
             </tr>
             <tr>
-              <td><strong>Combiné</strong></td>
+              <td><strong data-i18n="sections.attributes.table.combined">Combined</strong></td>
               <td>Plusieurs attributs</td>
               <td><code>{#main .box %visible size=large}</code></td>
-              <td>Tous les types combinés</td>
+              <td data-i18n="sections.attributes.table.combinedDesc">All types combined</td>
             </tr>
           </tbody>
         </table>
 
         <div class="syntax-item">
-          <h4>Exemple complet d'attributs</h4>
+          <h4 data-i18n="sections.attributes.exampleTitle">Complete attributes example</h4>
           <div class="code-example"><pre>:::#article {#post-1 .featured .highlight %published author=John date=2024}
 Contenu de l'article
 :::</pre></div>
@@ -475,19 +691,19 @@ Contenu de l'article
           </div>
         </div>
 
-        <div class="note">
-          Les attributs doivent être fermés avec <code>}</code>. Plusieurs attributs peuvent être séparés par des espaces.
+        <div class="note" data-i18n="sections.attributes.note">
+          Attributes must be closed with <code>}</code>. Multiple attributes can be separated by spaces.
         </div>
       </section>
 
       <!-- 6. Imbrication -->
       <section id="imbrication" class="section">
-        <h2>6. 🪆 Imbrication</h2>
+        <h2>6. 🪆 <span data-i18n="sections.nesting.title">Nesting</span></h2>
 
-        <p>Les blocs génériques peuvent être imbriqués en utilisant des délimiteurs de <strong>longueurs différentes</strong>.</p>
+        <p data-i18n="sections.nesting.intro">Generic blocks can be nested using delimiters of <strong>different lengths</strong>.</p>
 
         <div class="syntax-item">
-          <h4>Imbrication simple (2 niveaux)</h4>
+          <h4 data-i18n="sections.nesting.simple.title">Simple nesting (2 levels)</h4>
           <div class="code-example"><pre>:::
 Bloc externe
 :::::
@@ -499,7 +715,7 @@ Suite du bloc externe
         </div>
 
         <div class="syntax-item">
-          <h4>Imbrication multiple (3 niveaux)</h4>
+          <h4 data-i18n="sections.nesting.multiple.title">Multiple nesting (3 levels)</h4>
           <div class="code-example"><pre>:::
 Niveau 1
 :::::
@@ -514,30 +730,30 @@ Fin niveau 1
           <div class="result">Trois niveaux de GenericBlock imbriqués</div>
         </div>
 
-        <div class="warning">
-          <strong>Important :</strong> Pour imbriquer des blocs, le bloc interne DOIT avoir PLUS de délimiteurs que le bloc externe. Sinon, le premier délimiteur fermera le bloc externe et le reste sera considéré comme du texte.
+        <div class="warning" data-i18n="sections.nesting.warning">
+          <strong>Important:</strong> To nest blocks, the inner block MUST have MORE delimiters than the outer block. Otherwise, the first delimiter will close the outer block and the rest will be considered as normal text.
         </div>
 
         <div class="syntax-item">
-          <h4>❌ Erreur courante : même longueur</h4>
+          <h4 data-i18n="sections.nesting.errorTitle">❌ Common error: same length</h4>
           <div class="code-example"><pre>:::
 Bloc externe
 :::
 Ceci N'EST PAS un bloc interne
 :::
 :::</pre></div>
-          <div class="result">Le premier <code>:::</code> ferme le bloc, le reste est du texte normal</div>
+          <div class="result" data-i18n="sections.nesting.errorResult">The first <code>:::</code> closes the block, the rest is normal text</div>
         </div>
       </section>
 
       <!-- 7. Nommage -->
       <section id="nommage" class="section">
-        <h2>7. 🏷️ Nommage</h2>
+        <h2>7. 🏷️ <span data-i18n="sections.naming.title">Naming</span></h2>
 
-        <p>Les blocs et inlines peuvent avoir un nom précédé de <code>#</code>.</p>
+        <p data-i18n="sections.naming.intro">Blocks and inlines can have a name preceded by <code>#</code>.</p>
 
         <div class="syntax-item">
-          <h4>Blocs nommés</h4>
+          <h4 data-i18n="sections.naming.namedBlocks">Named blocks</h4>
           <div class="code-example"><pre>```#javascript
 code
 ```
@@ -552,23 +768,375 @@ contenu
         </div>
 
         <div class="syntax-item">
-          <h4>Inlines nommés</h4>
+          <h4 data-i18n="sections.naming.namedInlines">Named inlines</h4>
           <div class="code-example"><pre>`#js code`
 !#click script!
 :#span texte:</pre></div>
         </div>
 
-        <div class="note">
-          Le nom peut contenir des lettres, chiffres, tirets et underscores : <code>[a-zA-Z0-9_-]+</code>
+        <div class="note" data-i18n="sections.naming.note">
+          The name can contain letters, numbers, dashes and underscores: <code>[a-zA-Z0-9_-]+</code>
         </div>
       </section>
 
     </div>
 
     <footer>
-      <p><strong>Blocks Language</strong> - Un langage de balisage extensible et lisible</p>
-      <p style="margin-top: 0.5rem; opacity: 0.7;">Pour plus d'informations, consultez la documentation complète</p>
+      <p><strong data-i18n="footer.title">Blocks Language</strong> - <span data-i18n="footer.subtitle">An extensible and readable markup language</span></p>
+      <p style="margin-top: 0.5rem; opacity: 0.7;" data-i18n="footer.docs">For more information, see the complete documentation</p>
     </footer>
   </div>
+
+  <script>
+    // Translation object with FR and EN content
+    const translations = {
+      en: {
+        title: "Blocks Language",
+        subtitle: "Complete syntax reference guide",
+        toc: "Table of Contents",
+        sections: {
+          comments: {
+            title: "Comments",
+            blockComment: {
+              title: "Block comment",
+              desc: "Multi-line comment that doesn't appear in final output."
+            },
+            blockCommentNamed: {
+              title: "Named block comment",
+              desc: "Comment with an identifier for reference or specific processing."
+            },
+            inlineComment: {
+              title: "Inline comment",
+              desc: "Single-line comment, integrated in text."
+            },
+            inlineCommentNamed: {
+              title: "Named inline comment",
+              desc: "Inline comment with an identifier."
+            }
+          },
+          code: {
+            title: "Code Blocks and Inlines",
+            simpleBlock: {
+              title: "Simple code block",
+              desc: "Code block with minimum 3 backticks."
+            },
+            namedBlock: {
+              title: "Named code block",
+              desc: "Code block with a language or identifier."
+            },
+            blockWithAttrs: {
+              title: "Code block with attributes",
+              desc: "Code block enriched with metadata."
+            },
+            simpleInline: {
+              title: "Simple inline code",
+              desc: "Code integrated in a line of text."
+            },
+            namedInline: {
+              title: "Named inline code",
+              desc: "Inline code with a language identifier."
+            },
+            note: "Opening and closing backticks must have the <strong>same number</strong> of characters."
+          },
+          script: {
+            title: "Script Blocks and Inlines",
+            simpleBlock: {
+              title: "Simple script block",
+              desc: "Executable script block with minimum 3 exclamation marks."
+            },
+            namedBlock: {
+              title: "Named script block",
+              desc: "Script block with an identifier."
+            },
+            simpleInline: {
+              title: "Simple inline script",
+              desc: "Executable script integrated in text."
+            },
+            namedInline: {
+              title: "Named inline script",
+              desc: "Inline script with an identifier."
+            },
+            warning: "Opening and closing delimiters must have the <strong>same number</strong> of exclamation marks."
+          },
+          generic: {
+            title: "Generic Blocks and Inlines",
+            simpleBlock: {
+              title: "Simple generic block",
+              desc: "Generic container block with minimum 3 colons."
+            },
+            namedBlock: {
+              title: "Named generic block",
+              desc: "Block with a type name (div, section, aside, etc.)."
+            },
+            blockWithAttrs: {
+              title: "Generic block with attributes",
+              desc: "Block enriched with ID, classes, options and key-value pairs."
+            },
+            simpleInline: {
+              title: "Simple generic inline",
+              desc: "Generic inline container."
+            },
+            namedInline: {
+              title: "Named generic inline",
+              desc: "Inline with a type name."
+            }
+          },
+          attributes: {
+            title: "Attributes",
+            intro: "Attributes are specified between braces <code>{}</code> and can be combined.",
+            table: {
+              type: "Type",
+              syntax: "Syntax",
+              example: "Example",
+              description: "Description",
+              id: "ID",
+              idDesc: "Unique identifier",
+              class: "Class",
+              classDesc: "CSS class",
+              option: "Option",
+              optionDesc: "Boolean flag",
+              keyValue: "Key-value",
+              keyValueDesc: "Key-value pair",
+              combined: "Combined",
+              combinedDesc: "All types combined"
+            },
+            exampleTitle: "Complete attributes example",
+            note: "Attributes must be closed with <code>}</code>. Multiple attributes can be separated by spaces."
+          },
+          nesting: {
+            title: "Nesting",
+            intro: "Generic blocks can be nested using delimiters of <strong>different lengths</strong>.",
+            simple: {
+              title: "Simple nesting (2 levels)"
+            },
+            multiple: {
+              title: "Multiple nesting (3 levels)"
+            },
+            warning: "<strong>Important:</strong> To nest blocks, the inner block MUST have MORE delimiters than the outer block. Otherwise, the first delimiter will close the outer block and the rest will be considered as normal text.",
+            errorTitle: "❌ Common error: same length",
+            errorResult: "The first <code>:::</code> closes the block, the rest is normal text"
+          },
+          naming: {
+            title: "Naming",
+            intro: "Blocks and inlines can have a name preceded by <code>#</code>.",
+            namedBlocks: "Named blocks",
+            namedInlines: "Named inlines",
+            note: "The name can contain letters, numbers, dashes and underscores: <code>[a-zA-Z0-9_-]+</code>"
+          }
+        },
+        footer: {
+          title: "Blocks Language",
+          subtitle: "An extensible and readable markup language",
+          docs: "For more information, see the complete documentation"
+        }
+      },
+      fr: {
+        title: "Langage Blocks",
+        subtitle: "Guide de référence complet de la syntaxe",
+        toc: "Table des matières",
+        sections: {
+          comments: {
+            title: "Commentaires",
+            blockComment: {
+              title: "Commentaire de bloc",
+              desc: "Commentaire multi-lignes qui n'apparaît pas dans le résultat final."
+            },
+            blockCommentNamed: {
+              title: "Commentaire de bloc nommé",
+              desc: "Commentaire avec un identifiant pour référence ou traitement spécifique."
+            },
+            inlineComment: {
+              title: "Commentaire inline",
+              desc: "Commentaire sur une seule ligne, intégré dans le texte."
+            },
+            inlineCommentNamed: {
+              title: "Commentaire inline nommé",
+              desc: "Commentaire inline avec un identifiant."
+            }
+          },
+          code: {
+            title: "Blocs et inlines de code",
+            simpleBlock: {
+              title: "Bloc de code simple",
+              desc: "Bloc de code avec minimum 3 backticks."
+            },
+            namedBlock: {
+              title: "Bloc de code nommé",
+              desc: "Bloc de code avec un langage ou un identifiant."
+            },
+            blockWithAttrs: {
+              title: "Bloc de code avec attributs",
+              desc: "Bloc de code enrichi avec des métadonnées."
+            },
+            simpleInline: {
+              title: "Code inline simple",
+              desc: "Code intégré dans une ligne de texte."
+            },
+            namedInline: {
+              title: "Code inline nommé",
+              desc: "Code inline avec un identifiant de langage."
+            },
+            note: "Les backticks d'ouverture et de fermeture doivent avoir le <strong>même nombre</strong> de caractères."
+          },
+          script: {
+            title: "Blocs et inlines de script",
+            simpleBlock: {
+              title: "Bloc de script simple",
+              desc: "Bloc de script exécutable avec minimum 3 points d'exclamation."
+            },
+            namedBlock: {
+              title: "Bloc de script nommé",
+              desc: "Bloc de script avec un identifiant."
+            },
+            simpleInline: {
+              title: "Script inline simple",
+              desc: "Script exécutable intégré dans le texte."
+            },
+            namedInline: {
+              title: "Script inline nommé",
+              desc: "Script inline avec un identifiant."
+            },
+            warning: "Les délimiteurs d'ouverture et de fermeture doivent avoir le <strong>même nombre</strong> de points d'exclamation."
+          },
+          generic: {
+            title: "Blocs et inlines génériques",
+            simpleBlock: {
+              title: "Bloc générique simple",
+              desc: "Bloc conteneur générique avec minimum 3 deux-points."
+            },
+            namedBlock: {
+              title: "Bloc générique nommé",
+              desc: "Bloc avec un nom de type (div, section, aside, etc.)."
+            },
+            blockWithAttrs: {
+              title: "Bloc générique avec attributs",
+              desc: "Bloc enrichi avec ID, classes, options et paires clé-valeur."
+            },
+            simpleInline: {
+              title: "Inline générique simple",
+              desc: "Conteneur inline générique."
+            },
+            namedInline: {
+              title: "Inline générique nommé",
+              desc: "Inline avec un nom de type."
+            }
+          },
+          attributes: {
+            title: "Attributs",
+            intro: "Les attributs sont spécifiés entre accolades <code>{}</code> et peuvent être combinés.",
+            table: {
+              type: "Type",
+              syntax: "Syntaxe",
+              example: "Exemple",
+              description: "Description",
+              id: "ID",
+              idDesc: "Identifiant unique",
+              class: "Classe",
+              classDesc: "Classe CSS",
+              option: "Option",
+              optionDesc: "Drapeau booléen",
+              keyValue: "Clé-valeur",
+              keyValueDesc: "Paire clé-valeur",
+              combined: "Combiné",
+              combinedDesc: "Tous les types combinés"
+            },
+            exampleTitle: "Exemple complet d'attributs",
+            note: "Les attributs doivent être fermés avec <code>}</code>. Plusieurs attributs peuvent être séparés par des espaces."
+          },
+          nesting: {
+            title: "Imbrication",
+            intro: "Les blocs génériques peuvent être imbriqués en utilisant des délimiteurs de <strong>longueurs différentes</strong>.",
+            simple: {
+              title: "Imbrication simple (2 niveaux)"
+            },
+            multiple: {
+              title: "Imbrication multiple (3 niveaux)"
+            },
+            warning: "<strong>Important :</strong> Pour imbriquer des blocs, le bloc interne DOIT avoir PLUS de délimiteurs que le bloc externe. Sinon, le premier délimiteur fermera le bloc externe et le reste sera considéré comme du texte normal.",
+            errorTitle: "❌ Erreur courante : même longueur",
+            errorResult: "Le premier <code>:::</code> ferme le bloc, le reste est du texte normal"
+          },
+          naming: {
+            title: "Nommage",
+            intro: "Les blocs et inlines peuvent avoir un nom précédé de <code>#</code>.",
+            namedBlocks: "Blocs nommés",
+            namedInlines: "Inlines nommés",
+            note: "Le nom peut contenir des lettres, chiffres, tirets et underscores : <code>[a-zA-Z0-9_-]+</code>"
+          }
+        },
+        footer: {
+          title: "Langage Blocks",
+          subtitle: "Un langage de balisage extensible et lisible",
+          docs: "Pour plus d'informations, consultez la documentation complète"
+        }
+      }
+    };
+
+    let currentLang = 'en';
+    let currentTheme = 'auto';
+
+    // Load saved preferences
+    if (localStorage.getItem('cheatsheet-lang')) {
+      currentLang = localStorage.getItem('cheatsheet-lang');
+    }
+    if (localStorage.getItem('cheatsheet-theme')) {
+      currentTheme = localStorage.getItem('cheatsheet-theme');
+    }
+
+    // Apply theme
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    document.getElementById('themeSelect').value = currentTheme;
+    document.getElementById('langSelect').value = currentLang;
+
+    // Language selector
+    document.getElementById('langSelect').addEventListener('change', (e) => {
+      currentLang = e.target.value;
+      localStorage.setItem('cheatsheet-lang', currentLang);
+      updateContent();
+    });
+
+    // Theme selector
+    document.getElementById('themeSelect').addEventListener('change', (e) => {
+      currentTheme = e.target.value;
+      localStorage.setItem('cheatsheet-theme', currentTheme);
+      document.documentElement.setAttribute('data-theme', currentTheme);
+    });
+
+    // Helper function to get nested value from object
+    function getNestedValue(obj, path) {
+      return path.split('.').reduce((current, key) => current?.[key], obj);
+    }
+
+    // Update content based on language
+    function updateContent() {
+      const t = translations[currentLang];
+      
+      // Update page title and subtitle
+      document.getElementById('pageTitle').textContent = t.title;
+      document.getElementById('pageSubtitle').textContent = t.subtitle;
+      
+      // Update all elements with data-i18n attribute
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        const value = getNestedValue(t, key);
+        if (value) {
+          el.innerHTML = value;
+        }
+      });
+      
+      // Update TOC links to include section numbers
+      const tocLinks = document.querySelectorAll('.toc a');
+      tocLinks[0].innerHTML = '1. ' + t.sections.comments.title;
+      tocLinks[1].innerHTML = '2. ' + t.sections.code.title;
+      tocLinks[2].innerHTML = '3. ' + t.sections.script.title;
+      tocLinks[3].innerHTML = '4. ' + t.sections.generic.title;
+      tocLinks[4].innerHTML = '5. ' + t.sections.attributes.title;
+      tocLinks[5].innerHTML = '6. ' + t.sections.nesting.title;
+      tocLinks[6].innerHTML = '7. ' + t.sections.naming.title;
+    }
+
+    // Initialize content on page load
+    updateContent();
+  </script>
 </body>
 </html>

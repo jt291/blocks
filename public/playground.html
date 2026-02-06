@@ -185,6 +185,13 @@
       overflow: hidden;
     }
     
+    .line-number {
+      line-height: 1.5;
+      height: 1.5em;
+      text-align: right;
+      padding-right: 0.5rem;
+    }
+    
     .panel-header {
       background: var(--bg-secondary);
       padding: 0.75rem 1rem;
@@ -340,19 +347,24 @@
           <option value="code-backticks">Code Block (```)</option>
           <option value="code-exclamation">Code Block (!!!)</option>
           <option value="metadata">Metadata (---)</option>
+          <option value="inline-code">Inline Code (`)</option>
+          <option value="inline-emphasis">Inline Emphasis (!/:)</option>
         </optgroup>
         
         <optgroup label="Preprocessor">
           <option value="include-simple">Simple Include</option>
           <option value="include-in-code">Include in Code Block</option>
-          <option value="include-nested">Nested Includes</option>
+          <option value="include-nested">Nested Includes (2 levels)</option>
+          <option value="include-deep-nested">Deep Nested Includes (4 levels)</option>
         </optgroup>
         
-        <optgroup label="Errors">
+        <optgroup label="Errors (will fail to parse)">
           <option value="error-unclosed-backticks">Unclosed ``` Block</option>
           <option value="error-unclosed-exclamation">Unclosed !!! Block</option>
           <option value="error-unclosed-metadata">Unclosed --- Metadata</option>
-          <option value="error-missing-include">Missing Include File</option>
+          <option value="error-unclosed-comment">Unclosed /* Comment</option>
+          <option value="error-missing-include">Missing Include File (404)</option>
+          <option value="error-invalid-include">Invalid Include Path</option>
           <option value="error-circular-include">Circular Include (info)</option>
         </optgroup>
       </select>
@@ -507,6 +519,22 @@ Document content starts after the metadata block.
 
 Metadata uses YAML format between triple dashes.`,
 
+      'inline-code': `Inline code examples:
+
+Use \`inline code\` within text.
+
+Multiple \`inline\` code \`snippets\` on one line.
+
+Inline code with special chars: \`<html>\`, \`$variable\`, \`function()\`.`,
+
+      'inline-emphasis': `Inline emphasis markers:
+
+Text with !emphasis! using exclamation marks.
+
+Text with :emphasis: using colons.
+
+Note: Rendering depends on formatter implementation.`,
+
       // === PREPROCESSOR EXAMPLES ===
       'include-simple': `Simple file inclusion:
 
@@ -537,59 +565,72 @@ The included file content replaces the #include line.`,
 The nested.blocks file itself includes other files,
 demonstrating recursive include processing.`,
 
-      // === ERROR EXAMPLES (Actually trigger errors) ===
-      'error-unclosed-backticks': `/* Error Example: Unclosed Code Block */
+      'include-deep-nested': `Deep nested includes (4 levels):
 
-This example demonstrates an unclosed code block:
+#include level-a.blocks
+
+This demonstrates:
+- level-a.blocks includes level-b.blocks
+- level-b.blocks includes level-c.blocks  
+- level-c.blocks includes level-d.blocks
+- level-d.blocks has no further includes
+
+Expected hierarchy:
+level-a.blocks
+  └─ level-b.blocks
+      └─ level-c.blocks
+          └─ level-d.blocks`,
+
+      // === ERROR EXAMPLES (Actually trigger errors) ===
+      'error-unclosed-backticks': `Example with unclosed code block:
 
 \`\`\`python
 def broken():
-    print("This code block is never closed")
-# Missing closing \`\`\`
+    print("Missing closing delimiter")
+`,
 
-This will cause a parse error.`,
-
-      'error-unclosed-exclamation': `/* Error Example: Unclosed Exclamation Block */
-
-This example demonstrates an unclosed code block:
+      'error-unclosed-exclamation': `Example with unclosed code block:
 
 !!!javascript
 function broken() {
-  console.log("This code block is never closed");
+  console.log("Missing closing delimiter");
 }
-// Missing closing !!!
+`,
 
-This will cause a parse error.`,
-
-      'error-unclosed-metadata': `/* Error Example: Unclosed Metadata Block */
-
-This example demonstrates unclosed metadata:
+      'error-unclosed-metadata': `Example with unclosed metadata:
 
 ---
 title: Broken Document
-author: Test
-# Missing closing ---
+author: Test User
+`,
 
-This content is incorrectly treated as metadata.`,
+      'error-unclosed-comment': `Example with unclosed comment:
 
-      'error-missing-include': `/* Error Example: Missing Include File */
+/* This comment is never closed
+and extends to end of file
 
-This example tries to include a file that doesn't exist:
+More content here...
+`,
+
+      'error-missing-include': `Example with missing file:
 
 #include this-file-does-not-exist.blocks
 
-This will cause a preprocessor error (404 Not Found).`,
+The file above does not exist.`,
 
-      'error-circular-include': `/* Error Example: Circular Include */
+      'error-invalid-include': `Example with invalid include syntax:
 
-To test this, you would need:
-- File A includes File B
-- File B includes File A
+\`\`\`python
+#include /absolute/path/to/nonexistent/file.py
+\`\`\`
+`,
 
-This creates an infinite loop.
+      'error-circular-include': `Error Example: Circular Include
 
-Note: This example won't actually trigger the error
-unless you create the circular files.`,
+#include circular-example.blocks
+
+Note: circular-example.blocks includes duplicate-example.blocks
+which includes circular-example.blocks, creating a circular reference.`,
     };
     
     // Configuration
@@ -623,8 +664,10 @@ unless you create the circular files.`,
      */
     function updateLineNumbers() {
       const lines = inputEl.value.split('\n');
-      const numbers = lines.map((_, i) => i + 1).join('\n');
-      lineNumbersEl.textContent = numbers;
+      // Create a div for each line number
+      lineNumbersEl.innerHTML = lines.map((_, i) => 
+        `<div class="line-number">${i + 1}</div>`
+      ).join('');
     }
     
     /**

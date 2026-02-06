@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" 
+        content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data: https:;">
   <title>Blocks Language Cheatsheet</title>
   <style>
     * {
@@ -426,6 +428,74 @@
       .header-controls {
         display: none;
       }
+    }
+
+    /* Classes for inline style removal */
+    .playground-link {
+      color: #667eea;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .section-heading {
+      font-size: 1rem;
+      margin-top: 1rem;
+      color: #764ba2;
+    }
+
+    .feature-list {
+      margin-left: 2rem;
+      margin-top: 0.5rem;
+      color: var(--text-secondary);
+    }
+
+    .spaced-paragraph {
+      margin-top: 1rem;
+    }
+
+    .nav-link {
+      color: #667eea;
+      text-decoration: none;
+      margin: 0 1rem;
+    }
+
+    .table-standard {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .table-header-cell {
+      padding: 0.75rem;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    .table-cell {
+      padding: 0.75rem;
+    }
+
+    .table-cell-secondary {
+      padding: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .table-border-bottom {
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .toc-separator {
+      background: var(--bg-secondary);
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .footer-text-muted {
+      color: rgba(255,255,255,0.3);
+    }
+
+    .footer-note {
+      margin-top: 0.5rem;
+      opacity: 0.7;
     }
   </style>
 </head>
@@ -856,7 +926,7 @@ contenu
         <div class="syntax-item">
           <h4 data-i18n="sections.preprocessor.tryit.title">Try It</h4>
           <p data-i18n="sections.preprocessor.tryit.desc">Test preprocessor features in the interactive playground.</p>
-          <p><a href="playground.html" target="_blank" style="color: #667eea; font-weight: 600; font-size: 1.1rem;">🧪 Open Playground →</a></p>
+          <p><a href="playground.html" target="_blank" class="playground-link">🧪 Open Playground →</a></p>
         </div>
       </section>
 
@@ -870,12 +940,12 @@ contenu
           <h4>Attributes (Block-level styling)</h4>
           <p>Attributes are specified inline with the block delimiter, using CSS-like selector syntax.</p>
           
-          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Syntax:</h5>
+          <h5 class="section-heading">Syntax:</h5>
           <div class="code-example"><pre>:::blockType #id .class1 .class2
 Content
 :::</pre></div>
 
-          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Examples:</h5>
+          <h5 class="section-heading">Examples:</h5>
           <div class="code-example"><pre>:::note #intro .important .collapsible
 This note has an ID and two CSS classes
 :::
@@ -888,8 +958,8 @@ Critical warning with ID and class
 print("Code block with attributes")
 ```</pre></div>
 
-          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Purpose:</h5>
-          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+          <h5 class="section-heading">Purpose:</h5>
+          <ul class="feature-list">
             <li><code>#id</code> → Unique identifier for referencing</li>
             <li><code>.class</code> → CSS classes for styling</li>
             <li>Used for HTML rendering, styling, JavaScript hooks</li>
@@ -901,7 +971,7 @@ print("Code block with attributes")
           <h4>Metadata (Structured data)</h4>
           <p>Metadata is structured data in YAML format, enclosed in <code>---</code> delimiters.</p>
           
-          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Global metadata (frontmatter):</h5>
+          <h5 class="section-heading">Global metadata (frontmatter):</h5>
           <div class="code-example"><pre>---
 title: My Document
 author: John Doe
@@ -914,7 +984,7 @@ config:
 
 # Document content starts here</pre></div>
 
-          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Local metadata (inside blocks):</h5>
+          <h5 class="section-heading">Local metadata (inside blocks):</h5>
           <div class="code-example"><pre>:::note #intro .important
 ---
 severity: high
@@ -927,8 +997,8 @@ actions:
 This note has local metadata
 :::</pre></div>
 
-          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Purpose:</h5>
-          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+          <h5 class="section-heading">Purpose:</h5>
+          <ul class="feature-list">
             <li>Structured data (objects, arrays, primitives)</li>
             <li>Configuration and parameters</li>
             <li>Data accessible to scripts and formatters</li>
@@ -973,7 +1043,7 @@ version: 1.0
 
 Document content...</pre></div>
 
-          <p style="margin-top: 1rem;"><strong>Local metadata (block level):</strong></p>
+          <p class="spaced-paragraph"><strong>Local metadata (block level):</strong></p>
           <div class="code-example"><pre>:::section #main
 ---
 theme: dark
@@ -991,15 +1061,15 @@ This section overrides global settings
           <h4>Use Cases</h4>
           
           <p><strong>Attributes:</strong></p>
-          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+          <ul class="feature-list">
             <li>CSS styling: <code>.highlight</code>, <code>.warning</code>, <code>.success</code></li>
             <li>JavaScript selectors: <code>#interactive-chart</code></li>
             <li>Accessibility: <code>.screen-reader-only</code></li>
             <li>Layout hints: <code>.full-width</code>, <code>.sidebar</code></li>
           </ul>
 
-          <p style="margin-top: 1rem;"><strong>Metadata:</strong></p>
-          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+          <p class="spaced-paragraph"><strong>Metadata:</strong></p>
+          <ul class="feature-list">
             <li>Configuration: <code>{ timeout: 5000, retries: 3 }</code></li>
             <li>Data binding: <code>{ user: "john", role: "admin" }</code></li>
             <li>Conditional rendering: <code>{ visible: true, collapsed: false }</code></li>
@@ -1055,7 +1125,7 @@ Windows support is experimental
           
           <div class="code-example"><pre>type:content[#id .class %option key=value]</pre></div>
 
-          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+          <ul class="feature-list">
             <li><strong>type</strong> – Inline element type (no <code>#</code> prefix)</li>
             <li><strong>:</strong> – Colon separator</li>
             <li><strong>content</strong> – The inline content</li>
@@ -1066,28 +1136,28 @@ Windows support is experimental
         <div class="syntax-item">
           <h4>Common Inline Types</h4>
 
-          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Code inline:</h5>
+          <h5 class="section-heading">Code inline:</h5>
           <div class="code-example"><pre>Use code:print("hello")[.highlight] in your program.
 
 Multiple: code:const x = 1[#var1] and code:const y = 2[#var2]
 
 With options: code:npm install[.command %copy]</pre></div>
 
-          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Link inline:</h5>
+          <h5 class="section-heading">Link inline:</h5>
           <div class="code-example"><pre>Visit link:https://example.com for more info.
 
 With attributes: link:documentation[.external target="_blank"]
 
 With ID: link:home[#nav-home .nav-link .active]</pre></div>
 
-          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Emphasis inline:</h5>
+          <h5 class="section-heading">Emphasis inline:</h5>
           <div class="code-example"><pre>This is strong:very important[.urgent] information.
 
 Use em:subtle emphasis[.muted] for softer tone.
 
 Combine: strong:Critical![.alert color=red]</pre></div>
 
-          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Custom span inline:</h5>
+          <h5 class="section-heading">Custom span inline:</h5>
           <div class="code-example"><pre>Highlighted span:text[.highlight .yellow bg=yellow]
 
 Data attributes: span:clickable[data-action="submit" data-id="123"]
@@ -1098,15 +1168,15 @@ Status: span:operational[.status .status-ok data-status="ok"]</pre></div>
         <div class="syntax-item">
           <h4>Edge Cases</h4>
 
-          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Content with brackets:</h5>
+          <h5 class="section-heading">Content with brackets:</h5>
           <div class="code-example"><pre>Array access: code:arr[0][.highlight]
 The parser sees: type=code, content="arr[0]", attributes=[.highlight]</pre></div>
 
-          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Content with colons:</h5>
+          <h5 class="section-heading">Content with colons:</h5>
           <div class="code-example"><pre>URL: code:http://example.com[.url]
 Time: code:12:30:45[.timestamp]</pre></div>
 
-          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Nested quotes in attributes:</h5>
+          <h5 class="section-heading">Nested quotes in attributes:</h5>
           <div class="code-example"><pre>link:page[title="Link's title"]
 span:text[data-json='{"key": "value"}']</pre></div>
 
@@ -1140,7 +1210,7 @@ Alert: strong:Critical system failure![.alert .urgent color=red]</pre></div>
           
           <div class="code-example"><pre>{varname}</pre></div>
 
-          <p style="margin-top: 1rem;"><strong>Example:</strong></p>
+          <p class="spaced-paragraph"><strong>Example:</strong></p>
           <div class="code-example"><pre>---
 username: Alice
 title: Welcome Page
@@ -1160,7 +1230,7 @@ Item count: {count}</pre></div>
 ${object.property}
 ${array[0]}</pre></div>
 
-          <p style="margin-top: 1rem;"><strong>Example:</strong></p>
+          <p class="spaced-paragraph"><strong>Example:</strong></p>
           <div class="code-example"><pre>---
 base_url: https://api.example.com
 api_version: v2
@@ -1186,7 +1256,7 @@ Result: https://api.example.com/static/images/logo.png</pre></div>
 {varname|filter:arg1}
 {varname|filter:arg1:arg2}</pre></div>
 
-          <p style="margin-top: 1rem;"><strong>Example:</strong></p>
+          <p class="spaced-paragraph"><strong>Example:</strong></p>
           <div class="code-example"><pre>---
 price: 29.99
 date: 2026-02-06
@@ -1214,7 +1284,7 @@ Result: JOHN_DOE</pre></div>
           <div class="code-example"><pre>{text|lower|truncate:50}
 {description|escape|truncate:100}</pre></div>
 
-          <p style="margin-top: 1rem;"><strong>Example:</strong></p>
+          <p class="spaced-paragraph"><strong>Example:</strong></p>
           <div class="code-example"><pre>---
 text: "HELLO WORLD THIS IS A LONG TEXT"
 html: "<script>alert('xss')</script>"
@@ -1265,69 +1335,69 @@ Release: {release_date|date:DD/MM/YYYY}</pre></div>
         <div class="syntax-item">
           <h4>Available Filters</h4>
           
-          <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+          <table class="table-standard">
             <thead>
-              <tr style="background: var(--bg-secondary); border-bottom: 2px solid var(--border-color);">
-                <th style="padding: 0.75rem; text-align: left; font-weight: 600;">Filter</th>
-                <th style="padding: 0.75rem; text-align: left; font-weight: 600;">Arguments</th>
-                <th style="padding: 0.75rem; text-align: left; font-weight: 600;">Description</th>
-                <th style="padding: 0.75rem; text-align: left; font-weight: 600;">Example</th>
+              <tr class="toc-separator">
+                <th class="table-header-cell">Filter</th>
+                <th class="table-header-cell">Arguments</th>
+                <th class="table-header-cell">Description</th>
+                <th class="table-header-cell">Example</th>
               </tr>
             </thead>
             <tbody>
-              <tr style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 0.75rem;"><code>upper</code></td>
-                <td style="padding: 0.75rem; color: var(--text-secondary);">None</td>
-                <td style="padding: 0.75rem;">Convert to uppercase</td>
-                <td style="padding: 0.75rem;"><code>{text|upper}</code></td>
+              <tr class="table-border-bottom">
+                <td class="table-cell"><code>upper</code></td>
+                <td class="table-cell-secondary">None</td>
+                <td class="table-cell">Convert to uppercase</td>
+                <td class="table-cell"><code>{text|upper}</code></td>
               </tr>
-              <tr style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 0.75rem;"><code>lower</code></td>
-                <td style="padding: 0.75rem; color: var(--text-secondary);">None</td>
-                <td style="padding: 0.75rem;">Convert to lowercase</td>
-                <td style="padding: 0.75rem;"><code>{text|lower}</code></td>
+              <tr class="table-border-bottom">
+                <td class="table-cell"><code>lower</code></td>
+                <td class="table-cell-secondary">None</td>
+                <td class="table-cell">Convert to lowercase</td>
+                <td class="table-cell"><code>{text|lower}</code></td>
               </tr>
-              <tr style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 0.75rem;"><code>capitalize</code></td>
-                <td style="padding: 0.75rem; color: var(--text-secondary);">None</td>
-                <td style="padding: 0.75rem;">Capitalize first letter</td>
-                <td style="padding: 0.75rem;"><code>{name|capitalize}</code></td>
+              <tr class="table-border-bottom">
+                <td class="table-cell"><code>capitalize</code></td>
+                <td class="table-cell-secondary">None</td>
+                <td class="table-cell">Capitalize first letter</td>
+                <td class="table-cell"><code>{name|capitalize}</code></td>
               </tr>
-              <tr style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 0.75rem;"><code>truncate</code></td>
-                <td style="padding: 0.75rem;">N (length)</td>
-                <td style="padding: 0.75rem;">Truncate to N characters</td>
-                <td style="padding: 0.75rem;"><code>{desc|truncate:100}</code></td>
+              <tr class="table-border-bottom">
+                <td class="table-cell"><code>truncate</code></td>
+                <td class="table-cell">N (length)</td>
+                <td class="table-cell">Truncate to N characters</td>
+                <td class="table-cell"><code>{desc|truncate:100}</code></td>
               </tr>
-              <tr style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 0.75rem;"><code>date</code></td>
-                <td style="padding: 0.75rem;">FORMAT</td>
-                <td style="padding: 0.75rem;">Format date string</td>
-                <td style="padding: 0.75rem;"><code>{date|date:YYYY-MM-DD}</code></td>
+              <tr class="table-border-bottom">
+                <td class="table-cell"><code>date</code></td>
+                <td class="table-cell">FORMAT</td>
+                <td class="table-cell">Format date string</td>
+                <td class="table-cell"><code>{date|date:YYYY-MM-DD}</code></td>
               </tr>
-              <tr style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 0.75rem;"><code>currency</code></td>
-                <td style="padding: 0.75rem;">CODE</td>
-                <td style="padding: 0.75rem;">Format as currency</td>
-                <td style="padding: 0.75rem;"><code>{price|currency:EUR}</code></td>
+              <tr class="table-border-bottom">
+                <td class="table-cell"><code>currency</code></td>
+                <td class="table-cell">CODE</td>
+                <td class="table-cell">Format as currency</td>
+                <td class="table-cell"><code>{price|currency:EUR}</code></td>
               </tr>
-              <tr style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 0.75rem;"><code>number</code></td>
-                <td style="padding: 0.75rem;">DECIMALS</td>
-                <td style="padding: 0.75rem;">Format number</td>
-                <td style="padding: 0.75rem;"><code>{value|number:2}</code></td>
+              <tr class="table-border-bottom">
+                <td class="table-cell"><code>number</code></td>
+                <td class="table-cell">DECIMALS</td>
+                <td class="table-cell">Format number</td>
+                <td class="table-cell"><code>{value|number:2}</code></td>
               </tr>
-              <tr style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 0.75rem;"><code>json</code></td>
-                <td style="padding: 0.75rem; color: var(--text-secondary);">None</td>
-                <td style="padding: 0.75rem;">Convert to JSON string</td>
-                <td style="padding: 0.75rem;"><code>{data|json}</code></td>
+              <tr class="table-border-bottom">
+                <td class="table-cell"><code>json</code></td>
+                <td class="table-cell-secondary">None</td>
+                <td class="table-cell">Convert to JSON string</td>
+                <td class="table-cell"><code>{data|json}</code></td>
               </tr>
               <tr>
-                <td style="padding: 0.75rem;"><code>escape</code></td>
-                <td style="padding: 0.75rem; color: var(--text-secondary);">None</td>
-                <td style="padding: 0.75rem;">Escape HTML entities</td>
-                <td style="padding: 0.75rem;"><code>{html|escape}</code></td>
+                <td class="table-cell"><code>escape</code></td>
+                <td class="table-cell-secondary">None</td>
+                <td class="table-cell">Escape HTML entities</td>
+                <td class="table-cell"><code>{html|escape}</code></td>
               </tr>
             </tbody>
           </table>
@@ -1336,29 +1406,29 @@ Release: {release_date|date:DD/MM/YYYY}</pre></div>
         <div class="syntax-item">
           <h4>Filter Examples</h4>
 
-          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Text transformation:</h5>
+          <h5 class="section-heading">Text transformation:</h5>
           <div class="code-example"><pre>{name|upper}        → "JOHN DOE"
 {name|lower}        → "john doe"
 {name|capitalize}   → "John doe"</pre></div>
 
-          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Truncation:</h5>
+          <h5 class="section-heading">Truncation:</h5>
           <div class="code-example"><pre>{text|truncate:20}  → "This is a long te..."</pre></div>
 
-          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Date formatting:</h5>
+          <h5 class="section-heading">Date formatting:</h5>
           <div class="code-example"><pre>{date|date:YYYY-MM-DD}      → "2026-02-06"
 {date|date:DD/MM/YYYY}      → "06/02/2026"
 {date|date:MMMM D, YYYY}    → "February 6, 2026"</pre></div>
 
-          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Currency formatting:</h5>
+          <h5 class="section-heading">Currency formatting:</h5>
           <div class="code-example"><pre>{price|currency:USD}  → "$29.99"
 {price|currency:EUR}  → "€29.99"
 {price|currency:GBP}  → "£29.99"</pre></div>
 
-          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Number formatting:</h5>
+          <h5 class="section-heading">Number formatting:</h5>
           <div class="code-example"><pre>{value|number:2}   → "3.14"
 {value|number:0}   → "3"</pre></div>
 
-          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">HTML escaping:</h5>
+          <h5 class="section-heading">HTML escaping:</h5>
           <div class="code-example"><pre>{html|escape}  → "&lt;script&gt;alert('xss')&lt;/script&gt;"</pre></div>
         </div>
 
@@ -1454,46 +1524,46 @@ Price: {price|currency:USD} or {price|currency:EUR}
           <h4>Feature Breakdown</h4>
           
           <p><strong>1. Global Metadata (frontmatter):</strong></p>
-          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+          <ul class="feature-list">
             <li>Document-level configuration</li>
             <li>Variables available throughout the document</li>
           </ul>
 
-          <p style="margin-top: 1rem;"><strong>2. Generic Blocks with Attributes:</strong></p>
-          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+          <p class="spaced-paragraph"><strong>2. Generic Blocks with Attributes:</strong></p>
+          <ul class="feature-list">
             <li><code>::: section #intro .hero</code> – Block with ID and class</li>
             <li>Local metadata for block-specific configuration</li>
           </ul>
 
-          <p style="margin-top: 1rem;"><strong>3. Inline Elements:</strong></p>
-          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+          <p class="spaced-paragraph"><strong>3. Inline Elements:</strong></p>
+          <ul class="feature-list">
             <li><code>strong:{title}[.brand]</code> – Emphasis with variable and class</li>
             <li><code>link:${base_url}/docs[.external target="_blank"]</code> – Link with interpolation and attributes</li>
             <li><code>code:${base_url}${api_endpoint}[.api-path]</code> – Code inline with variables</li>
             <li><code>span:operational[.status .status-ok data-status="ok"]</code> – Custom element with data attributes</li>
           </ul>
 
-          <p style="margin-top: 1rem;"><strong>4. Variables:</strong></p>
-          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+          <p class="spaced-paragraph"><strong>4. Variables:</strong></p>
+          <ul class="feature-list">
             <li>Simple: <code>{title}</code>, <code>{version}</code></li>
             <li>Interpolated: <code>${base_url}</code>, <code>${api_endpoint}</code></li>
             <li>Filtered: <code>{author|capitalize}</code>, <code>{price|currency:EUR}</code></li>
           </ul>
 
-          <p style="margin-top: 1rem;"><strong>5. Filters:</strong></p>
-          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+          <p class="spaced-paragraph"><strong>5. Filters:</strong></p>
+          <ul class="feature-list">
             <li><code>capitalize</code> – Transform text</li>
             <li><code>currency:EUR</code> – Format with argument</li>
             <li><code>date:DD/MM/YYYY</code> – Custom date format</li>
           </ul>
 
-          <p style="margin-top: 1rem;"><strong>6. Code Blocks:</strong></p>
-          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+          <p class="spaced-paragraph"><strong>6. Code Blocks:</strong></p>
+          <ul class="feature-list">
             <li>Backtick blocks with attributes: <code>```bash #install-cmd .copy-button</code></li>
           </ul>
 
-          <p style="margin-top: 1rem;"><strong>7. Comments:</strong></p>
-          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+          <p class="spaced-paragraph"><strong>7. Comments:</strong></p>
+          <ul class="feature-list">
             <li>Block comments: <code>/* Welcome to ... */</code></li>
             <li>Can contain inline elements and variables</li>
           </ul>
@@ -1502,7 +1572,7 @@ Price: {price|currency:USD} or {price|currency:EUR}
         <div class="syntax-item">
           <h4>Try It Yourself</h4>
           <p>Copy this example to the playground to see how all features work together!</p>
-          <p><a href="public/playground.html" target="_blank" style="color: #667eea; font-weight: 600; font-size: 1.1rem;">🧪 Open Playground →</a></p>
+          <p><a href="public/playground.html" target="_blank" class="playground-link">🧪 Open Playground →</a></p>
         </div>
       </section>
 
@@ -1510,11 +1580,11 @@ Price: {price|currency:USD} or {price|currency:EUR}
 
     <footer>
       <p><strong data-i18n="footer.title">Blocks Language</strong> - <span data-i18n="footer.subtitle">An extensible and readable markup language</span></p>
-      <p style="margin-top: 0.5rem; opacity: 0.7;" data-i18n="footer.docs">For more information, see the complete documentation</p>
-      <p style="margin-top: 1rem;">
-        <a href="public/playground.html" style="color: #667eea; text-decoration: none; margin: 0 1rem;">🎮 Try the Playground</a>
-        <span style="color: rgba(255,255,255,0.3);">|</span>
-        <a href="https://github.com/jt291/blocks" target="_blank" style="color: #667eea; text-decoration: none; margin: 0 1rem;">📦 View on GitHub</a>
+      <p class="footer-note" data-i18n="footer.docs">For more information, see the complete documentation</p>
+      <p class="spaced-paragraph">
+        <a href="public/playground.html" class="nav-link">🎮 Try the Playground</a>
+        <span class="footer-text-muted">|</span>
+        <a href="https://github.com/jt291/blocks" target="_blank" class="nav-link">📦 View on GitHub</a>
       </p>
     </footer>
   </div>

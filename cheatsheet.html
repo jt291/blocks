@@ -457,6 +457,10 @@
           <li><a href="#imbrication" data-i18n="sections.nesting.title">6. Nesting</a></li>
           <li><a href="#nommage" data-i18n="sections.naming.title">7. Naming</a></li>
           <li><a href="#preprocessor" data-i18n="sections.preprocessor.title">8. Preprocessor Directives</a></li>
+          <li><a href="#inline-elements" data-i18n="sections.inline.title">9. Inline Elements (New Syntax)</a></li>
+          <li><a href="#variables" data-i18n="sections.variables.title">10. Variables</a></li>
+          <li><a href="#metadata" data-i18n="sections.metadata.title">11. Metadata</a></li>
+          <li><a href="#complete-example" data-i18n="sections.complete.title">12. Complete Example</a></li>
         </ul>
       </div>
 
@@ -840,6 +844,267 @@ contenu
         </div>
       </section>
 
+      <!-- 9. Inline Elements -->
+      <section id="inline-elements" class="section">
+        <h2>9. 🔗 <span data-i18n="sections.inline.title">Inline Elements (New Syntax)</span></h2>
+
+        <p data-i18n="sections.inline.intro">Inline elements allow you to add semantic markup within text using a unified syntax.</p>
+
+        <div class="syntax-item">
+          <h4 data-i18n="sections.inline.format.title">Format</h4>
+          <p data-i18n="sections.inline.format.desc">Inline syntax follows the pattern: <code>type:content[attributes]</code></p>
+          <div class="code-example"><pre>inlineType:content[#id .class %option key=value]</pre></div>
+        </div>
+
+        <div class="syntax-item">
+          <h4 data-i18n="sections.inline.codeExample.title">Code Inline</h4>
+          <div class="code-example"><pre>Use code:print("hello")[.highlight %copy] to display output.</pre></div>
+          <div class="result">Text with highlighted, copyable code inline</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4 data-i18n="sections.inline.linkExample.title">Link Inline</h4>
+          <div class="code-example"><pre>Visit link:https://example.com[#link1 .external target="_blank"] for more info.</pre></div>
+          <div class="result">Text with link that has ID, class, and target attribute</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4 data-i18n="sections.inline.emphasisExample.title">Emphasis Inline</h4>
+          <div class="code-example"><pre>This is strong:very important[.urgent %blink] information.</pre></div>
+          <div class="result">Text with emphasized content with styling</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4 data-i18n="sections.inline.spanExample.title">Custom Span</h4>
+          <div class="code-example"><pre>Status: span:active[.status .status-ok data-status="ok"]</pre></div>
+          <div class="result">Custom span with multiple classes and data attributes</div>
+        </div>
+
+        <div class="note" data-i18n="sections.inline.note">
+          Inline elements support the same attribute syntax as blocks: <code>#id</code>, <code>.class</code>, <code>%option</code>, and <code>key=value</code> pairs.
+        </div>
+      </section>
+
+      <!-- 10. Variables -->
+      <section id="variables" class="section">
+        <h2>10. 💱 <span data-i18n="sections.variables.title">Variables</span></h2>
+
+        <p data-i18n="sections.variables.intro">Variables allow dynamic content insertion with optional filters for formatting.</p>
+
+        <div class="syntax-item">
+          <h4 data-i18n="sections.variables.simple.title">Simple Variables</h4>
+          <p data-i18n="sections.variables.simple.desc">Reference variables using curly braces.</p>
+          <div class="code-example"><pre>Hello, {username}!
+Welcome to {siteName}.</pre></div>
+          <div class="result">Variables are replaced with their values from metadata</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4 data-i18n="sections.variables.interpolated.title">Interpolated Variables (JavaScript-like)</h4>
+          <p data-i18n="sections.variables.interpolated.desc">Use dollar-sign syntax for complex expressions and path concatenation.</p>
+          <div class="code-example"><pre>Image: ${basePath}/images/${filename}.png
+API: ${apiUrl}/users/${userId}
+Nested: ${config.theme}/styles/${variant}.css</pre></div>
+          <div class="result">Interpolated variables support object properties and array access</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4 data-i18n="sections.variables.filtered.title">Filtered Variables</h4>
+          <p data-i18n="sections.variables.filtered.desc">Apply filters to transform variable values.</p>
+          <div class="code-example"><pre>Price: {price|currency:USD}
+Date: {publishDate|date:YYYY-MM-DD}
+Uppercase: {title|upper}
+Truncate: {description|truncate:100}
+Chained: {text|lower|truncate:50}</pre></div>
+          <div class="result">Filters transform values (upper, lower, currency, date, truncate, etc.)</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4 data-i18n="sections.variables.filters.title">Common Filters</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Filter</th>
+                <th>Description</th>
+                <th>Example</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>upper</code></td>
+                <td>Uppercase</td>
+                <td><code>{text|upper}</code></td>
+              </tr>
+              <tr>
+                <td><code>lower</code></td>
+                <td>Lowercase</td>
+                <td><code>{text|lower}</code></td>
+              </tr>
+              <tr>
+                <td><code>capitalize</code></td>
+                <td>Capitalize first letter</td>
+                <td><code>{name|capitalize}</code></td>
+              </tr>
+              <tr>
+                <td><code>truncate:N</code></td>
+                <td>Truncate to N chars</td>
+                <td><code>{text|truncate:100}</code></td>
+              </tr>
+              <tr>
+                <td><code>date:FORMAT</code></td>
+                <td>Format date</td>
+                <td><code>{date|date:YYYY-MM-DD}</code></td>
+              </tr>
+              <tr>
+                <td><code>currency:CODE</code></td>
+                <td>Format currency</td>
+                <td><code>{price|currency:EUR}</code></td>
+              </tr>
+              <tr>
+                <td><code>number:DECIMALS</code></td>
+                <td>Format number</td>
+                <td><code>{value|number:2}</code></td>
+              </tr>
+              <tr>
+                <td><code>json</code></td>
+                <td>Convert to JSON</td>
+                <td><code>{data|json}</code></td>
+              </tr>
+              <tr>
+                <td><code>escape</code></td>
+                <td>Escape HTML</td>
+                <td><code>{html|escape}</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 11. Metadata -->
+      <section id="metadata" class="section">
+        <h2>11. 📋 <span data-i18n="sections.metadata.title">Metadata</span></h2>
+
+        <p data-i18n="sections.metadata.intro">Metadata provides structured configuration data in YAML format.</p>
+
+        <div class="syntax-item">
+          <h4 data-i18n="sections.metadata.global.title">Global Metadata (Document Frontmatter)</h4>
+          <p data-i18n="sections.metadata.global.desc">Define document-wide variables and configuration at the top of the file.</p>
+          <div class="code-example"><pre>---
+title: My Document
+author: John Doe
+date: 2026-02-06
+version: 1.0
+config:
+  theme: dark
+  debug: true
+variables:
+  base_url: https://example.com
+  api_endpoint: /api/v2
+---
+
+Document content starts here</pre></div>
+          <div class="result">Global metadata available throughout the document</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4 data-i18n="sections.metadata.local.title">Local Metadata (Block-Level)</h4>
+          <p data-i18n="sections.metadata.local.desc">Add metadata to specific blocks for block-specific configuration.</p>
+          <div class="code-example"><pre>::: section #main .content
+---
+layout: grid
+columns: 2
+background: gradient
+padding: large
+---
+Block content with local metadata
+:::</pre></div>
+          <div class="result">Local metadata overrides global metadata for this block</div>
+        </div>
+
+        <div class="syntax-item">
+          <h4 data-i18n="sections.metadata.priority.title">Metadata Priority</h4>
+          <div class="code-example"><pre>---
+theme: light
+debug: false
+---
+
+::: section #main
+---
+theme: dark
+---
+This section has theme=dark (overrides global)
+:::
+
+::: section #secondary
+This section inherits theme=light (from global)
+:::</pre></div>
+          <div class="result">Local metadata > Global metadata</div>
+        </div>
+
+        <div class="note" data-i18n="sections.metadata.note">
+          <strong>Attributes vs Metadata:</strong> Use <strong>attributes</strong> for simple inline values (<code>#id .class key=value</code>). Use <strong>metadata</strong> for complex structured data (objects, arrays, nested values).
+        </div>
+      </section>
+
+      <!-- 12. Complete Example -->
+      <section id="complete-example" class="section">
+        <h2>12. 🎯 <span data-i18n="sections.complete.title">Complete Example</span></h2>
+
+        <p data-i18n="sections.complete.intro">Example combining all syntax features:</p>
+
+        <div class="syntax-item">
+          <div class="code-example"><pre>---
+title: API Guide
+version: 2.0
+author: Dev Team
+base_url: https://api.example.com
+price: 29.99
+---
+
+::: article #main-doc .documentation
+---
+category: technical
+audience: developers
+---
+
+# {title} v{version}
+
+By strong:{author}[.author-name]
+
+::: section #installation .install-guide %expandable
+---
+platform: linux
+duration: 5
+---
+
+Install via package manager:
+
+``` bash #install-cmd .copy-button %numbered
+sudo apt-get update
+sudo apt-get install blocks
+```
+
+Price: {price|currency:EUR}
+API docs: link:${base_url}/docs[.api-link %external]
+
+:::
+
+::: warning #compatibility .important %closable level=high
+---
+min_version: 1.5
+platforms: [linux, macos, windows]
+---
+
+Test: link:${base_url}/test[target="_blank"]
+Status: span:operational[.status-ok data-status="ok"]
+
+:::
+
+:::</pre></div>
+          <div class="result">Complete document with metadata, variables, inline elements, and blocks</div>
+        </div>
+      </section>
+
     </div>
 
     <footer>
@@ -1010,6 +1275,66 @@ contenu
               title: "Try It",
               desc: "Test preprocessor features in the interactive playground."
             }
+          },
+          inline: {
+            title: "Inline Elements (New Syntax)",
+            intro: "Inline elements allow you to add semantic markup within text using a unified syntax.",
+            format: {
+              title: "Format",
+              desc: "Inline syntax follows the pattern: <code>type:content[attributes]</code>"
+            },
+            codeExample: {
+              title: "Code Inline"
+            },
+            linkExample: {
+              title: "Link Inline"
+            },
+            emphasisExample: {
+              title: "Emphasis Inline"
+            },
+            spanExample: {
+              title: "Custom Span"
+            },
+            note: "Inline elements support the same attribute syntax as blocks: <code>#id</code>, <code>.class</code>, <code>%option</code>, and <code>key=value</code> pairs."
+          },
+          variables: {
+            title: "Variables",
+            intro: "Variables allow dynamic content insertion with optional filters for formatting.",
+            simple: {
+              title: "Simple Variables",
+              desc: "Reference variables using curly braces."
+            },
+            interpolated: {
+              title: "Interpolated Variables (JavaScript-like)",
+              desc: "Use dollar-sign syntax for complex expressions and path concatenation."
+            },
+            filtered: {
+              title: "Filtered Variables",
+              desc: "Apply filters to transform variable values."
+            },
+            filters: {
+              title: "Common Filters"
+            }
+          },
+          metadata: {
+            title: "Metadata",
+            intro: "Metadata provides structured configuration data in YAML format.",
+            global: {
+              title: "Global Metadata (Document Frontmatter)",
+              desc: "Define document-wide variables and configuration at the top of the file."
+            },
+            local: {
+              title: "Local Metadata (Block-Level)",
+              desc: "Add metadata to specific blocks for block-specific configuration."
+            },
+            priority: {
+              title: "Metadata Priority"
+            },
+            note: "<strong>Attributes vs Metadata:</strong> Use <strong>attributes</strong> for simple inline values (<code>#id .class key=value</code>). Use <strong>metadata</strong> for complex structured data (objects, arrays, nested values)."
+          },
+          complete: {
+            title: "Complete Example",
+            intro: "Example combining all syntax features:"
           }
         },
         footer: {
@@ -1177,6 +1502,66 @@ contenu
               title: "Essayez-le",
               desc: "Testez les fonctionnalités du préprocesseur dans l'aire de jeu interactive."
             }
+          },
+          inline: {
+            title: "Éléments Inline (Nouvelle Syntaxe)",
+            intro: "Les éléments inline permettent d'ajouter du balisage sémantique dans le texte en utilisant une syntaxe unifiée.",
+            format: {
+              title: "Format",
+              desc: "La syntaxe inline suit le modèle: <code>type:contenu[attributs]</code>"
+            },
+            codeExample: {
+              title: "Code Inline"
+            },
+            linkExample: {
+              title: "Lien Inline"
+            },
+            emphasisExample: {
+              title: "Emphase Inline"
+            },
+            spanExample: {
+              title: "Span Personnalisé"
+            },
+            note: "Les éléments inline supportent la même syntaxe d'attributs que les blocs: <code>#id</code>, <code>.class</code>, <code>%option</code>, et paires <code>clé=valeur</code>."
+          },
+          variables: {
+            title: "Variables",
+            intro: "Les variables permettent l'insertion de contenu dynamique avec des filtres optionnels pour le formatage.",
+            simple: {
+              title: "Variables Simples",
+              desc: "Référencer des variables en utilisant des accolades."
+            },
+            interpolated: {
+              title: "Variables Interpolées (style JavaScript)",
+              desc: "Utilisez la syntaxe avec signe dollar pour des expressions complexes et la concaténation de chemins."
+            },
+            filtered: {
+              title: "Variables Filtrées",
+              desc: "Appliquer des filtres pour transformer les valeurs des variables."
+            },
+            filters: {
+              title: "Filtres Courants"
+            }
+          },
+          metadata: {
+            title: "Métadonnées",
+            intro: "Les métadonnées fournissent des données de configuration structurées au format YAML.",
+            global: {
+              title: "Métadonnées Globales (Frontmatter du Document)",
+              desc: "Définir des variables et configurations au niveau du document en haut du fichier."
+            },
+            local: {
+              title: "Métadonnées Locales (Niveau Bloc)",
+              desc: "Ajouter des métadonnées à des blocs spécifiques pour une configuration par bloc."
+            },
+            priority: {
+              title: "Priorité des Métadonnées"
+            },
+            note: "<strong>Attributs vs Métadonnées:</strong> Utilisez les <strong>attributs</strong> pour des valeurs inline simples (<code>#id .class clé=valeur</code>). Utilisez les <strong>métadonnées</strong> pour des données structurées complexes (objets, tableaux, valeurs imbriquées)."
+          },
+          complete: {
+            title: "Exemple Complet",
+            intro: "Exemple combinant toutes les fonctionnalités de syntaxe:"
           }
         },
         footer: {
@@ -1248,6 +1633,11 @@ contenu
       tocLinks[4].innerHTML = '5. ' + t.sections.attributes.title;
       tocLinks[5].innerHTML = '6. ' + t.sections.nesting.title;
       tocLinks[6].innerHTML = '7. ' + t.sections.naming.title;
+      tocLinks[7].innerHTML = '8. ' + t.sections.preprocessor.title;
+      tocLinks[8].innerHTML = '9. ' + t.sections.inline.title;
+      tocLinks[9].innerHTML = '10. ' + t.sections.variables.title;
+      tocLinks[10].innerHTML = '11. ' + t.sections.metadata.title;
+      tocLinks[11].innerHTML = '12. ' + t.sections.complete.title;
     }
 
     // Initialize content on page load

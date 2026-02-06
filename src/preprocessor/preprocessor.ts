@@ -113,7 +113,9 @@ export class Preprocessor {
         continue;
       }
       const sourceLine = i + 1;
-      const includeMatch = line.match(/^\s*#include\s+(.+?)$/);
+      
+      // Check if line contains #include (can be anywhere in the line, including in comments)
+      const includeMatch = line.match(/#include\s+([^\s\n]+)/);
 
       if (!includeMatch) {
         // Regular line - add to output and map it
@@ -201,17 +203,47 @@ export class Preprocessor {
         };
         result.includes.push(include);
 
-        // Add nested content to output
-        const nestedLines = nestedResult.content.split("\n");
-        outputLines.push(...nestedLines);
-
-        // Add nested line maps
-        for (const map of nestedResult.lineMap) {
-          result.lineMap.push({
-            outputLine: outputLineNumber,
-            sourceFile: map.sourceFile,
-            sourceLine: map.sourceLine,
-          });
+        // Replace the #include directive in the line with the nested content
+        const fullMatch = includeMatch[0]; // The full match "#include file.ext"
+        const processedLine = line.replace(fullMatch, nestedResult.content);
+        
+        // If the replacement is multiline, split it up
+        const replacementLines = processedLine.split("\n");
+        
+        // Add all lines from the replacement
+        for (let j = 0; j < replacementLines.length; j++) {
+          const replacementLine = replacementLines[j];
+          if (replacementLine === undefined) continue;
+          
+          outputLines.push(replacementLine);
+          
+          // For line mapping, map the first line to the source line
+          // and subsequent lines to nested content's source
+          if (j === 0) {
+            result.lineMap.push({
+              outputLine: outputLineNumber,
+              sourceFile: currentFile || "input",
+              sourceLine,
+            });
+          } else {
+            // Map to nested content
+            const nestedMapIndex = j - 1;
+            const nestedMap = nestedResult.lineMap[nestedMapIndex];
+            if (nestedMap) {
+              result.lineMap.push({
+                outputLine: outputLineNumber,
+                sourceFile: nestedMap.sourceFile,
+                sourceLine: nestedMap.sourceLine,
+              });
+            } else {
+              // Fallback if we don't have enough mappings
+              result.lineMap.push({
+                outputLine: outputLineNumber,
+                sourceFile: resolvedPath,
+                sourceLine: j,
+              });
+            }
+          }
           outputLineNumber++;
         }
 

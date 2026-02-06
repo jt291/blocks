@@ -351,6 +351,14 @@
           <option value="inline-emphasis">Inline Emphasis (!/:)</option>
         </optgroup>
         
+        <optgroup label="New Unified Syntax">
+          <option value="syntax-inline-elements">Inline Elements (type:content[attrs])</option>
+          <option value="syntax-variables">Variables ({var}, ${var}, {var|filter})</option>
+          <option value="syntax-metadata">Metadata (Global & Local)</option>
+          <option value="syntax-block-attributes">Block Attributes (All Types)</option>
+          <option value="syntax-complete">Complete Example (All Features)</option>
+        </optgroup>
+        
         <optgroup label="Preprocessor">
           <option value="include-simple">Simple Include</option>
           <option value="include-in-code">Include in Code Block</option>
@@ -631,6 +639,150 @@ The file above does not exist.`,
 
 Note: circular-example.blocks includes duplicate-example.blocks
 which includes circular-example.blocks, creating a circular reference.`,
+
+      // === NEW SYNTAX EXAMPLES ===
+      'syntax-inline-elements': `Inline Elements - New Unified Syntax:
+
+Paragraph with code:print("hello")[.highlight %copy] inline code.
+
+A link:https://example.com[#link1 .external target="_blank"] in text.
+
+Emphasis strong:important text[.urgent %blink color=red] to read.
+
+Custom span:custom content[#custom .special data-value="123"] element.
+
+Simple code:variable without attributes.
+
+Link with title link:documentation[title="Read the docs" .internal].`,
+
+      'syntax-variables': `Variables - Simple, Interpolated, and Filtered:
+
+---
+username: Alice
+siteName: Blocks Language
+price: 29.99
+publishDate: 2026-02-06
+basePath: /assets
+filename: logo
+apiUrl: https://api.example.com
+userId: 42
+---
+
+Simple Variables:
+Hello, {username}!
+Welcome to {siteName}.
+
+Filtered Variables:
+Price: {price|currency:USD}
+Date: {publishDate|date:YYYY-MM-DD}
+Uppercase: {siteName|upper}
+
+Interpolated Variables:
+Image: ${basePath}/images/${filename}.png
+API: ${apiUrl}/users/${userId}`,
+
+      'syntax-metadata': `Metadata - Global and Local:
+
+---
+theme: light
+debug: false
+base_url: https://example.com
+---
+
+::: section #main
+---
+theme: dark
+debug: true
+---
+This section has theme=dark and debug=true (overrides global)
+:::
+
+::: section #secondary
+This section inherits theme=light and debug=false (from global)
+:::`,
+
+      'syntax-block-attributes': `Block Attributes - All Types:
+
+::: note
+Simple note without attributes
+:::
+
+::: note #intro .important
+Note with ID and class
+:::
+
+::: warning #alert .urgent .dismissible %closable %sound level=critical timeout=5000
+Warning with:
+- ID: alert
+- Classes: urgent, dismissible
+- Options: closable, sound
+- Attributes: level=critical, timeout=5000
+:::
+
+\`\`\` python #example .highlight %linenos start=1 theme=monokai
+def hello():
+    print("Hello, World!")
+\`\`\`
+
+!!! javascript #demo .interactive %editable mode=live
+console.log("Interactive demo");
+!!!`,
+
+      'syntax-complete': `Complete Syntax Demo - All Features:
+
+---
+title: Complete Syntax Demo
+version: 1.0
+author: Documentation Team
+base_url: https://example.com
+api_endpoint: /api/v2
+price: 29.99
+install_date: 2026-02-06
+min_version: 1.5
+---
+
+::: section #demo .example %interactive mode=live
+---
+layout: grid
+columns: 2
+background: gradient
+---
+
+/* Welcome to {title} version {version} */
+
+Demo of strong:all syntax features[.highlight %important].
+
+Variable: {title} version {version}
+Interpolated: ${base_url}/path
+Filtered: {price|currency:EUR}
+
+Link: link:${base_url}/docs[.external target="_blank"]
+Code: code:print("hello")[.highlight %copy]
+
+\`\`\` python #example-code .highlighted %linenos
+def factorial(n):
+    if n <= 1:
+        return 1
+    return n * factorial(n - 1)
+\`\`\`
+
+Date: {install_date|date:DD/MM/YYYY}
+
+:::
+
+::: warning #compatibility .important %closable level=high
+---
+min_version: 1.5
+platforms: [linux, macos, windows]
+---
+
+Minimum version: code:{min_version}[.version-number]
+
+Test: link:${base_url}${api_endpoint}/test[target="_blank"]
+
+Status: span:operational[.status .status-ok data-status="ok"]
+
+:::`,
     };
     
     // Configuration

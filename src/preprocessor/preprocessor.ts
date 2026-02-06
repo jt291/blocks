@@ -112,21 +112,17 @@ export class Preprocessor {
         // Read file content
         let includedContent: string;
 
-        if (this.config.cache && this.cache.has(resolvedPath)) {
+        if (this.config.cache) {
           const cachedContent = this.cache.get(resolvedPath);
           if (cachedContent !== undefined) {
             includedContent = cachedContent;
           } else {
-            // Cache miss - re-read file
+            // Cache miss - read file and cache it
             includedContent = await fileReader.read(resolvedPath);
             this.cache.set(resolvedPath, includedContent);
           }
         } else {
           includedContent = await fileReader.read(resolvedPath);
-
-          if (this.config.cache) {
-            this.cache.set(resolvedPath, includedContent);
-          }
         }
 
         // Add to list of included files

@@ -46,12 +46,13 @@ export class Preprocessor {
     // Wait for fileReader to be ready
     const fileReader = await this.fileReaderPromise;
 
-    // Process content
+    // Process content with empty stack
     const processedContent = await this.processContent(
       content,
       currentFile,
       0,
       fileReader,
+      [],
     );
 
     return {
@@ -63,12 +64,14 @@ export class Preprocessor {
 
   /**
    * Process content recursively
+   * @param stack Array of file paths in current include chain (for circular detection)
    */
   private async processContent(
     content: string,
     currentFile: string,
     depth: number,
     fileReader: FileReader,
+    stack: string[],
   ): Promise<string> {
     // Check maximum depth
     if (depth > this.config.maxDepth) {
@@ -98,13 +101,20 @@ export class Preprocessor {
       // Resolve the path of the file to include
       const resolvedPath = fileReader.resolve(currentFile, includePath);
 
-      // Check for circular includes
-      if (this.includedFiles.has(resolvedPath)) {
-        this.errors.push({
+      // Check for circular includes (A→B→A loop)
+      if (stack.includes(resolvedPath)) {
+        const error: PreprocessorError = {
           type: "circular_include",
-          message: `Circular include detected: ${resolvedPath}`,
+          message: `Circular include detected: ${includePath} (would create infinite loop: ${[...stack, resolvedPath].join(' → ')})`,
           file: currentFile,
-        });
+        };
+        this.errors.push(error);
+        continue;
+      }
+
+      // Check for duplicate includes (already processed and cached)
+      if (this.includedFiles.has(resolvedPath)) {
+        // This is normal behavior - file is cached, skip silently
         continue;
       }
 
@@ -128,12 +138,13 @@ export class Preprocessor {
         // Add to list of included files
         this.includedFiles.add(resolvedPath);
 
-        // Recursively process included content
+        // Recursively process included content with updated stack
         const processedIncluded = await this.processContent(
           includedContent,
           resolvedPath,
           depth + 1,
           fileReader,
+          [...stack, resolvedPath],
         );
 
         // Replace the #include directive with content

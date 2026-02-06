@@ -295,12 +295,12 @@ console.log("Debug mode:", CONFIG.debug);
   </div>
 
   <script type="module">
-    import { Preprocessor } from './dist/preprocessor/index.js';
-    import { parse } from './dist/index.js';
+    import { Preprocessor } from './preprocessor/index.js';
+    import { parse } from './index.js';
     
     // Configuration
     const preprocessor = new Preprocessor({
-      basePath: '/includes/'  // Relatif au HTML
+      basePath: 'includes/'  // Relatif au HTML
     });    
     // Elements
     const inputEl = document.getElementById('input');

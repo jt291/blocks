@@ -15,4 +15,11 @@ export default defineConfig({
       external: [],
     },
   },
+  resolve: {
+    alias: {
+      // Map io-node imports to io-browser for playground
+      './io-node.js': resolve(__dirname, 'src/preprocessor/io-browser.ts'),
+      './io-node': resolve(__dirname, 'src/preprocessor/io-browser.ts'),
+    },
+  },
 });

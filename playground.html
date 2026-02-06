@@ -3,16 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blocks Language Playground</title>
+  <title>Blocks Playground</title>
   <style>
-    /* CSS pour le layout et le style */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       height: 100vh;
       display: flex;
       flex-direction: column;
+      background: #f5f5f5;
     }
     
     header {
@@ -27,6 +31,12 @@
       font-weight: 600;
     }
     
+    .info {
+      margin-top: 0.5rem;
+      font-size: 0.875rem;
+      color: #ecf0f1;
+    }
+    
     main {
       flex: 1;
       display: grid;
@@ -37,18 +47,18 @@
     }
     
     .panel {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       display: flex;
       flex-direction: column;
-      border: 1px solid #ddd;
-      border-radius: 8px;
       overflow: hidden;
-      background: white;
     }
     
     .panel-header {
-      background: #f5f5f5;
+      background: #34495e;
+      color: white;
       padding: 0.75rem 1rem;
-      border-bottom: 1px solid #ddd;
       font-weight: 600;
       display: flex;
       justify-content: space-between;
@@ -61,1425 +71,350 @@
       padding: 1rem;
     }
     
-    .editor-container {
-      display: flex;
-      height: 100%;
-      position: relative;
-      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .line-numbers {
-      background: #f5f5f5;
-      border-right: 1px solid #ddd;
-      color: #999;
-      padding: 0 0.5rem;
-      text-align: right;
-      user-select: none;
-      min-width: 3rem;
-      overflow: hidden;
-    }
-
-    .line-number {
-      height: 1.5em;
-      line-height: 1.5;
-      position: relative;
-    }
-
-    .line-number.error {
-      background: #ffebee;
-      color: #c62828;
-      font-weight: bold;
-      position: relative;
-      cursor: help;
-    }
-
-    .line-number.error::before {
-      content: '⚠️';
-      position: absolute;
-      left: -1.2rem;
-      font-size: 0.9em;
-    }
-    
-    /* Textarea error line highlighting */
-    textarea.has-error-line {
-      background: linear-gradient(
-        transparent calc(var(--error-line, 1) * 1.5em - 1.5em),
-        rgba(255, 0, 0, 0.1) calc(var(--error-line, 1) * 1.5em - 1.5em),
-        rgba(255, 0, 0, 0.1) calc(var(--error-line, 1) * 1.5em),
-        transparent calc(var(--error-line, 1) * 1.5em)
-      );
-      background-attachment: local;
-    }
-    
     textarea {
-      flex: 1;
+      width: 100%;
+      height: 100%;
       border: none;
-      font-family: inherit;
-      font-size: inherit;
-      line-height: inherit;
       resize: none;
-      padding: 0 0.5rem;
-      background: transparent;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      padding: 0;
     }
     
-    textarea:focus { outline: none; }
-    
-    .errors {
-      background: #fff3cd;
-      border: 1px solid #ffc107;
-      border-radius: 4px;
-      padding: 0.75rem;
-      margin-top: 0.5rem;
-      color: #856404;
+    textarea:focus {
+      outline: none;
     }
     
-    .error-item {
-      margin: 0.5rem 0;
-      padding: 0.5rem;
+    pre {
+      margin: 0;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    
+    .controls {
+      padding: 1rem;
       background: white;
-      border-left: 3px solid #f44336;
-      font-size: 0.9rem;
-    }
-    
-    .error-item strong {
-      color: #c62828;
-    }
-    
-    .ast-controls {
+      border-top: 1px solid #e0e0e0;
       display: flex;
-      gap: 0.5rem;
+      gap: 1rem;
+      align-items: center;
     }
     
     button {
-      padding: 0.375rem 0.75rem;
-      background: #007bff;
+      background: #3498db;
       color: white;
       border: none;
+      padding: 0.75rem 1.5rem;
       border-radius: 4px;
+      font-size: 1rem;
+      font-weight: 600;
       cursor: pointer;
-      font-size: 0.875rem;
+      transition: background 0.2s;
     }
     
     button:hover {
-      background: #0056b3;
+      background: #2980b9;
     }
     
-    /* Styles for examples select */
-    .editor-controls {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-    }
-
-    #cheatsheetBtn {
-      background: #667eea;
-      color: white;
-      border: none;
-      padding: 0.4rem 0.8rem;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      font-weight: 500;
-      transition: background 0.2s;
-    }
-
-    #cheatsheetBtn:hover {
-      background: #5568d3;
-    }
-
-    #cheatsheetBtn:active {
+    button:active {
       transform: translateY(1px);
     }
-
-    #examplesSelect {
-      padding: 0.375rem 0.75rem;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      background: white;
+    
+    .checkbox-group {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    
+    label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
       font-size: 0.875rem;
       cursor: pointer;
-      min-width: 200px;
     }
     
-    #examplesSelect:focus {
-      outline: 2px solid #007bff;
-      outline-offset: 1px;
-    }
-    
-    /* Styles for JSON display */
-    .json-display {
-      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
-      font-size: 13px;
-      line-height: 1.6;
-      overflow: auto;
-      background: #f8f9fa;
-      padding: 1rem;
-      border-radius: 4px;
-      margin: 0;
-    }
-    
-    .json-key {
-      color: #0066cc;
-      font-weight: bold;
-    }
-    
-    .json-string {
-      color: #22863a;
-    }
-    
-    .json-number {
-      color: #005cc5;
-    }
-    
-    .json-boolean {
-      color: #d73a49;
-    }
-    
-    .json-null {
-      color: #6f42c1;
-    }
-
-    /* AST Tree Styles */
-    .ast-node {
-      margin-left: 1rem;
-    }
-
-    .ast-node-header {
+    input[type="checkbox"] {
       cursor: pointer;
-      padding: 0.25rem 0.5rem;
-      border-radius: 3px;
-      display: inline-block;
-      margin: 0.125rem 0;
-      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
-      font-size: 13px;
     }
-
-    .ast-node-header:hover {
-      background: #e9ecef;
+    
+    .stats {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.75rem;
+      color: #7f8c8d;
     }
-
-    .toggle-icon {
-      display: inline-block;
-      width: 1.5em;
-      text-align: left;
-      user-select: none;
+    
+    .stat {
+      display: flex;
+      gap: 0.25rem;
     }
-
-    .ast-node-children {
-      margin-left: 0.5rem;
+    
+    .stat-label {
+      font-weight: 600;
     }
-
-    .ast-node-children.collapsed {
+    
+    .errors {
+      background: #fee;
+      color: #c00;
+      padding: 0.5rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
       display: none;
     }
-
-    .node-meta {
-      color: #666;
-      font-style: italic;
+    
+    .errors.visible {
+      display: block;
     }
-
-    .node-content-preview {
-      color: #22863a;
+    
+    .success {
+      background: #efe;
+      color: #0a0;
+      padding: 0.5rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+      display: none;
     }
-
-    .node-Document {
-      font-weight: bold;
-      color: #0366d6;
+    
+    .success.visible {
+      display: block;
     }
-
-    .node-GenericBlock, .node-CodeBlock, .node-ScriptBlock, .node-CommentBlock {
-      color: #6f42c1;
+    
+    .included-files {
+      background: #e3f2fd;
+      color: #1565c0;
+      padding: 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      margin-bottom: 1rem;
+      display: none;
     }
-
-    .node-GenericInline, .node-CodeInline, .node-ScriptInline, .node-CommentInline {
-      color: #d73a49;
+    
+    .included-files.visible {
+      display: block;
     }
-
-    .node-Text {
-      color: #22863a;
+    
+    .included-files-title {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
     }
-
-    /* JSON Tree Viewer Styles */
-    .json-node {
-      font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
-      font-size: 13px;
-      line-height: 1.6;
-    }
-
-    .json-line {
-      white-space: pre;
-    }
-
-    .json-key {
-      color: #881391;
-      font-weight: 500;
-    }
-
-    .json-string {
-      color: #1A1AA6;
-    }
-
-    .json-number {
-      color: #1C00CF;
-    }
-
-    .json-boolean {
-      color: #0000FF;
-    }
-
-    .json-null {
-      color: #808080;
-    }
-
-    .json-punctuation {
-      color: #000000;
-    }
-
-    .json-toggle {
-      display: inline-block;
-      width: 1.2em;
-      font-weight: bold;
-      color: #666;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    .json-toggle:hover {
-      color: #000;
-    }
-
-    .json-children {
-      margin-left: 0;
+    
+    .included-files-list {
+      margin-left: 1rem;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>🧱 Blocks Language Playground</h1>
+    <h1>🧱 Blocks Playground</h1>
+    <div class="info">Test the Blocks language parser with #include preprocessor support</div>
   </header>
   
   <main>
-    <!-- Editor Panel -->
     <div class="panel">
       <div class="panel-header">
-        Editor
-        <div class="editor-controls">
-          <button id="cheatsheetBtn" title="Open the cheatsheet">📖 Cheatsheet</button>
-          <select id="examplesSelect">
-            <option value="">-- Select an example --</option>
-          <optgroup label="Commentaires">
-            <option value="comment-block-simple">Commentaire de bloc simple</option>
-            <option value="comment-block-named">Commentaire de bloc nommé</option>
-            <option value="comment-inline-simple">Commentaire inline simple</option>
-            <option value="comment-inline-named">Commentaire inline nommé</option>
-          </optgroup>
-          <optgroup label="Blocs de code">
-            <option value="code-block-simple">Bloc de code simple</option>
-            <option value="code-block-named">Bloc de code nommé</option>
-            <option value="code-block-attrs">Bloc de code nommé avec attributs</option>
-          </optgroup>
-          <optgroup label="Blocs de script">
-            <option value="script-block-simple">Bloc de script simple</option>
-            <option value="script-block-named">Bloc de script nommé</option>
-            <option value="script-block-attrs">Bloc de script nommé avec attributs</option>
-          </optgroup>
-          <optgroup label="Inlines">
-            <option value="inline-code">Code inline simple et nommé</option>
-            <option value="inline-script">Script inline simple et nommé</option>
-            <option value="inline-generic">Générique inline simple et nommé</option>
-          </optgroup>
-          <optgroup label="Blocs génériques">
-            <option value="generic-block-simple">Bloc générique simple</option>
-            <option value="generic-block-named">Bloc générique nommé</option>
-            <option value="generic-block-attrs">Bloc générique avec attributs</option>
-            <option value="generic-block-nested-simple">Blocs génériques imbriqués simples</option>
-            <option value="generic-block-nested-complex">Blocs génériques imbriqués complexes</option>
-            <option value="generic-block-html">Bloc générique avec HTML</option>
-            <option value="generic-block-mixed">Bloc générique avec contenu mixte</option>
-          </optgroup>
-          <optgroup label="Exemples complexes">
-            <option value="complex-complete">Exemple complet</option>
-            <option value="complex-document">Document complet</option>
-            <option value="complex-multiple">Imbrications multiples</option>
-            <option value="demo-complete-all-syntaxes">🎯 Démo complète (toutes les syntaxes)</option>
-          </optgroup>
-          <optgroup label="Exemples avec erreurs">
-            <option value="error-comment-unclosed">Commentaire bloc non fermé</option>
-            <option value="error-comment-malformed">Commentaire bloc mal formé</option>
-            <option value="error-codeblock-unclosed">Bloc de code non fermé</option>
-            <option value="error-codeblock-mismatch">Bloc de code longueurs différentes</option>
-            <option value="error-scriptblock-unclosed">Bloc de script non fermé</option>
-            <option value="error-scriptblock-mismatch">Bloc de script longueurs différentes</option>
-            <option value="error-generic-unclosed">Bloc générique non fermé</option>
-            <option value="error-generic-mismatch">Bloc générique longueurs différentes</option>
-            <option value="error-generic-nested-wrong">Bloc générique imbrication incorrecte</option>
-            <option value="error-generic-attributes">Attributs mal formés</option>
-            <option value="error-inline-code-unclosed">Code inline non fermé</option>
-            <option value="error-inline-script-unclosed">Script inline non fermé</option>
-            <option value="error-inline-generic-unclosed">Inline générique non fermé</option>
-            <option value="error-attributes-no-closing-brace">Attributs sans accolade fermante</option>
-            <option value="error-attributes-invalid-syntax">Attributs syntaxe invalide</option>
-          </optgroup>
-        </select>
-        </div>
+        Input (Blocks)
       </div>
       <div class="panel-content">
-        <div class="editor-container">
-          <div class="line-numbers" id="lineNumbers"></div>
-          <textarea id="editor" spellcheck="false"></textarea>
-        </div>
+        <textarea id="input" spellcheck="false">/* #include header.blocks */
+
+# Main Document
+
+## Python Example
+
+```python
+#include utils.py
+
+# Main script
+data = "hello world"
+result = process_data(data)
+print(format_output(result))
+```
+
+## JavaScript Configuration
+
+!!!javascript
+#include config.js
+
+initConfig();
+console.log("Debug mode:", CONFIG.debug);
+!!!
+
+## Nested Include Test
+
+#include nested.blocks
+
+/* #include footer.blocks */</textarea>
       </div>
-      <div id="errors" style="display: none;"></div>
     </div>
     
-    <!-- AST Panel -->
     <div class="panel">
       <div class="panel-header">
-        AST (JSON)
-        <div class="ast-controls">
-          <button id="expandAll">Expand All</button>
-          <button id="collapseAll">Collapse All</button>
-          <button id="copyJson">Copy JSON</button>
+        Output (AST)
+        <div class="stats">
+          <div class="stat">
+            <span class="stat-label">Time:</span>
+            <span id="time">-</span>
+          </div>
         </div>
       </div>
       <div class="panel-content">
-        <pre id="astTree" class="json-display"></pre>
+        <div id="included-files" class="included-files">
+          <div class="included-files-title">📁 Included files:</div>
+          <div class="included-files-list" id="included-files-list"></div>
+        </div>
+        <div id="success" class="success"></div>
+        <div id="errors" class="errors"></div>
+        <pre id="output"></pre>
       </div>
     </div>
   </main>
   
+  <div class="controls">
+    <button id="parseBtn">Parse</button>
+    <div class="checkbox-group">
+      <label>
+        <input type="checkbox" id="prettyPrint" checked>
+        Pretty Print
+      </label>
+      <label>
+        <input type="checkbox" id="enablePreprocessor" checked>
+        Enable Preprocessor
+      </label>
+      <label>
+        <input type="checkbox" id="autoProcess">
+        Auto Process
+      </label>
+    </div>
+  </div>
+
   <script type="module">
-    // Import the parser
-    import { parse } from './dist/playground.js';
+    import { Preprocessor } from './src/preprocessor/index.ts';
+    import { parse } from './src/index.ts';
     
-    const editor = document.getElementById('editor');
-    const lineNumbers = document.getElementById('lineNumbers');
-    const astTreeEl = document.getElementById('astTree');
+    // Configuration
+    const preprocessor = new Preprocessor({
+      basePath: '/includes/'
+    });
+    
+    // Elements
+    const inputEl = document.getElementById('input');
+    const outputEl = document.getElementById('output');
     const errorsEl = document.getElementById('errors');
-    const examplesSelect = document.getElementById('examplesSelect');
-    const copyJsonBtn = document.getElementById('copyJson');
-    const expandAllBtn = document.getElementById('expandAll');
-    const collapseAllBtn = document.getElementById('collapseAll');
+    const successEl = document.getElementById('success');
+    const includedFilesEl = document.getElementById('included-files');
+    const includedFilesListEl = document.getElementById('included-files-list');
+    const timeEl = document.getElementById('time');
+    const parseBtn = document.getElementById('parseBtn');
+    const prettyPrintCheckbox = document.getElementById('prettyPrint');
+    const enablePreprocessorCheckbox = document.getElementById('enablePreprocessor');
+    const autoProcessCheckbox = document.getElementById('autoProcess');
     
-    let currentAst = null;
-    let parseTimeout = null;
-    
-    // Examples dictionary
-    const examples = {
-      // Commentaires
-      'comment-block-simple': `/* This is a simple block comment */\n`,
+    /**
+     * Traiter et parser le contenu
+     */
+    async function processAndParse() {
+      const input = inputEl.value;
+      const startTime = performance.now();
       
-      'comment-block-named': `/*#note This is a named block comment */\n`,
-      
-      'comment-inline-simple': `Text with // inline comment\n`,
-      
-      'comment-inline-named': `//#todo Add more features
-Text continues here\n`,
-      
-      // Blocs de code
-      'code-block-simple': '```\nconst x = 1;\nconsole.log(x);\n```\n',
-      
-      'code-block-named': '```#javascript\nconst greeting = "Hello";\nconsole.log(greeting);\n```\n',
-      
-      'code-block-attrs': '```#python {#code1 .highlight .numbered}\ndef hello():\n    print("Hello World")\n```\n',
-      
-      // Blocs de script
-      'script-block-simple': '!!!\nalert("Hello");\n!!!\n',
-      
-      'script-block-named': '!!!#javascript\nconst data = { key: "value" };\nconsole.log(data);\n!!!\n',
-      
-      'script-block-attrs': '!!!#python {#script1 .executable}\nimport sys\nprint(sys.version)\n!!!\n',
-      
-      // Inlines
-      'inline-code': 'Text with `inline code` and `#javascript const x = 1` examples.\n',
-      
-      'inline-script': 'Execute !alert("Hi")! or !#javascript console.log("test")! inline.\n',
-      
-      'inline-generic': 'Use :emphasis: or :#strong Bold text: for styling.\n',
-      
-      // Blocs génériques simples
-      'generic-block-simple': `:::
-This is a simple generic block
-with multiple lines
-:::\n`,
-      
-      'generic-block-named': `:::#container
-This is a named generic block
-:::\n`,
-      
-      'generic-block-attrs': `:::#section {#main .wrapper .highlighted}
-Content with id and classes
-:::\n`,
-      
-      'generic-block-nested-simple': `:::
-Outer block
-:::::
-Inner block
-:::::
-:::\n`,
-      
-      'generic-block-nested-complex': `:::#outer {#container}
-Level 1 content
-
-::::::#inner1 {.box}
-Level 2 - First inner
-::::::
-
-::::::#inner2 {.box}
-Level 2 - Second inner
-
-:::::::
-Level 3 nested
-:::::::
-::::::
-:::\n`,
-      
-      'generic-block-html': `:::#article
-<h2>HTML Title</h2>
-<p>Paragraph with <strong>bold</strong> text.</p>
-<ul>
-  <li>Item 1</li>
-  <li>Item 2</li>
-</ul>
-:::\n`,
-      
-      'generic-block-mixed': `:::#wrapper
-Regular text with :emphasis: inline.
-
-\`\`\`#javascript
-const mixed = true;
-\`\`\`
-
-More text with \`code\` and :#link clickable: {href="#"}.
-:::\n`,
-      
-      // Exemples complexes
-      'complex-complete': `/* #include header.html */
-
-:::#container {#main .wrapper}
-Text with \`code\` and :emphasis:
-
-\`\`\`#javascript
-const x = 1;
-\`\`\`
-
-:::::
-Nested block
-:::::
-:::
-
-!!!#python
-print("Hello World")
-!!!
-
-// This is a comment
-//#todo Add more features\n`,
-      
-      'complex-document': `/* Document metadata */
-/*#title My Document */
-/*#author John Doe */
-
-:::#header {.top-bar}
-Main Title
-
-Welcome to the document.
-:::
-
-:::#content {#main}
-This is the main content area.
-
-\`\`\`#python {.code-sample}
-def example():
-    return "Hello"
-\`\`\`
-
-Text with :emphasis: and \`inline code\`.
-:::
-
-:::#sidebar {.info-box}
-Important information
-Read the documentation.
-:::
-
-:::#footer
-© 2026 - All rights reserved
-// Footer comment
-:::\n`,
-      
-      'complex-multiple': `:::#level1
-First level
-
-::::::#level2a
-Second level A
-
-::::::::#level3
-Third level
-::::::::
-::::::
-
-::::::#level2b
-Second level B
-
-::::::::#level3a
-Third level A
-::::::::
-
-::::::::#level3b
-Third level B
-
-::::::::::#level4
-Fourth level with \`code\` and :inline:
-::::::::::
-::::::::
-::::::
-:::\n`,
-      
-      // Démo complète avec TOUTES les syntaxes
-      'demo-complete-all-syntaxes': `/* #metadata Demo showing ALL Blocks syntax features */
-
-:::#document {#main-doc .demo-page %interactive lang=fr}
-
-// Introduction section
-:::#section {#intro .hero}
-This is a :strong complete demonstration: of the Blocks language.
-It showcases :#span every syntax: available.
-:::
-
-/* Block comment with name */
-/*#note This comment explains the next section */
-
-// Code examples section
-:::#section {#code-examples .code-section}
-
-Inline code: \`const x = 1\` and named inline code: \`#javascript console.log(x)\`.
-
-Block code with attributes:
-\`\`\`#python {#example1 .highlight %numbered}
-def greet(name):
-    return f"Hello, {name}!"
-
-print(greet("World"))
-\`\`\`
-
-Code with different length delimiters:
-\`\`\`\`\`
-Code with 5 backticks
-\`\`\`\`\`
-
-:::
-
-/* Script section */
-:::#section {#script-examples}
-
-Inline script: !console.log('Hello')! and named: !#setup initApp()!.
-
-Block script:
-!!!#init {.executable}
-// Initialize application
-const config = {
-  theme: 'dark',
-  language: 'en'
-};
-!!!
-
-Script with different delimiter length:
-!!!!!
-alert('5 exclamation marks');
-!!!!!
-
-:::
-
-// Generic blocks with nesting
-:::#section {#generic-examples}
-
-Simple generic inline: :emphasis: and named: :#strong Bold text:.
-
-Nested generic blocks with different delimiters:
-::::#outer {.container}
-Outer level
-
-::::::#inner {#nested %collapsed}
-Inner level with :highlight nested inline: content
-
-::::::::#deepest
-Deepest level with \`code\` and !script! elements
-::::::::
-::::::
-::::
-
-:::
-
-/* Attributes showcase */
-:::#section {#attributes-demo .showcase}
-
-All attribute types:
-:::#box {#unique-id .class1 .class2 %option1 %option2 data-value=123 title="Example"}
-Content with full attributes
-:::
-
-:::
-
-/* Final comments */
-//#footer End of demonstration
-// Regular inline comment
-
-:::
-\n`,
-      
-      // Erreurs de commentaires
-      'error-comment-unclosed': `/* Erreur : commentaire de bloc non fermé - il manque le délimiteur de fermeture */
-
-/* Ce commentaire n'est pas fermé\n`,
-      
-      'error-comment-malformed': `/* Erreur : délimiteur de fermeture mal formé - il manque l'astérisque avant le slash */
-
-/* Commentaire avec délimiteur incorrect /\n`,
-      
-      // Erreurs de blocs de code
-      'error-codeblock-unclosed': `/* Erreur : bloc de code non fermé - il manque les trois backticks de fermeture */
-
-\`\`\`javascript
-const x = 1;
-console.log(x);\n`,
-      
-      'error-codeblock-mismatch': `/* Erreur : nombre différent de backticks entre ouverture (3) et fermeture (4) */
-
-\`\`\`
-const code = 'example';
-\`\`\`\`\n`,
-      
-      // Erreurs de blocs de script
-      'error-scriptblock-unclosed': `/* Erreur : bloc de script non fermé - il manque les trois points d'exclamation de fermeture */
-
-!!!python
-print("Hello")\n`,
-      
-      'error-scriptblock-mismatch': `/* Erreur : nombre différent de points d'exclamation entre ouverture (3) et fermeture (4) */
-
-!!!
-alert('test');
-!!!!\n`,
-      
-      // Erreurs de blocs génériques
-      'error-generic-unclosed': `/* Erreur : bloc générique non fermé - il manque les trois deux-points de fermeture */
-
-:::#container
-Du contenu ici
-Mais pas de fermeture\n`,
-      
-      'error-generic-mismatch': `/* Erreur : délimiteurs de longueurs différentes sans imbrication correcte */
-/* Ouverture avec 3 deux-points, fermeture avec 5 deux-points */
-
-:::
-Contenu du bloc
-:::::\n`,
-      
-      'error-generic-nested-wrong': `/* REMARQUE : Ce n'est PAS une erreur ! */
-/* Comportement normal : Le premier ::: ferme le bloc externe */
-/* Le contenu "interne" devient du texte normal, les ::: suivants ne sont pas parsés comme blocs */
-/* Pour imbriquer correctement, le bloc interne doit avoir PLUS de délimiteurs (ex: ::::: au lieu de :::) */
-
-:::
-Bloc externe
-:::
-Ceci est du texte normal (pas un bloc interne car le bloc externe est déjà fermé)
-:::
-:::\n`,
-      
-      'error-generic-attributes': `/* Erreur : attributs non fermés - il manque l'accolade fermante } */
-
-:::#container {#main .wrapper
-Contenu
-:::\n`,
-      
-      // Erreurs d'inlines
-      'error-inline-code-unclosed': `/* Erreur : code inline non fermé - il manque le backtick de fermeture */
-
-Voici du texte avec \`code non fermé et suite du texte.\n`,
-      
-      'error-inline-script-unclosed': `/* Erreur : script inline non fermé - il manque le point d'exclamation de fermeture */
-
-Texte avec !alert('test') non fermé ici.\n`,
-      
-      'error-inline-generic-unclosed': `/* Erreur : inline générique non fermé - il manque les deux-points de fermeture */
-
-Du texte avec :emphasis non fermé dans la phrase.\n`,
-      
-      // Erreurs d'attributs
-      'error-attributes-no-closing-brace': `/* Erreur : accolade fermante manquante dans les attributs */
-
-:::{#id .class1 .class2
-Contenu
-:::\n`,
-      
-      'error-attributes-invalid-syntax': `/* Erreur : syntaxe invalide dans les attributs - esperluette sans option */
-
-:::{#id & .class}
-Contenu
-:::\n`
-    };
-    
-    // Default example
-    const defaultCode = examples['complex-complete'];
-    
-    editor.value = defaultCode;
-    
-    // Update line numbers
-    function updateLineNumbers() {
-      const lines = editor.value.split('\n');
-      const lineNumbersHtml = lines.map((_, index) => 
-        `<div class="line-number" data-line="${index + 1}">${index + 1}</div>`
-      ).join('');
-      lineNumbers.innerHTML = lineNumbersHtml;
-    }
-
-    // Extract line number from error message or token
-    function extractLineNumber(error) {
-      // Try to extract from error message
-      // Chevrotain errors might contain: "Expecting... at offset: X" or similar
-      
-      // Pattern 1: "(line N)" at the end of message
-      let match = error.match(/\(line (\d+)\)/);
-      if (match) return parseInt(match[1]);
-      
-      // Pattern 2: "line N:" or "line N "
-      match = error.match(/line[:\s]+(\d+)/i);
-      if (match) return parseInt(match[1]);
-      
-      // Pattern 3: "at line N"
-      match = error.match(/at line (\d+)/i);
-      if (match) return parseInt(match[1]);
-      
-      // Pattern 4: "offset: N" - we need to convert offset to line
-      match = error.match(/offset[:\s]+(\d+)/i);
-      if (match) {
-        const offset = parseInt(match[1]);
-        return offsetToLine(offset);
-      }
-      
-      // Pattern 5: Look for token information
-      match = error.match(/token.*line[:\s]+(\d+)/i);
-      if (match) return parseInt(match[1]);
-      
-      // If no line number found, return null
-      return null;
-    }
-
-    // Convert character offset to line number
-    function offsetToLine(offset) {
-      const text = editor.value;
-      let line = 1;
-      for (let i = 0; i < offset && i < text.length; i++) {
-        if (text[i] === '\n') line++;
-      }
-      return line;
-    }
-
-    // Highlight error lines with better extraction
-    function highlightErrorLines(errors) {
-      // Clear previous errors
-      document.querySelectorAll('.line-number.error').forEach(el => {
-        el.classList.remove('error');
-        el.title = '';
-      });
-      
-      // Remove textarea highlighting
-      editor.classList.remove('has-error-line');
-      editor.style.removeProperty('--error-line');
-      
-      if (!errors || errors.length === 0) return;
-      
-      const errorLines = [];
-      
-      errors.forEach(error => {
-        const lineNum = extractLineNumber(error);
-        
-        if (lineNum) {
-          errorLines.push(lineNum);
-          
-          // Highlight line number
-          const lineEl = document.querySelector(`.line-number[data-line="${lineNum}"]`);
-          if (lineEl) {
-            lineEl.classList.add('error');
-            lineEl.title = error; // Show error on hover
-          }
-        }
-      });
-      
-      // Highlight first error line in textarea
-      if (errorLines.length > 0) {
-        editor.classList.add('has-error-line');
-        editor.style.setProperty('--error-line', errorLines[0]);
-      }
-    }
-
-    // Sync scroll between textarea and line numbers
-    editor.addEventListener('scroll', () => {
-      lineNumbers.scrollTop = editor.scrollTop;
-    });
-
-    // Handle example selection
-    examplesSelect.addEventListener('change', (e) => {
-      const exampleKey = e.target.value;
-      if (exampleKey && examples[exampleKey]) {
-        editor.value = examples[exampleKey];
-        updateLineNumbers();
-        parseCode();
-      }
-    });
-
-    // Open cheatsheet in new tab
-    const cheatsheetBtn = document.getElementById('cheatsheetBtn');
-    cheatsheetBtn.addEventListener('click', () => {
-      window.open('cheatsheet.html', '_blank', 'noopener,noreferrer');
-    });
-    
-    // Debounced parse
-    function handleInput() {
-      updateLineNumbers();
-      clearTimeout(parseTimeout);
-      parseTimeout = setTimeout(() => {
-        parseCode();
-      }, 300);
-    }
-    
-    editor.addEventListener('input', handleInput);
-    
-    // Display errors with line numbers
-    function displayErrors(errors) {
-      if (!errors || errors.length === 0) {
-        errorsEl.style.display = 'none';
-        return;
-      }
-      
-      errorsEl.style.display = 'block';
-      errorsEl.className = 'errors';
-      
-      const errorItems = errors.map(error => {
-        // Replace cryptic errors with better messages
-        let message = error;
-        
-        if (error.includes('undefined is not an object')) {
-          message = 'Parsing error: likely an unclosed block or inline, or mismatched delimiter lengths. Check that all opening delimiters have matching closing delimiters.';
-        }
-        
-        const lineNum = extractLineNumber(message);
-        
-        // Add line context
-        let lineInfo = '';
-        if (lineNum) {
-          const lines = editor.value.split('\n');
-          const lineContent = lines[lineNum - 1];
-          const preview = lineContent ? lineContent.trim().substring(0, 50) : '';
-          
-          lineInfo = `<div style="margin-top: 0.25rem;">
-            <strong style="color: #c62828;">Ligne ${lineNum}:</strong> 
-            <code style="background: #f5f5f5; padding: 2px 4px; border-radius: 3px;">${escapeHtml(preview)}${preview.length >= 50 ? '...' : ''}</code>
-          </div>`;
-        }
-        
-        return `<div class="error-item">
-          <div>${escapeHtml(message)}</div>
-          ${lineInfo}
-        </div>`;
-      }).join('');
-      
-      errorsEl.innerHTML = '<div style="font-weight: 600; margin-bottom: 0.5rem;">⚠️ Erreurs de parsing:</div>' + errorItems;
-    }
-    
-    // Parse and display
-    function parseCode() {
-      const code = editor.value;
-      const result = parse(code);
-      
-      currentAst = result.ast;
-      
-      // Display and highlight errors
-      if (result.errors && result.errors.length > 0) {
-        displayErrors(result.errors);
-        highlightErrorLines(result.errors);
-      } else {
-        errorsEl.style.display = 'none';
-        highlightErrorLines([]); // Clear error highlights
-      }
-      
-      // Display AST
-      renderAst(result.ast);
-    }
-    
-    // Render AST as interactive tree
-    function renderAst(ast) {
-      astTreeEl.innerHTML = '';
-      renderJsonTree(ast, astTreeEl);
-    }
-
-    // Create tree node element
-    function createNodeElement(node, depth, expanded = false) {
-      const container = document.createElement('div');
-      container.className = 'ast-node';
-      
-      const header = document.createElement('div');
-      header.className = `ast-node-header node-${node.type}`;
-      
-      const hasChildren = (Array.isArray(node.content) && node.content.length > 0) ||
-                          (Array.isArray(node.children) && node.children.length > 0);
-      
-      const toggleIcon = document.createElement('span');
-      toggleIcon.className = 'toggle-icon';
-      toggleIcon.textContent = hasChildren ? (expanded ? '▼ ' : '▶ ') : '  ';
-      header.appendChild(toggleIcon);
-      
-      const typeSpan = document.createElement('span');
-      typeSpan.textContent = node.type;
-      header.appendChild(typeSpan);
-      
-      // Add metadata
-      const meta = [];
-      if (node.name) meta.push(`name="${node.name}"`);
-      if (node.attributes?.id) meta.push(`id="${node.attributes.id}"`);
-      if (node.attributes?.classes?.length) {
-        meta.push(`classes=[${node.attributes.classes.map(c => `"${c}"`).join(', ')}]`);
-      }
-      if (node.attributes?.options?.length) {
-        meta.push(`options=[${node.attributes.options.map(o => `"${o}"`).join(', ')}]`);
-      }
-      
-      if (meta.length > 0) {
-        const metaSpan = document.createElement('span');
-        metaSpan.className = 'node-meta';
-        metaSpan.textContent = ' { ' + meta.join(', ') + ' }';
-        header.appendChild(metaSpan);
-      }
-      
-      // Add FULL content (no truncation)
-      if (typeof node.content === 'string') {
-        const contentSpan = document.createElement('span');
-        contentSpan.className = 'node-content-preview';
-        contentSpan.textContent = ` content="${escapeHtml(node.content)}"`;
-        header.appendChild(contentSpan);
-      } else if (typeof node.value === 'string') {
-        const valueSpan = document.createElement('span');
-        valueSpan.className = 'node-content-preview';
-        valueSpan.textContent = ` value="${escapeHtml(node.value)}"`;
-        header.appendChild(valueSpan);
-      } else if (Array.isArray(node.content) || Array.isArray(node.children)) {
-        const countSpan = document.createElement('span');
-        countSpan.className = 'node-meta';
-        const count = (node.content || node.children).length;
-        countSpan.textContent = ` [${count} child${count !== 1 ? 'ren' : ''}]`;
-        header.appendChild(countSpan);
-      }
-      
-      container.appendChild(header);
-      
-      // Add children
-      if (hasChildren) {
-        const childrenContainer = document.createElement('div');
-        childrenContainer.className = 'ast-node-children';
-        if (!expanded) childrenContainer.classList.add('collapsed');
-        
-        const children = node.content || node.children || [];
-        children.forEach(child => {
-          if (child && typeof child === 'object') {
-            childrenContainer.appendChild(createNodeElement(child, depth + 1, false));
-          }
-        });
-        
-        container.appendChild(childrenContainer);
-        
-        // Toggle functionality
-        header.addEventListener('click', () => {
-          childrenContainer.classList.toggle('collapsed');
-          toggleIcon.textContent = childrenContainer.classList.contains('collapsed') 
-            ? '▶ ' 
-            : '▼ ';
-        });
-      }
-      
-      return container;
-    }
-
-    // Expand all nodes
-    expandAllBtn.addEventListener('click', expandAllJson);
-
-    // Collapse all nodes
-    collapseAllBtn.addEventListener('click', collapseAllJson);
-    
-    // Render AST as formatted JSON with syntax highlighting (kept for reference)
-    function renderJsonAst(ast) {
-      const json = JSON.stringify(ast, null, 2);
-      const highlighted = syntaxHighlightJson(json);
-      astTreeEl.innerHTML = highlighted;
-    }
-    
-    // Syntax highlight JSON
-    function syntaxHighlightJson(json) {
-      // Escape HTML entities first
-      json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      
-      return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-        let cls = 'json-number';
-        if (/^"/.test(match)) {
-          if (/:$/.test(match)) {
-            cls = 'json-key';
-          } else {
-            cls = 'json-string';
-          }
-        } else if (/true|false/.test(match)) {
-          cls = 'json-boolean';
-        } else if (/null/.test(match)) {
-          cls = 'json-null';
-        }
-        return '<span class="' + cls + '">' + match + '</span>';
-      });
-    }
-    
-    // Copy JSON
-    copyJsonBtn.addEventListener('click', async () => {
       try {
-        await navigator.clipboard.writeText(JSON.stringify(currentAst, null, 2));
-        copyJsonBtn.textContent = '✓ Copied!';
-        setTimeout(() => {
-          copyJsonBtn.textContent = 'Copy JSON';
-        }, 2000);
-      } catch (err) {
-        alert('Failed to copy to clipboard');
+        let content = input;
+        let includedFiles = [];
+        let preprocessorErrors = [];
+        
+        // 1. Préprocesseur (si activé)
+        if (enablePreprocessorCheckbox.checked) {
+          console.log('🔄 Running preprocessor...');
+          const preprocessResult = await preprocessor.process(input, 'playground.blocks');
+          
+          content = preprocessResult.content;
+          includedFiles = preprocessResult.includedFiles;
+          preprocessorErrors = preprocessResult.errors;
+          
+          console.log('✅ Preprocessor complete');
+          if (includedFiles.length > 0) {
+            console.log('📁 Included files:', includedFiles);
+          }
+          if (preprocessorErrors.length > 0) {
+            console.warn('⚠️ Preprocessor errors:', preprocessorErrors);
+          }
+        } else {
+          console.log('⏭️ Preprocessor disabled');
+        }
+        
+        // 2. Parser
+        console.log('🔄 Parsing...');
+        const parseResult = parse(content);
+        console.log('✅ Parse complete');
+        
+        const endTime = performance.now();
+        const duration = (endTime - startTime).toFixed(2);
+        
+        // 3. Afficher les résultats
+        
+        // Fichiers inclus
+        if (includedFiles.length > 0) {
+          includedFilesListEl.innerHTML = includedFiles
+            .map(f => `<div>• ${f}</div>`)
+            .join('');
+          includedFilesEl.classList.add('visible');
+        } else {
+          includedFilesEl.classList.remove('visible');
+        }
+        
+        // AST
+        const indent = prettyPrintCheckbox.checked ? 2 : 0;
+        outputEl.textContent = JSON.stringify(parseResult.ast, null, indent);
+        
+        // Erreurs
+        const allErrors = [
+          ...preprocessorErrors.map(e => `[Preprocessor] ${e.message}`),
+          ...parseResult.errors
+        ];
+        
+        if (allErrors.length > 0) {
+          errorsEl.textContent = allErrors.join('\n');
+          errorsEl.classList.add('visible');
+          successEl.classList.remove('visible');
+        } else {
+          errorsEl.classList.remove('visible');
+          successEl.textContent = '✅ No errors';
+          successEl.classList.add('visible');
+        }
+        
+        // Temps
+        timeEl.textContent = `${duration}ms`;
+        
+      } catch (error) {
+        console.error('❌ Processing error:', error);
+        errorsEl.textContent = `Fatal error: ${error.message}`;
+        errorsEl.classList.add('visible');
+        successEl.classList.remove('visible');
+        outputEl.textContent = '';
+        includedFilesEl.classList.remove('visible');
+      }
+    }
+    
+    // Event listeners
+    parseBtn.addEventListener('click', processAndParse);
+    
+    // Auto process
+    let autoProcessTimeout;
+    inputEl.addEventListener('input', () => {
+      if (autoProcessCheckbox.checked) {
+        clearTimeout(autoProcessTimeout);
+        autoProcessTimeout = setTimeout(processAndParse, 500);
       }
     });
     
-    // Utility functions
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    /**
-     * Render interactive JSON tree
-     */
-    function renderJsonTree(data, container, key = null, depth = 0, isLast = false) {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'json-node';
-      wrapper.style.marginLeft = `${depth * 1.5}rem`;
-      
-      const type = Array.isArray(data) ? 'array' : typeof data;
-      
-      if (type === 'object' && data !== null) {
-        renderObject(data, wrapper, key, depth, isLast);
-      } else if (type === 'array') {
-        renderArray(data, wrapper, key, depth, isLast);
-      } else {
-        renderPrimitive(data, wrapper, key, type, isLast);
-      }
-      
-      container.appendChild(wrapper);
-    }
-
-    /**
-     * Render an object
-     */
-    function renderObject(obj, container, key, depth, isLast = false) {
-      const keys = Object.keys(obj);
-      const isEmpty = keys.length === 0;
-      
-      const header = document.createElement('div');
-      header.className = 'json-line';
-      
-      if (key !== null) {
-        const keySpan = document.createElement('span');
-        keySpan.className = 'json-key';
-        keySpan.textContent = `"${key}"`;
-        header.appendChild(keySpan);
-        
-        const colon = document.createElement('span');
-        colon.className = 'json-punctuation';
-        colon.textContent = ': ';
-        header.appendChild(colon);
-      }
-      
-      if (!isEmpty) {
-        const toggle = document.createElement('span');
-        toggle.className = 'json-toggle';
-        toggle.textContent = '▼ ';
-        toggle.style.cursor = 'pointer';
-        toggle.style.userSelect = 'none';
-        toggle.style.color = '#666';
-        header.insertBefore(toggle, header.firstChild);
-      }
-      
-      const openBrace = document.createElement('span');
-      openBrace.className = 'json-punctuation';
-      openBrace.textContent = isEmpty ? '{}' : '{';
-      header.appendChild(openBrace);
-      
-      // Add comma AFTER the object if it's empty and not the last element
-      if (!isLast && isEmpty) {
-        const comma = document.createElement('span');
-        comma.className = 'json-punctuation';
-        comma.textContent = ',';
-        header.appendChild(comma);
-      }
-      
-      container.appendChild(header);
-      
-      if (!isEmpty) {
-        const childrenContainer = document.createElement('div');
-        childrenContainer.className = 'json-children';
-        
-        keys.forEach((k, index) => {
-          const childWrapper = document.createElement('div');
-          childWrapper.style.marginLeft = '1.5rem';
-          
-          const isLastChild = index === keys.length - 1;
-          renderJsonTree(obj[k], childWrapper, k, 0, isLastChild);
-          
-          childrenContainer.appendChild(childWrapper);
-        });
-        
-        const closeBrace = document.createElement('div');
-        closeBrace.className = 'json-line';
-        closeBrace.style.marginLeft = '0';
-        const closeBraceSpan = document.createElement('span');
-        closeBraceSpan.className = 'json-punctuation';
-        closeBraceSpan.textContent = '}';
-        closeBrace.appendChild(closeBraceSpan);
-        
-        // Add comma AFTER the closing brace if not the last element
-        if (!isLast) {
-          const comma = document.createElement('span');
-          comma.className = 'json-punctuation';
-          comma.textContent = ',';
-          closeBrace.appendChild(comma);
-        }
-        
-        childrenContainer.appendChild(closeBrace);
-        container.appendChild(childrenContainer);
-        
-        // Toggle functionality
-        const toggle = header.querySelector('.json-toggle');
-        toggle.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const isCollapsed = childrenContainer.style.display === 'none';
-          childrenContainer.style.display = isCollapsed ? 'block' : 'none';
-          toggle.textContent = isCollapsed ? '▼ ' : '▶ ';
-          
-          if (isCollapsed) {
-            openBrace.textContent = '{';
-            closeBrace.style.display = 'block';
-          } else {
-            openBrace.textContent = `{ ... } (${keys.length} ${keys.length === 1 ? 'property' : 'properties'})`;
-            closeBrace.style.display = 'none';
-          }
-        });
-      }
-    }
-
-    /**
-     * Render an array
-     */
-    function renderArray(arr, container, key, depth, isLast = false) {
-      const isEmpty = arr.length === 0;
-      
-      const header = document.createElement('div');
-      header.className = 'json-line';
-      
-      if (key !== null) {
-        const keySpan = document.createElement('span');
-        keySpan.className = 'json-key';
-        keySpan.textContent = `"${key}"`;
-        header.appendChild(keySpan);
-        
-        const colon = document.createElement('span');
-        colon.className = 'json-punctuation';
-        colon.textContent = ': ';
-        header.appendChild(colon);
-      }
-      
-      if (!isEmpty) {
-        const toggle = document.createElement('span');
-        toggle.className = 'json-toggle';
-        toggle.textContent = '▼ ';
-        toggle.style.cursor = 'pointer';
-        toggle.style.userSelect = 'none';
-        toggle.style.color = '#666';
-        header.insertBefore(toggle, header.firstChild);
-      }
-      
-      const openBracket = document.createElement('span');
-      openBracket.className = 'json-punctuation';
-      openBracket.textContent = isEmpty ? '[]' : '[';
-      header.appendChild(openBracket);
-      
-      // Add comma AFTER the array if it's empty and not the last element
-      if (!isLast && isEmpty) {
-        const comma = document.createElement('span');
-        comma.className = 'json-punctuation';
-        comma.textContent = ',';
-        header.appendChild(comma);
-      }
-      
-      container.appendChild(header);
-      
-      if (!isEmpty) {
-        const childrenContainer = document.createElement('div');
-        childrenContainer.className = 'json-children';
-        
-        arr.forEach((item, index) => {
-          const childWrapper = document.createElement('div');
-          childWrapper.style.marginLeft = '1.5rem';
-          
-          const isLastChild = index === arr.length - 1;
-          renderJsonTree(item, childWrapper, null, 0, isLastChild);
-          
-          childrenContainer.appendChild(childWrapper);
-        });
-        
-        const closeBracket = document.createElement('div');
-        closeBracket.className = 'json-line';
-        closeBracket.style.marginLeft = '0';
-        const closeBracketSpan = document.createElement('span');
-        closeBracketSpan.className = 'json-punctuation';
-        closeBracketSpan.textContent = ']';
-        closeBracket.appendChild(closeBracketSpan);
-        
-        // Add comma AFTER the closing bracket if not the last element
-        if (!isLast) {
-          const comma = document.createElement('span');
-          comma.className = 'json-punctuation';
-          comma.textContent = ',';
-          closeBracket.appendChild(comma);
-        }
-        
-        childrenContainer.appendChild(closeBracket);
-        container.appendChild(childrenContainer);
-        
-        // Toggle functionality
-        const toggle = header.querySelector('.json-toggle');
-        toggle.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const isCollapsed = childrenContainer.style.display === 'none';
-          childrenContainer.style.display = isCollapsed ? 'block' : 'none';
-          toggle.textContent = isCollapsed ? '▼ ' : '▶ ';
-          
-          if (isCollapsed) {
-            openBracket.textContent = '[';
-            closeBracket.style.display = 'block';
-          } else {
-            openBracket.textContent = `[ ... ] (${arr.length} ${arr.length === 1 ? 'item' : 'items'})`;
-            closeBracket.style.display = 'none';
-          }
-        });
-      }
-    }
-
-    /**
-     * Render a primitive value
-     */
-    function renderPrimitive(value, container, key, type, isLast = false) {
-      const line = document.createElement('div');
-      line.className = 'json-line';
-      
-      if (key !== null) {
-        const keySpan = document.createElement('span');
-        keySpan.className = 'json-key';
-        keySpan.textContent = `"${key}"`;
-        line.appendChild(keySpan);
-        
-        const colon = document.createElement('span');
-        colon.className = 'json-punctuation';
-        colon.textContent = ': ';
-        line.appendChild(colon);
-      }
-      
-      const valueSpan = document.createElement('span');
-      
-      if (type === 'string') {
-        valueSpan.className = 'json-string';
-        valueSpan.textContent = `"${escapeJsonString(value)}"`;
-      } else if (type === 'number') {
-        valueSpan.className = 'json-number';
-        valueSpan.textContent = value;
-      } else if (type === 'boolean') {
-        valueSpan.className = 'json-boolean';
-        valueSpan.textContent = value;
-      } else if (value === null) {
-        valueSpan.className = 'json-null';
-        valueSpan.textContent = 'null';
-      } else {
-        valueSpan.textContent = String(value);
-      }
-      
-      line.appendChild(valueSpan);
-      
-      // Add comma if not the last element
-      if (!isLast) {
-        const comma = document.createElement('span');
-        comma.className = 'json-punctuation';
-        comma.textContent = ',';
-        line.appendChild(comma);
-      }
-      
-      container.appendChild(line);
-    }
-
-    /**
-     * Escape JSON string
-     */
-    function escapeJsonString(str) {
-      return str
-        .replace(/\\/g, '\\\\')
-        .replace(/"/g, '\\"')
-        .replace(/\n/g, '\\n')
-        .replace(/\r/g, '\\r')
-        .replace(/\t/g, '\\t');
-    }
-
-    /**
-     * Expand all JSON nodes
-     */
-    function expandAllJson() {
-      document.querySelectorAll('.json-children').forEach(el => {
-        el.style.display = 'block';
-      });
-      document.querySelectorAll('.json-toggle').forEach(el => {
-        el.textContent = '▼ ';
-      });
-      // Reset braces/brackets text
-      document.querySelectorAll('.json-punctuation').forEach(el => {
-        if (el.textContent.includes('...')) {
-          if (el.textContent.startsWith('{')) {
-            el.textContent = '{';
-          } else if (el.textContent.startsWith('[')) {
-            el.textContent = '[';
-          }
-        }
-      });
-      // Show closing braces/brackets
-      document.querySelectorAll('.json-children').forEach(childrenContainer => {
-        const closeBrace = childrenContainer.querySelector('.json-line:last-child');
-        if (closeBrace) {
-          closeBrace.style.display = 'block';
-        }
-      });
-    }
-
-    /**
-     * Collapse all JSON nodes
-     */
-    function collapseAllJson() {
-      document.querySelectorAll('.json-children').forEach(el => {
-        el.style.display = 'none';
-      });
-      document.querySelectorAll('.json-toggle').forEach(el => {
-        el.textContent = '▶ ';
-      });
-    }
-    
-    // Initial setup
-    updateLineNumbers();
-    parseCode();
+    // Initial parse
+    processAndParse();
   </script>
 </body>
 </html>

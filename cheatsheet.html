@@ -425,6 +425,8 @@
           <p id="pageSubtitle">Complete syntax reference guide</p>
         </div>
         <div class="header-controls">
+          <a href="public/playground.html" style="color: white; text-decoration: none; padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border-radius: 6px; transition: background 0.2s; margin-right: 0.5rem;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">🎮 Playground</a>
+          <a href="https://github.com/jt291/blocks" target="_blank" style="color: white; text-decoration: none; padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border-radius: 6px; transition: background 0.2s; margin-right: 1rem;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">📦 GitHub</a>
           <div class="control-group">
             <label for="langSelect">🌐</label>
             <select id="langSelect">
@@ -457,6 +459,7 @@
           <li><a href="#imbrication" data-i18n="sections.nesting.title">6. Nesting</a></li>
           <li><a href="#nommage" data-i18n="sections.naming.title">7. Naming</a></li>
           <li><a href="#preprocessor" data-i18n="sections.preprocessor.title">8. Preprocessor Directives</a></li>
+          <li><a href="#attributes-metadata">9. Attributes vs Metadata</a></li>
         </ul>
       </div>
 
@@ -840,11 +843,199 @@ contenu
         </div>
       </section>
 
+      <!-- 9. Attributes vs Metadata -->
+      <section id="attributes-metadata" class="section">
+        <h2>9. 🏷️ Attributes vs Metadata</h2>
+
+        <p>Blocks supports two distinct mechanisms for adding information to blocks: <strong>attributes</strong> (for styling and semantics) and <strong>metadata</strong> (for structured data).</p>
+
+        <div class="syntax-item">
+          <h4>Attributes (Block-level styling)</h4>
+          <p>Attributes are specified inline with the block delimiter, using CSS-like selector syntax.</p>
+          
+          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Syntax:</h5>
+          <div class="code-example"><pre>:::blockType #id .class1 .class2
+Content
+:::</pre></div>
+
+          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Examples:</h5>
+          <div class="code-example"><pre>:::note #intro .important .collapsible
+This note has an ID and two CSS classes
+:::
+
+:::warning #alert .urgent
+Critical warning with ID and class
+:::
+
+```python #code-sample .highlight
+print("Code block with attributes")
+```</pre></div>
+
+          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Purpose:</h5>
+          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+            <li><code>#id</code> → Unique identifier for referencing</li>
+            <li><code>.class</code> → CSS classes for styling</li>
+            <li>Used for HTML rendering, styling, JavaScript hooks</li>
+            <li>Semantic markup</li>
+          </ul>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Metadata (Structured data)</h4>
+          <p>Metadata is structured data in YAML format, enclosed in <code>---</code> delimiters.</p>
+          
+          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Global metadata (frontmatter):</h5>
+          <div class="code-example"><pre>---
+title: My Document
+author: John Doe
+date: 2026-02-06
+version: 1.0
+config:
+  debug: true
+  theme: dark
+---
+
+# Document content starts here</pre></div>
+
+          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Local metadata (inside blocks):</h5>
+          <div class="code-example"><pre>:::note #intro .important
+---
+severity: high
+dismissible: true
+timeout: 5000
+actions:
+  - dismiss
+  - details
+---
+This note has local metadata
+:::</pre></div>
+
+          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Purpose:</h5>
+          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+            <li>Structured data (objects, arrays, primitives)</li>
+            <li>Configuration and parameters</li>
+            <li>Data accessible to scripts and formatters</li>
+            <li>Local metadata overrides global metadata</li>
+          </ul>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Combining Attributes and Metadata</h4>
+          <p>Both can be used together for maximum flexibility.</p>
+          
+          <div class="code-example"><pre>:::warning #critical-alert .urgent .dismissible
+---
+severity: critical
+priority: 1
+auto_dismiss: false
+sound: true
+recipients:
+  - admin@example.com
+  - ops@example.com
+---
+Database connection lost!
+Attempting to reconnect...
+:::</pre></div>
+
+          <div class="note">
+            <strong>Breakdown:</strong><br>
+            • <strong>Attributes</strong>: <code>#critical-alert</code>, <code>.urgent</code>, <code>.dismissible</code> → For styling and DOM<br>
+            • <strong>Metadata</strong>: YAML block → For application logic and data
+          </div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Metadata Scope and Priority</h4>
+          
+          <p><strong>Global metadata (document level):</strong></p>
+          <div class="code-example"><pre>---
+theme: light
+debug: false
+version: 1.0
+---
+
+Document content...</pre></div>
+
+          <p style="margin-top: 1rem;"><strong>Local metadata (block level):</strong></p>
+          <div class="code-example"><pre>:::section #main
+---
+theme: dark
+debug: true
+---
+This section overrides global settings
+:::</pre></div>
+
+          <div class="note">
+            <strong>Priority:</strong> Local metadata > Global metadata
+          </div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Use Cases</h4>
+          
+          <p><strong>Attributes:</strong></p>
+          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+            <li>CSS styling: <code>.highlight</code>, <code>.warning</code>, <code>.success</code></li>
+            <li>JavaScript selectors: <code>#interactive-chart</code></li>
+            <li>Accessibility: <code>.screen-reader-only</code></li>
+            <li>Layout hints: <code>.full-width</code>, <code>.sidebar</code></li>
+          </ul>
+
+          <p style="margin-top: 1rem;"><strong>Metadata:</strong></p>
+          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+            <li>Configuration: <code>{ timeout: 5000, retries: 3 }</code></li>
+            <li>Data binding: <code>{ user: "john", role: "admin" }</code></li>
+            <li>Conditional rendering: <code>{ visible: true, collapsed: false }</code></li>
+            <li>Analytics: <code>{ track: true, category: "engagement" }</code></li>
+          </ul>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Complete Example</h4>
+          
+          <div class="code-example"><pre>---
+title: User Guide
+version: 2.0
+author: Documentation Team
+---
+
+:::note #installation .step-1
+---
+platform: linux
+required: true
+estimated_time: 5
+---
+Install the package using your package manager
+:::
+
+```bash #install-command .copy-button
+---
+copy_button: true
+syntax_highlight: true
+---
+sudo apt-get install blocks
+```
+
+:::warning #compatibility .important
+---
+min_version: 1.5
+platforms: [linux, macos]
+---
+Windows support is experimental
+:::</pre></div>
+        </div>
+      </section>
+
     </div>
 
     <footer>
       <p><strong data-i18n="footer.title">Blocks Language</strong> - <span data-i18n="footer.subtitle">An extensible and readable markup language</span></p>
       <p style="margin-top: 0.5rem; opacity: 0.7;" data-i18n="footer.docs">For more information, see the complete documentation</p>
+      <p style="margin-top: 1rem;">
+        <a href="public/playground.html" style="color: #667eea; text-decoration: none; margin: 0 1rem;">🎮 Try the Playground</a>
+        <span style="color: rgba(255,255,255,0.3);">|</span>
+        <a href="https://github.com/jt291/blocks" target="_blank" style="color: #667eea; text-decoration: none; margin: 0 1rem;">📦 View on GitHub</a>
+      </p>
     </footer>
   </div>
 

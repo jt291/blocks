@@ -27,3 +27,4 @@ coverage/
 
 # Include .block example files
 !examples/*.block
+*.backup

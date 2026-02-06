@@ -1,0 +1,9 @@
+# Nested Include Test
+
+This file demonstrates nested includes.
+
+```python
+#include utils.py
+```
+
+End of nested content.

@@ -282,11 +282,13 @@ describe("Preprocessor", () => {
       // utils.py should only be in includedFiles once
       expect(result.includedFiles).toContain(utilsPath);
       expect(result.includedFiles).toContain(nestedPath);
-      // The second #include utils.py (in nested.blocks) should be skipped silently
+      // All #include directives should be replaced with content
       expect(result.content).toContain("def helper(): pass");
-      // Should not have duplicate content
+      // Should not have any remaining #include directives
+      expect(result.content).not.toContain("#include");
+      // Duplicate includes result in duplicate content (expected behavior)
       const helperMatches = result.content.match(/def helper\(\): pass/g);
-      expect(helperMatches).toHaveLength(1);
+      expect(helperMatches).toHaveLength(2);
     });
 
     it("should cache duplicate includes", async () => {

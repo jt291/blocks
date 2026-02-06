@@ -463,8 +463,8 @@ console.log("Debug mode:", CONFIG.debug);
   </div>
 
   <script type="module">
-    import { Preprocessor } from '../dist/playground.js';
-    import { parse } from '../dist/playground.js';
+    import { Preprocessor, parse } from '../dist/playground.js';
+
     
     // Examples
     const EXAMPLES = {
@@ -701,10 +701,11 @@ unless you create the circular files.`,
      */
     function renderOutput(mode, preprocessResult, parseResult) {
       switch(mode) {
-        case 'ast':
+        case 'ast': {
           const indent = prettyPrintCheckbox.checked ? 2 : 0;
           outputEl.innerHTML = `<pre><code>${escapeHTML(JSON.stringify(parseResult.ast, null, indent))}</code></pre>`;
           break;
+        }
           
         case 'html-rendered':
           outputEl.innerHTML = `<div class="coming-soon">🚧 HTML renderer coming soon! See AST for now.</div>`;

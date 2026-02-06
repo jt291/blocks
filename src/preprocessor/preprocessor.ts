@@ -113,7 +113,7 @@ export class Preprocessor {
         continue;
       }
       const sourceLine = i + 1;
-      
+
       // Check if line contains #include (can be anywhere in the line, including in comments)
       const includeMatch = line.match(/#include\s+([^\s\n]+)/);
 
@@ -206,17 +206,17 @@ export class Preprocessor {
         // Replace the #include directive in the line with the nested content
         const fullMatch = includeMatch[0]; // The full match "#include file.ext"
         const processedLine = line.replace(fullMatch, nestedResult.content);
-        
+
         // If the replacement is multiline, split it up
         const replacementLines = processedLine.split("\n");
-        
+
         // Add all lines from the replacement
         for (let j = 0; j < replacementLines.length; j++) {
           const replacementLine = replacementLines[j];
           if (replacementLine === undefined) continue;
-          
+
           outputLines.push(replacementLine);
-          
+
           // For line mapping, map the first line to the source line
           // and subsequent lines to nested content's source
           if (j === 0) {

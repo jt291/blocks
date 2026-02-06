@@ -11,7 +11,7 @@ import type {
  */
 export class Preprocessor {
   private config: Required<PreprocessorConfig>;
-  private fileReader: FileReader;
+  private fileReaderPromise: Promise<FileReader>;
   private cache: Map<string, string>;
   private includedFiles: Set<string>;
   private errors: PreprocessorError[];
@@ -23,7 +23,7 @@ export class Preprocessor {
       cache: config.cache ?? true,
     };
 
-    this.fileReader = createFileReader(this.config.basePath);
+    this.fileReaderPromise = createFileReader(this.config.basePath);
     this.cache = new Map();
     this.includedFiles = new Set();
     this.errors = [];
@@ -43,8 +43,11 @@ export class Preprocessor {
     this.includedFiles.clear();
     this.errors = [];
 
+    // Wait for fileReader to be ready
+    const fileReader = await this.fileReaderPromise;
+
     // Process content
-    const processedContent = await this.processContent(content, currentFile, 0);
+    const processedContent = await this.processContent(content, currentFile, 0, fileReader);
 
     return {
       content: processedContent,
@@ -60,6 +63,7 @@ export class Preprocessor {
     content: string,
     currentFile: string,
     depth: number,
+    fileReader: FileReader,
   ): Promise<string> {
     // Check maximum depth
     if (depth > this.config.maxDepth) {
@@ -87,7 +91,7 @@ export class Preprocessor {
       const fullMatch = match[0];
 
       // Resolve the path of the file to include
-      const resolvedPath = this.fileReader.resolve(currentFile, includePath);
+      const resolvedPath = fileReader.resolve(currentFile, includePath);
 
       // Check for circular includes
       if (this.includedFiles.has(resolvedPath)) {
@@ -106,7 +110,7 @@ export class Preprocessor {
         if (this.config.cache && this.cache.has(resolvedPath)) {
           includedContent = this.cache.get(resolvedPath)!;
         } else {
-          includedContent = await this.fileReader.read(resolvedPath);
+          includedContent = await fileReader.read(resolvedPath);
 
           if (this.config.cache) {
             this.cache.set(resolvedPath, includedContent);
@@ -121,6 +125,7 @@ export class Preprocessor {
           includedContent,
           resolvedPath,
           depth + 1,
+          fileReader,
         );
 
         // Replace the #include directive with content

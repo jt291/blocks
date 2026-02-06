@@ -11,7 +11,7 @@ export default defineConfig({
       formats: ["es"],
     },
     rollupOptions: {
-      external: ["chevrotain"],
+      external: ["chevrotain", "node:fs/promises", "node:path", "node:fs", "node:url"],
     },
   },
   test: {

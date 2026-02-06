@@ -5,13 +5,16 @@ export default defineConfig({
   build: {
     emptyOutDir: false, // Don't clear dist directory
     lib: {
-      entry: resolve(__dirname, "src/index.ts"),
-      name: "Blocks",
-      fileName: "index",
+      entry: {
+        'index': resolve(__dirname, 'src/index.ts'),
+        'parser/index': resolve(__dirname, 'src/parser/parser.ts'),
+        'preprocessor/index': resolve(__dirname, 'src/preprocessor/index.ts'),
+        'preprocessor/browser': resolve(__dirname, 'src/preprocessor/browser.ts'),
+      },name: "Blocks",
       formats: ["es"],
     },
     rollupOptions: {
-      external: ["chevrotain", "node:fs/promises", "node:path", "node:fs", "node:url"],
+      external: [/^node:.*/],
     },
   },
     optimizeDeps: {

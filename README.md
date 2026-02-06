@@ -155,6 +155,35 @@ All inline elements follow a **uniform syntax rule**: if the first token after t
 
 Format: `{ #id .class1 .class2 %option1 %option2 key1=val1 key2=val2 }`
 
+### Attributes vs Metadata
+
+Blocks supports two distinct mechanisms for adding information to blocks:
+
+**Attributes** (inline, CSS-like):
+- Syntax: `:::blockType #id .class1 .class2`
+- Used for styling, IDs, CSS classes
+- Ideal for: HTML rendering, JavaScript hooks, semantic markup
+
+**Metadata** (YAML format):
+- Syntax: YAML frontmatter between `---` delimiters
+- Used for structured data (objects, arrays, primitives)
+- Ideal for: Configuration, data binding, conditional rendering
+
+**Example combining both:**
+```blocks
+:::warning #alert .urgent
+---
+severity: critical
+auto_dismiss: false
+recipients:
+  - admin@example.com
+---
+Database connection lost!
+:::
+```
+
+See the [Cheatsheet](cheatsheet.html#attributes-metadata) for complete specification and examples.
+
 ### Nested Generic Blocks
 
 Generic blocks support nesting using delimiters of **different lengths**. Inner blocks must use **strictly more** delimiter characters than their parent blocks.

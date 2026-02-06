@@ -499,4 +499,89 @@ describe("Preprocessor", () => {
       expect(result.includedFiles).toHaveLength(3);
     });
   });
+
+  describe("Escape character support", () => {
+    it("should treat \\#include as literal text", async () => {
+      const mainPath = path.join(TEST_DIR, "main.blocks");
+      await fs.writeFile(
+        mainPath,
+        "/* The \\#include directive loads external files. */",
+      );
+
+      const preprocessor = new Preprocessor({ basePath: TEST_DIR });
+      const result = await preprocessor.process(
+        await fs.readFile(mainPath, "utf-8"),
+        mainPath,
+      );
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.content).toBe(
+        "/* The #include directive loads external files. */",
+      );
+      expect(result.includedFiles).toHaveLength(0);
+    });
+
+    it("should handle multiple escaped includes in same line", async () => {
+      const mainPath = path.join(TEST_DIR, "main.blocks");
+      await fs.writeFile(
+        mainPath,
+        "Use \\#include to include files. Example: \\#include file.txt",
+      );
+
+      const preprocessor = new Preprocessor({ basePath: TEST_DIR });
+      const result = await preprocessor.process(
+        await fs.readFile(mainPath, "utf-8"),
+        mainPath,
+      );
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.content).toBe(
+        "Use #include to include files. Example: #include file.txt",
+      );
+      expect(result.includedFiles).toHaveLength(0);
+    });
+
+    it("should handle mixed escaped and unescaped includes", async () => {
+      const headerPath = path.join(TEST_DIR, "header.blocks");
+      const mainPath = path.join(TEST_DIR, "main.blocks");
+
+      await fs.writeFile(headerPath, "Header Content");
+      await fs.writeFile(
+        mainPath,
+        "/* The \\#include directive is used like this: */\n#include header.blocks",
+      );
+
+      const preprocessor = new Preprocessor({ basePath: TEST_DIR });
+      const result = await preprocessor.process(
+        await fs.readFile(mainPath, "utf-8"),
+        mainPath,
+      );
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.content).toBe(
+        "/* The #include directive is used like this: */\nHeader Content",
+      );
+      expect(result.includedFiles).toContain(headerPath);
+    });
+
+    it("should handle escaped includes in code blocks", async () => {
+      const mainPath = path.join(TEST_DIR, "main.blocks");
+      await fs.writeFile(
+        mainPath,
+        "```blocks\n\\#include example.blocks\n```\n\nDocumentation for \\#include directive.",
+      );
+
+      const preprocessor = new Preprocessor({ basePath: TEST_DIR });
+      const result = await preprocessor.process(
+        await fs.readFile(mainPath, "utf-8"),
+        mainPath,
+      );
+
+      expect(result.errors).toHaveLength(0);
+      expect(result.content).toBe(
+        "```blocks\n#include example.blocks\n```\n\nDocumentation for #include directive.",
+      );
+      expect(result.includedFiles).toHaveLength(0);
+    });
+  });
 });

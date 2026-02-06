@@ -569,7 +569,9 @@ Main content here.
 
 #include footer.blocks
 
-The #include directive loads external files.`,
+The \\#include directive loads external files.
+
+To use a literal #include in your text, escape it: \\\\#include`,
 
       'include-in-code': `Include a file inside a code block:
 
@@ -581,7 +583,7 @@ result = process_data("test")
 print(result)
 \`\`\`
 
-The included file content replaces the #include line.`,
+The included file content replaces the \\#include line.`,
 
       'include-nested': `Nested includes demonstration:
 
@@ -625,14 +627,12 @@ function broken() {
       'error-unclosed-metadata': `---
 title: Broken Document
 author: Test User
-tags: [incomplete, broken]
+invalid_yaml_syntax: [this bracket is never closed
 date: 2026-02-06
 
-This metadata block is missing the closing --- delimiter!
-Everything after the opening --- becomes metadata instead of content.
+Content that should NOT be metadata starts here.
 
-This heading should NOT be in metadata.
-This content should be outside the metadata block.
+# This is a heading but gets parsed as metadata!
 `,
 
       'error-unclosed-comment': `Example with unclosed comment:

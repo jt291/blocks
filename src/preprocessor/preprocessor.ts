@@ -114,6 +114,21 @@ export class Preprocessor {
       }
       const sourceLine = i + 1;
 
+      // Check for escaped #include: \#include
+      // This allows writing literal #include in documentation
+      if (line.includes("\\#include")) {
+        // Remove backslash and treat as literal text
+        const unescapedLine = line.replace(/\\#include/g, "#include");
+        outputLines.push(unescapedLine);
+        result.lineMap.push({
+          outputLine: outputLineNumber,
+          sourceFile: currentFile || "input",
+          sourceLine,
+        });
+        outputLineNumber++;
+        continue;
+      }
+
       // Check if line contains #include (can be anywhere in the line, including in comments)
       const includeMatch = line.match(/#include\s+([^\s\n]+)/);
 

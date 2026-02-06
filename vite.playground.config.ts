@@ -22,7 +22,4 @@ export default defineConfig({
       './io-node': resolve(__dirname, 'src/preprocessor/io-browser.ts'),
     },
   },
-  optimizeDeps: {
-    exclude: ['node:fs/promises', 'node:path'],
-  },
 });

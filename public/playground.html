@@ -773,9 +773,9 @@ api_version: v2
 user_id: 12345
 ---
 
-API endpoint: \${base_url}/\${api_version}/users/\${user_id}
+API endpoint: \\${base_url}/\\${api_version}/\\${user_id}
 
-Image path: \${base_url}/static/images/logo.png
+Image path: \\${base_url}/static/images/logo.png
 
 JavaScript-style interpolation with multiple variables.`,
 
@@ -827,7 +827,7 @@ columns: 2
 This demonstrates all syntax features:
 
 1. Inline code: code:print("hello")[.highlight %copy]
-2. Link: link:\${base_url}/docs[.external target="_blank"]
+2. Link: link:\\${base_url}/docs[.external target="_blank"]
 3. Variable: {author|capitalize}
 4. Filtered: {price|currency:EUR}
 5. Date: {release_date|date:DD/MM/YYYY}

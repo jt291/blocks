@@ -184,6 +184,65 @@ Database connection lost!
 
 See the [Cheatsheet](cheatsheet.html#attributes-metadata) for complete specification and examples.
 
+### Inline Elements
+
+Unified syntax for inline elements with attributes:
+
+```blocks
+type:content[#id .class %option key=value]
+```
+
+**Key points:**
+- No `#` prefix for inline type name
+- Colon `:` separator
+- Optional attributes in brackets `[...]`
+- Same attribute syntax as blocks
+
+**Examples:**
+```blocks
+code:print("hello")[.highlight %copy]
+link:https://example.com[.external target="_blank"]
+strong:important[.urgent]
+span:content[#custom .special data-value="123"]
+```
+
+**Edge cases:**
+- Content with brackets: `code:arr[0][.highlight]`
+- Content with colons: `code:http://url[.url]`
+- Nested quotes: `link:page["quotes"][title="Link's title"]`
+
+### Variables
+
+Blocks supports three types of variable syntax for dynamic content:
+
+**Simple:** `{varname}`
+```blocks
+Hello {username}!
+```
+
+**Interpolated:** `${varname}` or `${obj.prop}`
+```blocks
+${base_url}/api/${endpoint}
+```
+
+**Filtered:** `{varname|filter:arg}`
+```blocks
+{price|currency:EUR}
+{date|date:YYYY-MM-DD}
+{text|lower|truncate:50}
+```
+
+**Common filters:**
+- `upper`, `lower`, `capitalize` – Text transformation
+- `truncate:N` – Truncate to N characters
+- `date:FORMAT` – Format dates
+- `currency:CODE` – Format currency
+- `number:DECIMALS` – Format numbers
+- `escape` – Escape HTML entities
+- `json` – Convert to JSON
+
+See [Cheatsheet](cheatsheet.html#variables) for complete filter reference.
+
 ### Nested Generic Blocks
 
 Generic blocks support nesting using delimiters of **different lengths**. Inner blocks must use **strictly more** delimiter characters than their parent blocks.

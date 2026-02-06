@@ -358,6 +358,23 @@
           <option value="include-deep-nested">Deep Nested Includes (4 levels)</option>
         </optgroup>
         
+        <optgroup label="Inline Elements">
+          <option value="inline-code">Inline Code with Attributes</option>
+          <option value="inline-links">Inline Links</option>
+          <option value="inline-custom">Custom Inline Elements</option>
+        </optgroup>
+        
+        <optgroup label="Variables">
+          <option value="variables-simple">Simple Variables</option>
+          <option value="variables-interpolated">Interpolated Variables</option>
+          <option value="variables-filtered">Filtered Variables</option>
+          <option value="variables-chained">Chained Filters</option>
+        </optgroup>
+        
+        <optgroup label="Complete Examples">
+          <option value="syntax-complete">Complete Syntax Demo</option>
+        </optgroup>
+        
         <optgroup label="Errors (will fail to parse)">
           <option value="error-unclosed-backticks">Unclosed ``` Block</option>
           <option value="error-unclosed-exclamation">Unclosed !!! Block</option>
@@ -710,6 +727,123 @@ print("Normal code block")
 /* ERROR: 4 backticks instead of 3! */
 
 Opening used 3, closing used 4 - mismatch.`,
+
+      // === INLINE EXAMPLES ===
+      'inline-code': `Inline code examples:
+
+Use code:inline code[.highlight] within text.
+
+Multiple code:first[.highlight] code:second[.highlight] on one line.
+
+With attributes: code:print("hello")[#example .highlight %copy].`,
+
+      'inline-links': `Link examples:
+
+Simple link:https://example.com without attributes.
+
+With target: link:documentation[.external target="_blank"].
+
+With ID and class: link:home[#nav-home .nav-link .active].`,
+
+      'inline-custom': `Custom inline elements:
+
+Emphasis: strong:important text[.urgent] and em:subtle text[.muted].
+
+Custom span: span:highlighted[.highlight .yellow bg=yellow].
+
+Data attributes: span:interactive[data-action="click" data-id="123"].`,
+
+      // === VARIABLE EXAMPLES ===
+      'variables-simple': `---
+username: Alice
+title: Welcome Page
+count: 42
+---
+
+Hello, {username}!
+
+Page title: {title}
+Item count: {count}
+
+Simple variable substitution from global metadata.`,
+
+      'variables-interpolated': `---
+base_url: https://api.example.com
+api_version: v2
+user_id: 12345
+---
+
+API endpoint: \${base_url}/\${api_version}/users/\${user_id}
+
+Image path: \${base_url}/static/images/logo.png
+
+JavaScript-style interpolation with multiple variables.`,
+
+      'variables-filtered': `---
+price: 29.99
+date: 2026-02-06
+description: This is a very long description that needs to be truncated for display purposes
+username: john_doe
+---
+
+Price: {price|currency:EUR}
+Date: {date|date:DD/MM/YYYY}
+Description: {description|truncate:50}
+Username: {username|upper}
+
+Variables with filters for formatting.`,
+
+      'variables-chained': `---
+text: "HELLO WORLD THIS IS A LONG TEXT THAT NEEDS PROCESSING"
+data: {"key": "value", "nested": {"prop": 123}}
+html: "<script>alert('xss')</script>"
+---
+
+Chained filters:
+- Lowercase + truncate: {text|lower|truncate:20}
+- JSON + escape: {data|json|escape}
+- Escape + truncate: {html|escape|truncate:30}
+
+Multiple filters applied in sequence.`,
+
+      // === COMPLETE EXAMPLE ===
+      'syntax-complete': `---
+title: Complete Syntax Demo
+version: 1.0
+author: Demo Author
+base_url: https://example.com
+price: 29.99
+release_date: 2026-02-06
+---
+
+::: section #demo .example
+---
+layout: grid
+columns: 2
+---
+
+/* Welcome to strong:{title}[.brand-name] version {version}! */
+
+This demonstrates all syntax features:
+
+1. Inline code: code:print("hello")[.highlight %copy]
+2. Link: link:\${base_url}/docs[.external target="_blank"]
+3. Variable: {author|capitalize}
+4. Filtered: {price|currency:EUR}
+5. Date: {release_date|date:DD/MM/YYYY}
+
+:::
+
+::: warning #notice .urgent
+---
+priority: high
+dismissible: true
+---
+
+Alert with span:critical status[.status .status-error]!
+
+Contact: link:admin@example.com[.email-link]
+:::`,
     };
     
     // Configuration

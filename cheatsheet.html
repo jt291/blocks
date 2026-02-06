@@ -74,6 +74,19 @@
       align-items: center;
     }
 
+    .header-controls a {
+      color: white;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      background: rgba(255,255,255,0.2);
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+
+    .header-controls a:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
     .control-group {
       display: flex;
       align-items: center;
@@ -425,8 +438,8 @@
           <p id="pageSubtitle">Complete syntax reference guide</p>
         </div>
         <div class="header-controls">
-          <a href="public/playground.html" style="color: white; text-decoration: none; padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border-radius: 6px; transition: background 0.2s; margin-right: 0.5rem;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">🎮 Playground</a>
-          <a href="https://github.com/jt291/blocks" target="_blank" style="color: white; text-decoration: none; padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border-radius: 6px; transition: background 0.2s; margin-right: 1rem;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">📦 GitHub</a>
+          <a href="public/playground.html">🎮 Playground</a>
+          <a href="https://github.com/jt291/blocks" target="_blank">📦 GitHub</a>
           <div class="control-group">
             <label for="langSelect">🌐</label>
             <select id="langSelect">

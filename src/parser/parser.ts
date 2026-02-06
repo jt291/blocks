@@ -28,6 +28,21 @@ function getLineNumber(token: IToken | undefined): number | string {
 }
 
 /**
+ * Helper function to process token image for escaped tokens
+ * Removes the backslash from escaped tokens
+ */
+function processTokenImage(tok: IToken): string {
+  // Check if this is an escaped token (token name starts with "Escaped")
+  const typeName = tok.tokenType?.name;
+  if (typeName?.startsWith("Escaped")) {
+    // Remove the leading backslash to get the literal character
+    return tok.image.substring(1);
+  }
+  // For all other tokens, return the image as-is
+  return tok.image;
+}
+
+/**
  * Parse attributes from a string like "{#id .class %option key=value}"
  */
 function parseAttributesString(attrsStr: string): Attributes | undefined {
@@ -259,6 +274,19 @@ export class BlocksParser extends EmbeddedActionsParser {
         { ALT: () => this.CONSUME2(tokens.Whitespace) },
         { ALT: () => this.CONSUME(tokens.Newline) },
         { ALT: () => this.CONSUME(tokens.InlineCommentStart) },
+        // Escaped tokens (can appear in block content)
+        { ALT: () => this.CONSUME(tokens.EscapedHash) },
+        { ALT: () => this.CONSUME(tokens.EscapedBacktick) },
+        { ALT: () => this.CONSUME(tokens.EscapedExclamation) },
+        { ALT: () => this.CONSUME(tokens.EscapedColon) },
+        { ALT: () => this.CONSUME(tokens.EscapedLBrace) },
+        { ALT: () => this.CONSUME(tokens.EscapedRBrace) },
+        { ALT: () => this.CONSUME(tokens.EscapedLBracket) },
+        { ALT: () => this.CONSUME(tokens.EscapedRBracket) },
+        { ALT: () => this.CONSUME(tokens.EscapedDash) },
+        { ALT: () => this.CONSUME(tokens.EscapedDollar) },
+        { ALT: () => this.CONSUME(tokens.EscapedBackslash) },
+        { ALT: () => this.CONSUME(tokens.Backslash) },
         // Complete inline tokens (can appear in block content)
         { ALT: () => this.CONSUME(tokens.InlineCodeCompleteWithAttrs) },
         { ALT: () => this.CONSUME(tokens.InlineCodeComplete) },
@@ -289,7 +317,7 @@ export class BlocksParser extends EmbeddedActionsParser {
 
     const node: CommentBlockNode = {
       type: "CommentBlock",
-      content: contentTokens.map((t) => t.image).join(""),
+      content: contentTokens.map((t) => processTokenImage(t)).join(""),
     };
 
     if (name) {
@@ -346,6 +374,19 @@ export class BlocksParser extends EmbeddedActionsParser {
         { ALT: () => this.CONSUME4(tokens.Whitespace) },
         { ALT: () => this.CONSUME2(tokens.Newline) },
         { ALT: () => this.CONSUME(tokens.InlineCommentStart) },
+        // Escaped tokens (can appear in block content)
+        { ALT: () => this.CONSUME(tokens.EscapedHash) },
+        { ALT: () => this.CONSUME(tokens.EscapedBacktick) },
+        { ALT: () => this.CONSUME(tokens.EscapedExclamation) },
+        { ALT: () => this.CONSUME(tokens.EscapedColon) },
+        { ALT: () => this.CONSUME(tokens.EscapedLBrace) },
+        { ALT: () => this.CONSUME(tokens.EscapedRBrace) },
+        { ALT: () => this.CONSUME(tokens.EscapedLBracket) },
+        { ALT: () => this.CONSUME(tokens.EscapedRBracket) },
+        { ALT: () => this.CONSUME(tokens.EscapedDash) },
+        { ALT: () => this.CONSUME(tokens.EscapedDollar) },
+        { ALT: () => this.CONSUME(tokens.EscapedBackslash) },
+        { ALT: () => this.CONSUME(tokens.Backslash) },
         // Complete inline tokens (can appear in block content)
         { ALT: () => this.CONSUME(tokens.InlineCodeCompleteWithAttrs) },
         { ALT: () => this.CONSUME(tokens.InlineCodeComplete) },
@@ -387,7 +428,7 @@ export class BlocksParser extends EmbeddedActionsParser {
 
     const node: CodeBlockNode = {
       type: "CodeBlock",
-      content: contentTokens.map((t) => t.image).join(""),
+      content: contentTokens.map((t) => processTokenImage(t)).join(""),
     };
 
     if (name) node.name = name;
@@ -443,6 +484,19 @@ export class BlocksParser extends EmbeddedActionsParser {
         { ALT: () => this.CONSUME4(tokens.Whitespace) },
         { ALT: () => this.CONSUME2(tokens.Newline) },
         { ALT: () => this.CONSUME(tokens.InlineCommentStart) },
+        // Escaped tokens (can appear in block content)
+        { ALT: () => this.CONSUME(tokens.EscapedHash) },
+        { ALT: () => this.CONSUME(tokens.EscapedBacktick) },
+        { ALT: () => this.CONSUME(tokens.EscapedExclamation) },
+        { ALT: () => this.CONSUME(tokens.EscapedColon) },
+        { ALT: () => this.CONSUME(tokens.EscapedLBrace) },
+        { ALT: () => this.CONSUME(tokens.EscapedRBrace) },
+        { ALT: () => this.CONSUME(tokens.EscapedLBracket) },
+        { ALT: () => this.CONSUME(tokens.EscapedRBracket) },
+        { ALT: () => this.CONSUME(tokens.EscapedDash) },
+        { ALT: () => this.CONSUME(tokens.EscapedDollar) },
+        { ALT: () => this.CONSUME(tokens.EscapedBackslash) },
+        { ALT: () => this.CONSUME(tokens.Backslash) },
         // Complete inline tokens (can appear in block content)
         { ALT: () => this.CONSUME(tokens.InlineCodeCompleteWithAttrs) },
         { ALT: () => this.CONSUME(tokens.InlineCodeComplete) },
@@ -484,7 +538,7 @@ export class BlocksParser extends EmbeddedActionsParser {
 
     const node: ScriptBlockNode = {
       type: "ScriptBlock",
-      content: contentTokens.map((t) => t.image).join(""),
+      content: contentTokens.map((t) => processTokenImage(t)).join(""),
     };
 
     if (name) node.name = name;
@@ -613,6 +667,19 @@ export class BlocksParser extends EmbeddedActionsParser {
         { ALT: () => this.CONSUME2(tokens.Identifier) },
         { ALT: () => this.CONSUME(tokens.Content) },
         { ALT: () => this.CONSUME2(tokens.Whitespace) },
+        // Escaped tokens (can appear in inline comment)
+        { ALT: () => this.CONSUME(tokens.EscapedHash) },
+        { ALT: () => this.CONSUME(tokens.EscapedBacktick) },
+        { ALT: () => this.CONSUME(tokens.EscapedExclamation) },
+        { ALT: () => this.CONSUME(tokens.EscapedColon) },
+        { ALT: () => this.CONSUME(tokens.EscapedLBrace) },
+        { ALT: () => this.CONSUME(tokens.EscapedRBrace) },
+        { ALT: () => this.CONSUME(tokens.EscapedLBracket) },
+        { ALT: () => this.CONSUME(tokens.EscapedRBracket) },
+        { ALT: () => this.CONSUME(tokens.EscapedDash) },
+        { ALT: () => this.CONSUME(tokens.EscapedDollar) },
+        { ALT: () => this.CONSUME(tokens.EscapedBackslash) },
+        { ALT: () => this.CONSUME(tokens.Backslash) },
         // Complete inline tokens (can appear in inline comment)
         { ALT: () => this.CONSUME(tokens.InlineCodeCompleteWithAttrs) },
         { ALT: () => this.CONSUME(tokens.InlineCodeComplete) },
@@ -645,7 +712,7 @@ export class BlocksParser extends EmbeddedActionsParser {
 
     const node: CommentInlineNode = {
       type: "CommentInline",
-      content: contentTokens.map((t) => t.image).join(""),
+      content: contentTokens.map((t) => processTokenImage(t)).join(""),
     };
 
     if (name) {
@@ -731,6 +798,20 @@ export class BlocksParser extends EmbeddedActionsParser {
   // Text element
   private textElement = this.RULE("textElement", (): TextNode => {
     const token = this.OR([
+      // Escaped tokens - treat as literal text with their unescaped value
+      { ALT: () => this.CONSUME(tokens.EscapedHash) },
+      { ALT: () => this.CONSUME(tokens.EscapedBacktick) },
+      { ALT: () => this.CONSUME(tokens.EscapedExclamation) },
+      { ALT: () => this.CONSUME(tokens.EscapedColon) },
+      { ALT: () => this.CONSUME(tokens.EscapedLBrace) },
+      { ALT: () => this.CONSUME(tokens.EscapedRBrace) },
+      { ALT: () => this.CONSUME(tokens.EscapedLBracket) },
+      { ALT: () => this.CONSUME(tokens.EscapedRBracket) },
+      { ALT: () => this.CONSUME(tokens.EscapedDash) },
+      { ALT: () => this.CONSUME(tokens.EscapedDollar) },
+      { ALT: () => this.CONSUME(tokens.EscapedBackslash) },
+      { ALT: () => this.CONSUME(tokens.Backslash) },
+      // Regular text tokens
       { ALT: () => this.CONSUME(tokens.Content) },
       { ALT: () => this.CONSUME(tokens.Whitespace) },
       { ALT: () => this.CONSUME(tokens.Newline) },
@@ -750,7 +831,7 @@ export class BlocksParser extends EmbeddedActionsParser {
 
     const node: TextNode = {
       type: "Text",
-      value: token.image,
+      value: processTokenImage(token),
     };
 
     return node;

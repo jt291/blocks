@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { parse } from "../src/index";
 
 describe("Parser", () => {
@@ -1018,7 +1018,9 @@ more text
 
       expect(result.errors).toHaveLength(0);
       // The backtick should be treated as text since no closing delimiter is found
-      expect(result.ast.children.some((node) => node.type === "Text")).toBe(true);
+      expect(result.ast.children.some((node) => node.type === "Text")).toBe(
+        true,
+      );
     });
 
     it("should treat unclosed inline script as text (no closing delimiter found)", () => {
@@ -1026,7 +1028,9 @@ more text
 
       expect(result.errors).toHaveLength(0);
       // The exclamation mark should be treated as text since no closing delimiter is found
-      expect(result.ast.children.some((node) => node.type === "Text")).toBe(true);
+      expect(result.ast.children.some((node) => node.type === "Text")).toBe(
+        true,
+      );
     });
 
     it("should treat unclosed inline generic as text (no closing delimiter found)", () => {
@@ -1034,7 +1038,9 @@ more text
 
       expect(result.errors).toHaveLength(0);
       // The colon should be treated as text since no closing delimiter is found
-      expect(result.ast.children.some((node) => node.type === "Text")).toBe(true);
+      expect(result.ast.children.some((node) => node.type === "Text")).toBe(
+        true,
+      );
     });
 
     it("should provide specific error for generic block length mismatch", () => {
@@ -1160,7 +1166,9 @@ more text
 
       expect(result.errors).toHaveLength(0);
       // The colon should be treated as text since no closing delimiter is found
-      expect(result.ast.children.some((node) => node.type === "Text")).toBe(true);
+      expect(result.ast.children.some((node) => node.type === "Text")).toBe(
+        true,
+      );
     });
 
     it("should treat unclosed code delimiter as text (no error)", () => {
@@ -1170,7 +1178,9 @@ more text
 
       expect(result.errors).toHaveLength(0);
       // The backtick should be treated as text since no closing delimiter is found
-      expect(result.ast.children.some((node) => node.type === "Text")).toBe(true);
+      expect(result.ast.children.some((node) => node.type === "Text")).toBe(
+        true,
+      );
     });
 
     it("should treat unclosed script delimiter as text (no error)", () => {
@@ -1180,7 +1190,9 @@ more text
 
       expect(result.errors).toHaveLength(0);
       // The exclamation mark should be treated as text since no closing delimiter is found
-      expect(result.ast.children.some((node) => node.type === "Text")).toBe(true);
+      expect(result.ast.children.some((node) => node.type === "Text")).toBe(
+        true,
+      );
     });
 
     it("should handle demo complète without errors", () => {
@@ -1287,7 +1299,9 @@ Content
       const result = parse("A ` and : and ! all as text");
 
       expect(result.errors).toHaveLength(0);
-      expect(result.ast.children.every((node) => node.type === "Text")).toBe(true);
+      expect(result.ast.children.every((node) => node.type === "Text")).toBe(
+        true,
+      );
       // Verify the delimiters are preserved in the text
       const fullText = result.ast.children.map((node) => node.value).join("");
       expect(fullText).toBe("A ` and : and ! all as text");
@@ -1327,7 +1341,7 @@ Content
       expect(result.errors).toHaveLength(0);
       expect(result.ast.children).toHaveLength(1);
       expect(result.ast.children[0].type).toBe("GenericBlock");
-      
+
       const content = result.ast.children[0].content;
       // Should have parsed the colon as text and the backticks as valid inline code
       expect(content.some((node) => node.type === "CodeInline")).toBe(true);
@@ -1364,6 +1378,323 @@ Content
       // The colons should be preserved as part of the content, not parsed as inline delimiters
       expect(result.ast.children[0].content).toContain("a: 1");
       expect(result.ast.children[0].content).toContain("b: 2");
+    });
+  });
+
+  describe("Escape characters", () => {
+    describe("Escaped hash (#)", () => {
+      it("should treat escaped hash as literal text", () => {
+        const result = parse("Use \\#include for directives");
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].type).toBe("Text");
+        expect(result.ast.children[0].value).toBe(
+          "Use #include for directives",
+        );
+      });
+
+      it("should not parse escaped hash as comment block directive", () => {
+        const result = parse("/* \\#include header.html */");
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children[0]).toMatchObject({
+          type: "CommentBlock",
+          content: "#include header.html ",
+        });
+        // Should not have a name since # was escaped
+        expect(result.ast.children[0].name).toBeUndefined();
+      });
+
+      it("should not parse escaped hash as code block name", () => {
+        const result = parse("```\\#javascript\nconsole.log('test');\n```");
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children[0]).toMatchObject({
+          type: "CodeBlock",
+        });
+        // Name should be undefined since # was escaped
+        expect(result.ast.children[0].name).toBeUndefined();
+        // Content should include the escaped hash
+        expect(result.ast.children[0].content).toContain("#javascript");
+      });
+    });
+
+    describe("Escaped backticks (`)", () => {
+      it("should treat escaped backticks as literal text", () => {
+        const result = parse("Use \\`code\\` for inline code");
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].type).toBe("Text");
+        expect(result.ast.children[0].value).toBe("Use `code` for inline code");
+      });
+
+      it("should not parse escaped backticks as code block delimiter", () => {
+        const result = parse("\\`\\`\\` not a code block");
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].type).toBe("Text");
+        expect(result.ast.children[0].value).toBe("``` not a code block");
+      });
+
+      it("should handle mix of escaped and unescaped backticks", () => {
+        const result = parse("Text \\` and `actual code` here");
+
+        expect(result.errors).toHaveLength(0);
+        // Should have Text, CodeInline, Text
+        expect(result.ast.children.length).toBeGreaterThanOrEqual(2);
+        const types = result.ast.children.map((c) => c.type);
+        expect(types).toContain("Text");
+        expect(types).toContain("CodeInline");
+      });
+    });
+
+    describe("Escaped exclamation (!)", () => {
+      it("should treat escaped exclamation as literal text", () => {
+        const result = parse("Use \\!script\\! for inline scripts");
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].type).toBe("Text");
+        expect(result.ast.children[0].value).toBe(
+          "Use !script! for inline scripts",
+        );
+      });
+
+      it("should not parse escaped exclamations as script block delimiter", () => {
+        const result = parse("\\!\\!\\! not a script block");
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].type).toBe("Text");
+        expect(result.ast.children[0].value).toBe("!!! not a script block");
+      });
+    });
+
+    describe("Escaped colon (:)", () => {
+      it("should treat escaped colon as literal text", () => {
+        const result = parse("Use type\\:content for inline generics");
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].type).toBe("Text");
+        expect(result.ast.children[0].value).toBe(
+          "Use type:content for inline generics",
+        );
+      });
+
+      it("should not parse escaped colons as generic block delimiter", () => {
+        const result = parse("\\:\\:\\: not a generic block");
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].type).toBe("Text");
+        expect(result.ast.children[0].value).toBe("::: not a generic block");
+      });
+
+      it("should not parse escaped colon as inline generic delimiter", () => {
+        const result = parse("link\\:url");
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].type).toBe("Text");
+        expect(result.ast.children[0].value).toBe("link:url");
+      });
+    });
+
+    describe("Escaped braces ({ })", () => {
+      it("should treat escaped braces as literal text", () => {
+        const result = parse("Use \\{var\\} for variables");
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].type).toBe("Text");
+        expect(result.ast.children[0].value).toBe("Use {var} for variables");
+      });
+
+      it("should not parse escaped braces as attributes", () => {
+        const result = parse("```\\{#id .class\\}\ncode\n```");
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children[0]).toMatchObject({
+          type: "CodeBlock",
+        });
+        // Should not have attributes since braces were escaped
+        expect(result.ast.children[0].attributes).toBeUndefined();
+        // Content should include the escaped braces
+        expect(result.ast.children[0].content).toContain("{#id .class}");
+      });
+    });
+
+    describe("Escaped brackets ([ ])", () => {
+      it("should treat escaped brackets as literal text", () => {
+        const result = parse("Arrays use \\[\\] syntax");
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].type).toBe("Text");
+        expect(result.ast.children[0].value).toBe("Arrays use [] syntax");
+      });
+    });
+
+    describe("Escaped dash (-)", () => {
+      it("should treat escaped dash as literal text", () => {
+        const result = parse("Metadata uses \\-\\-\\- delimiters");
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].type).toBe("Text");
+        expect(result.ast.children[0].value).toBe(
+          "Metadata uses --- delimiters",
+        );
+      });
+    });
+
+    describe("Escaped dollar ($)", () => {
+      it("should treat escaped dollar as literal text", () => {
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: testing literal ${var} syntax
+        const result = parse("Variables use \\${var} syntax");
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].type).toBe("Text");
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: testing literal ${var} syntax
+        expect(result.ast.children[0].value).toBe(
+          "Variables use ${var} syntax",
+        );
+      });
+    });
+
+    describe("Escaped backslash (\\)", () => {
+      it("should treat escaped backslash as literal backslash", () => {
+        const result = parse("Test \\\\backslash here");
+
+        expect(result.errors).toHaveLength(0);
+        // May have multiple text nodes, so join them
+        const text = result.ast.children.map((c) => c.value).join("");
+        expect(text).toBe("Test \\backslash here");
+      });
+
+      it("should handle escaped backslash before special char", () => {
+        const result = parse("\\\\#include");
+
+        expect(result.errors).toHaveLength(0);
+        const text = result.ast.children.map((c) => c.value).join("");
+        // Should be backslash followed by #include (not escaped hash)
+        expect(text).toBe("\\#include");
+      });
+    });
+
+    describe("Multiple escapes", () => {
+      it("should handle multiple escaped characters in one line", () => {
+        const result = parse(
+          "Use \\#include, \\`code\\`, \\{var\\}, and type\\:content",
+        );
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].type).toBe("Text");
+        expect(result.ast.children[0].value).toBe(
+          "Use #include, `code`, {var}, and type:content",
+        );
+      });
+
+      it("should handle escaped characters in block content", () => {
+        const result = parse("/* Use \\#include for directives */");
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children[0]).toMatchObject({
+          type: "CommentBlock",
+          content: "Use #include for directives ",
+        });
+      });
+
+      it("should handle escaped characters in code block", () => {
+        const result = parse(
+          "```\nThe \\#include directive\n\\`\\`\\` for code blocks\n```",
+        );
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children[0]).toMatchObject({
+          type: "CodeBlock",
+        });
+        expect(result.ast.children[0].content).toContain("#include");
+        expect(result.ast.children[0].content).toContain("```");
+      });
+
+      it("should handle escaped characters in inline comment", () => {
+        const result = parse("// Use \\#include for directives\n");
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children[0]).toMatchObject({
+          type: "CommentInline",
+          content: "Use #include for directives",
+        });
+      });
+    });
+
+    describe("Edge cases", () => {
+      it("should handle trailing backslash", () => {
+        const result = parse("Text ends with \\");
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].type).toBe("Text");
+        expect(result.ast.children[0].value).toContain("\\");
+      });
+
+      it("should handle unknown escape sequence", () => {
+        const result = parse("Unknown \\x escape");
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children).toHaveLength(1);
+        expect(result.ast.children[0].type).toBe("Text");
+        // Should preserve backslash for unknown escapes
+        expect(result.ast.children[0].value).toContain("\\x");
+      });
+
+      it("should handle escaped and unescaped characters together", () => {
+        const result = parse("\\#not-directive #actual content");
+
+        expect(result.errors).toHaveLength(0);
+        // Should have Text nodes with literal # at the start
+        const firstNode = result.ast.children[0];
+        expect(firstNode.type).toBe("Text");
+        expect(firstNode.value).toContain("#not-directive");
+      });
+    });
+
+    describe("Complete examples", () => {
+      it("should handle complete documentation example", () => {
+        const result = parse(`/* Documentation example:
+Use \\#include to load files
+Use \\\`\\\`\\\` for code blocks
+Use \\{var\\} for variables
+Use type\\:content for inline generics
+*/`);
+
+        expect(result.errors).toHaveLength(0);
+        expect(result.ast.children[0]).toMatchObject({
+          type: "CommentBlock",
+        });
+        const content = result.ast.children[0].content;
+        expect(content).toContain("#include");
+        expect(content).toContain("```");
+        expect(content).toContain("{var}");
+        expect(content).toContain("type:content");
+      });
+
+      it("should not interfere with normal parsing", () => {
+        const result = parse("Normal #text and `code` and :generic:");
+
+        expect(result.errors).toHaveLength(0);
+        // Should still parse valid inline elements
+        const types = result.ast.children.map((c) => c.type);
+        expect(types).toContain("CodeInline");
+        expect(types).toContain("GenericInline");
+      });
     });
   });
 });

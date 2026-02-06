@@ -125,6 +125,68 @@ export const Equals = createToken({
   pattern: /=/,
 });
 
+// Escape tokens - backslash followed by special characters
+// These must be defined BEFORE their non-escaped counterparts to have priority
+export const EscapedHash = createToken({
+  name: "EscapedHash",
+  pattern: /\\#/,
+});
+
+export const EscapedBacktick = createToken({
+  name: "EscapedBacktick",
+  pattern: /\\`/,
+});
+
+export const EscapedExclamation = createToken({
+  name: "EscapedExclamation",
+  pattern: /\\!/,
+});
+
+export const EscapedColon = createToken({
+  name: "EscapedColon",
+  pattern: /\\:/,
+});
+
+export const EscapedLBrace = createToken({
+  name: "EscapedLBrace",
+  pattern: /\\{/,
+});
+
+export const EscapedRBrace = createToken({
+  name: "EscapedRBrace",
+  pattern: /\\}/,
+});
+
+export const EscapedLBracket = createToken({
+  name: "EscapedLBracket",
+  pattern: /\\\[/,
+});
+
+export const EscapedRBracket = createToken({
+  name: "EscapedRBracket",
+  pattern: /\\\]/,
+});
+
+export const EscapedDash = createToken({
+  name: "EscapedDash",
+  pattern: /\\-/,
+});
+
+export const EscapedDollar = createToken({
+  name: "EscapedDollar",
+  pattern: /\\\$/,
+});
+
+export const EscapedBackslash = createToken({
+  name: "EscapedBackslash",
+  pattern: /\\\\/,
+});
+
+export const Backslash = createToken({
+  name: "Backslash",
+  pattern: /\\/,
+});
+
 // Identifier for names, keys, values
 export const Identifier = createToken({
   name: "Identifier",
@@ -149,6 +211,7 @@ export const AnyChar = createToken({
 
 // All tokens array for the lexer
 // IMPORTANT: Order matters! Specific patterns must be tested BEFORE generic ones.
+// - Escape sequences FIRST (highest priority)
 // - Block delimiters (3+ chars) BEFORE inline delimiters
 // - Complete inline patterns WITH attributes BEFORE patterns WITHOUT attributes
 // - Complete inline patterns BEFORE individual delimiters
@@ -156,6 +219,20 @@ export const allTokens = [
   // Whitespace and newlines first
   Whitespace,
   Newline,
+
+  // === ESCAPE SEQUENCES (HIGHEST PRIORITY) ===
+  EscapedBackslash, // \\ must be BEFORE single backslash
+  EscapedHash, // \#
+  EscapedBacktick, // \`
+  EscapedExclamation, // \!
+  EscapedColon, // \:
+  EscapedLBrace, // \{
+  EscapedRBrace, // \}
+  EscapedLBracket, // \[
+  EscapedRBracket, // \]
+  EscapedDash, // \-
+  EscapedDollar, // \$
+  Backslash, // \ (for unknown escapes or trailing backslash)
 
   // === BLOCK DELIMITERS (3+ characters) BEFORE INLINE DELIMITERS ===
   BlockCommentStart, // /*

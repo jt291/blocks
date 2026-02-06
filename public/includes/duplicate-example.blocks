@@ -1,0 +1,116 @@
+# Duplicate Include Example
+
+## ✅ This is perfectly fine!
+
+This example demonstrates **duplicate includes**, which are normal and expected behavior.
+The preprocessor handles this automatically by caching files.
+
+### Example of Duplicate Include (OK)
+
+**File: main.blocks**
+```blocks
+#include header.blocks
+#include utils.py
+#include nested.blocks
+```
+
+**File: nested.blocks**
+```blocks
+#include utils.py  ← Same file included again!
+```
+
+**What happens:**
+1. main.blocks includes utils.py → **processed & cached**
+2. main.blocks includes nested.blocks → **processed**
+3. nested.blocks tries to include utils.py → **already cached, skipped silently**
+
+**Result:**
+- ✅ No error or warning
+- ✅ utils.py content appears only once (from first include)
+- ✅ No duplicate processing (cache is used)
+- ✅ Fast performance
+
+### Why This is Different from Circular
+
+**Circular include (BAD):**
+```
+A → B → A  (infinite loop)
+```
+
+**Duplicate include (GOOD):**
+```
+main → utils (first include)
+main → nested → utils (cached, skipped)
+```
+
+The key difference:
+- **Circular**: File includes itself through a chain (creates loop)
+- **Duplicate**: File is included multiple times from different sources (no loop)
+
+### Real-World Example
+
+This pattern is very common in modular code:
+
+**File: main.blocks**
+```blocks
+/* #include header.blocks */
+
+# My Application
+
+## Component 1
+/* #include component1.blocks */
+
+## Component 2
+/* #include component2.blocks */
+```
+
+**File: component1.blocks**
+```blocks
+```python
+#include utils.py
+
+def component1():
+    result = process_data("component1")
+    print(format_output(result))
+```
+```
+
+**File: component2.blocks**
+```blocks
+```python
+#include utils.py  ← Same utils.py!
+
+def component2():
+    result = process_data("component2")
+    print(format_output(result))
+```
+```
+
+Both components need the same utility functions from `utils.py`. This is:
+- ✅ **Normal and expected**
+- ✅ **Handled by caching**
+- ✅ **No performance penalty**
+- ✅ **No error or warning**
+
+### Benefits of Duplicate Includes
+
+1. **Modularity**: Each component can include what it needs
+2. **Independence**: Components don't need to know about each other
+3. **Maintainability**: Easy to move/refactor components
+4. **Performance**: Caching prevents duplicate processing
+5. **Simplicity**: No need to manually track what's included
+
+### Try It Yourself
+
+You can test this in the playground:
+
+```blocks
+/* Include utils.py twice - no error! */
+
+#include utils.py
+
+/* Now include nested.blocks which also includes utils.py */
+#include nested.blocks
+
+/* The utils.py content only appears once */
+```

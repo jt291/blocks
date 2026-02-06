@@ -237,6 +237,86 @@ describe("Preprocessor", () => {
       );
     });
 
+    it("should show include chain in circular include error", async () => {
+      const file1Path = path.join(TEST_DIR, "file1.blocks");
+      const file2Path = path.join(TEST_DIR, "file2.blocks");
+
+      await fs.writeFile(file1Path, "#include file2.blocks");
+      await fs.writeFile(file2Path, "#include file1.blocks");
+
+      const preprocessor = new Preprocessor({ basePath: TEST_DIR });
+      const result = await preprocessor.process(
+        await fs.readFile(file1Path, "utf-8"),
+        file1Path,
+      );
+
+      expect(result.errors.length).toBeGreaterThan(0);
+      const circularError = result.errors.find(
+        (e) => e.type === "circular_include",
+      );
+      expect(circularError).toBeDefined();
+      expect(circularError?.message).toContain("would create infinite loop");
+      expect(circularError?.message).toContain("→");
+    });
+
+    it("should allow duplicate includes (not circular)", async () => {
+      const utilsPath = path.join(TEST_DIR, "utils.py");
+      const nestedPath = path.join(TEST_DIR, "nested.blocks");
+      const mainPath = path.join(TEST_DIR, "main.blocks");
+
+      await fs.writeFile(utilsPath, "def helper(): pass");
+      await fs.writeFile(nestedPath, "#include utils.py");
+      await fs.writeFile(
+        mainPath,
+        "#include utils.py\n#include nested.blocks",
+      );
+
+      const preprocessor = new Preprocessor({ basePath: TEST_DIR });
+      const result = await preprocessor.process(
+        await fs.readFile(mainPath, "utf-8"),
+        mainPath,
+      );
+
+      // Should have no errors - duplicate includes are normal
+      expect(result.errors).toHaveLength(0);
+      // utils.py should only be in includedFiles once
+      expect(result.includedFiles).toContain(utilsPath);
+      expect(result.includedFiles).toContain(nestedPath);
+      // The second #include utils.py (in nested.blocks) should be skipped silently
+      expect(result.content).toContain("def helper(): pass");
+      // Should not have duplicate content
+      const helperMatches = result.content.match(/def helper\(\): pass/g);
+      expect(helperMatches).toHaveLength(1);
+    });
+
+    it("should cache duplicate includes", async () => {
+      const sharedPath = path.join(TEST_DIR, "shared.blocks");
+      const module1Path = path.join(TEST_DIR, "module1.blocks");
+      const module2Path = path.join(TEST_DIR, "module2.blocks");
+      const mainPath = path.join(TEST_DIR, "main.blocks");
+
+      await fs.writeFile(sharedPath, "Shared content");
+      await fs.writeFile(module1Path, "Module 1\n#include shared.blocks");
+      await fs.writeFile(module2Path, "Module 2\n#include shared.blocks");
+      await fs.writeFile(
+        mainPath,
+        "#include module1.blocks\n#include module2.blocks",
+      );
+
+      const preprocessor = new Preprocessor({ basePath: TEST_DIR });
+      const result = await preprocessor.process(
+        await fs.readFile(mainPath, "utf-8"),
+        mainPath,
+      );
+
+      // Should have no errors
+      expect(result.errors).toHaveLength(0);
+      // All files should be tracked
+      expect(result.includedFiles).toContain(sharedPath);
+      expect(result.includedFiles).toContain(module1Path);
+      expect(result.includedFiles).toContain(module2Path);
+    });
+
     it("should respect max depth limit", async () => {
       // Create a deep chain of includes
       for (let i = 0; i < 15; i++) {

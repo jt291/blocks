@@ -40,9 +40,9 @@
     "ast"
   ],
   "blockLanguage": {
-    "fileExtension": ".block",
+    "fileExtension": ".blocks",
     "extensions": [
-      ".block"
+      ".blocks"
     ],
     "mimeType": "text/x-blocks"
   },

@@ -460,6 +460,10 @@
           <li><a href="#nommage" data-i18n="sections.naming.title">7. Naming</a></li>
           <li><a href="#preprocessor" data-i18n="sections.preprocessor.title">8. Preprocessor Directives</a></li>
           <li><a href="#attributes-metadata">9. Attributes vs Metadata</a></li>
+          <li><a href="#inline-elements">10. Inline Elements</a></li>
+          <li><a href="#variables">11. Variables</a></li>
+          <li><a href="#filter-reference">12. Filter Reference</a></li>
+          <li><a href="#complete-example">13. Complete Example</a></li>
         </ul>
       </div>
 
@@ -1023,6 +1027,469 @@ platforms: [linux, macos]
 ---
 Windows support is experimental
 :::</pre></div>
+        </div>
+      </section>
+
+      <!-- 10. Inline Elements -->
+      <section id="inline-elements" class="section">
+        <h2>10. ✍️ Inline Elements</h2>
+
+        <p>Inline elements use a <strong>unified syntax</strong> that supports attributes, making them consistent with blocks while remaining concise for inline use.</p>
+
+        <div class="syntax-item">
+          <h4>Unified Syntax</h4>
+          <p>All inline elements follow the same pattern:</p>
+          
+          <div class="code-example"><pre>type:content[#id .class %option key=value]</pre></div>
+
+          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+            <li><strong>type</strong> – Inline element type (no <code>#</code> prefix)</li>
+            <li><strong>:</strong> – Colon separator</li>
+            <li><strong>content</strong> – The inline content</li>
+            <li><strong>[...]</strong> – Optional attributes (same syntax as blocks)</li>
+          </ul>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Common Inline Types</h4>
+
+          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Code inline:</h5>
+          <div class="code-example"><pre>Use code:print("hello")[.highlight] in your program.
+
+Multiple: code:const x = 1[#var1] and code:const y = 2[#var2]
+
+With options: code:npm install[.command %copy]</pre></div>
+
+          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Link inline:</h5>
+          <div class="code-example"><pre>Visit link:https://example.com for more info.
+
+With attributes: link:documentation[.external target="_blank"]
+
+With ID: link:home[#nav-home .nav-link .active]</pre></div>
+
+          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Emphasis inline:</h5>
+          <div class="code-example"><pre>This is strong:very important[.urgent] information.
+
+Use em:subtle emphasis[.muted] for softer tone.
+
+Combine: strong:Critical![.alert color=red]</pre></div>
+
+          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Custom span inline:</h5>
+          <div class="code-example"><pre>Highlighted span:text[.highlight .yellow bg=yellow]
+
+Data attributes: span:clickable[data-action="submit" data-id="123"]
+
+Status: span:operational[.status .status-ok data-status="ok"]</pre></div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Edge Cases</h4>
+
+          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Content with brackets:</h5>
+          <div class="code-example"><pre>Array access: code:arr[0][.highlight]
+The parser sees: type=code, content="arr[0]", attributes=[.highlight]</pre></div>
+
+          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Content with colons:</h5>
+          <div class="code-example"><pre>URL: code:http://example.com[.url]
+Time: code:12:30:45[.timestamp]</pre></div>
+
+          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Nested quotes in attributes:</h5>
+          <div class="code-example"><pre>link:page[title="Link's title"]
+span:text[data-json='{"key": "value"}']</pre></div>
+
+          <div class="note">
+            <strong>Note:</strong> The first colon after the type name is the separator. All subsequent colons are part of the content.
+          </div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Complete Example</h4>
+          
+          <div class="code-example"><pre>Visit link:https://docs.example.com[.external target="_blank"] for the documentation.
+
+Install using code:npm install blocks[.command %copy] in your terminal.
+
+Status: span:operational[.status .ok data-status="ok"] since yesterday.
+
+Alert: strong:Critical system failure![.alert .urgent color=red]</pre></div>
+        </div>
+      </section>
+
+      <!-- 11. Variables -->
+      <section id="variables" class="section">
+        <h2>11. 🔤 Variables</h2>
+
+        <p>Variables allow dynamic content substitution from metadata. Blocks supports three types of variable syntax for different use cases.</p>
+
+        <div class="syntax-item">
+          <h4>Simple Variables</h4>
+          <p>Basic variable substitution using curly braces.</p>
+          
+          <div class="code-example"><pre>{varname}</pre></div>
+
+          <p style="margin-top: 1rem;"><strong>Example:</strong></p>
+          <div class="code-example"><pre>---
+username: Alice
+title: Welcome Page
+count: 42
+---
+
+Hello, {username}!
+Page title: {title}
+Item count: {count}</pre></div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Interpolated Variables</h4>
+          <p>JavaScript-style string interpolation with <code>$</code> prefix.</p>
+          
+          <div class="code-example"><pre>${varname}
+${object.property}
+${array[0]}</pre></div>
+
+          <p style="margin-top: 1rem;"><strong>Example:</strong></p>
+          <div class="code-example"><pre>---
+base_url: https://api.example.com
+api_version: v2
+user_id: 12345
+---
+
+API endpoint: ${base_url}/${api_version}/users/${user_id}
+Result: https://api.example.com/v2/users/12345
+
+Image path: ${base_url}/static/images/logo.png
+Result: https://api.example.com/static/images/logo.png</pre></div>
+
+          <div class="note">
+            <strong>Use case:</strong> Interpolated variables are ideal for constructing paths, URLs, and composite strings.
+          </div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Filtered Variables</h4>
+          <p>Variables with filters for formatting and transformation.</p>
+          
+          <div class="code-example"><pre>{varname|filter}
+{varname|filter:arg1}
+{varname|filter:arg1:arg2}</pre></div>
+
+          <p style="margin-top: 1rem;"><strong>Example:</strong></p>
+          <div class="code-example"><pre>---
+price: 29.99
+date: 2026-02-06
+description: This is a very long description that needs truncation
+username: john_doe
+---
+
+Price: {price|currency:EUR}
+Result: €29.99
+
+Date: {date|date:DD/MM/YYYY}
+Result: 06/02/2026
+
+Description: {description|truncate:50}
+Result: This is a very long description that needs tru...
+
+Username: {username|upper}
+Result: JOHN_DOE</pre></div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Filter Chaining</h4>
+          <p>Apply multiple filters in sequence using the pipe <code>|</code> operator.</p>
+          
+          <div class="code-example"><pre>{text|lower|truncate:50}
+{description|escape|truncate:100}</pre></div>
+
+          <p style="margin-top: 1rem;"><strong>Example:</strong></p>
+          <div class="code-example"><pre>---
+text: "HELLO WORLD THIS IS A LONG TEXT"
+html: "<script>alert('xss')</script>"
+---
+
+Lowercase then truncate:
+{text|lower|truncate:20}
+Result: hello world this is...
+
+Escape HTML then truncate:
+{html|escape|truncate:30}
+Result: &lt;script&gt;alert('xss')&lt;/...</pre></div>
+
+          <div class="note">
+            <strong>Note:</strong> Filters are applied left-to-right. The output of each filter becomes the input to the next.
+          </div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Complete Example</h4>
+          
+          <div class="code-example"><pre>---
+title: User Guide
+version: 2.0
+author: Documentation Team
+base_url: https://example.com
+price: 29.99
+release_date: 2026-02-06
+---
+
+/* Welcome to strong:{title}[.brand] version {version}! */
+
+Written by: {author|capitalize}
+
+Visit: link:${base_url}/docs[.external]
+
+Current price: {price|currency:EUR}
+Release: {release_date|date:DD/MM/YYYY}</pre></div>
+        </div>
+      </section>
+
+      <!-- 12. Filter Reference -->
+      <section id="filter-reference" class="section">
+        <h2>12. 🔧 Filter Reference</h2>
+
+        <p>Filters transform variable values for display. Each filter takes optional arguments separated by colons.</p>
+
+        <div class="syntax-item">
+          <h4>Available Filters</h4>
+          
+          <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+              <tr style="background: var(--bg-secondary); border-bottom: 2px solid var(--border-color);">
+                <th style="padding: 0.75rem; text-align: left; font-weight: 600;">Filter</th>
+                <th style="padding: 0.75rem; text-align: left; font-weight: 600;">Arguments</th>
+                <th style="padding: 0.75rem; text-align: left; font-weight: 600;">Description</th>
+                <th style="padding: 0.75rem; text-align: left; font-weight: 600;">Example</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.75rem;"><code>upper</code></td>
+                <td style="padding: 0.75rem; color: var(--text-secondary);">None</td>
+                <td style="padding: 0.75rem;">Convert to uppercase</td>
+                <td style="padding: 0.75rem;"><code>{text|upper}</code></td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.75rem;"><code>lower</code></td>
+                <td style="padding: 0.75rem; color: var(--text-secondary);">None</td>
+                <td style="padding: 0.75rem;">Convert to lowercase</td>
+                <td style="padding: 0.75rem;"><code>{text|lower}</code></td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.75rem;"><code>capitalize</code></td>
+                <td style="padding: 0.75rem; color: var(--text-secondary);">None</td>
+                <td style="padding: 0.75rem;">Capitalize first letter</td>
+                <td style="padding: 0.75rem;"><code>{name|capitalize}</code></td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.75rem;"><code>truncate</code></td>
+                <td style="padding: 0.75rem;">N (length)</td>
+                <td style="padding: 0.75rem;">Truncate to N characters</td>
+                <td style="padding: 0.75rem;"><code>{desc|truncate:100}</code></td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.75rem;"><code>date</code></td>
+                <td style="padding: 0.75rem;">FORMAT</td>
+                <td style="padding: 0.75rem;">Format date string</td>
+                <td style="padding: 0.75rem;"><code>{date|date:YYYY-MM-DD}</code></td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.75rem;"><code>currency</code></td>
+                <td style="padding: 0.75rem;">CODE</td>
+                <td style="padding: 0.75rem;">Format as currency</td>
+                <td style="padding: 0.75rem;"><code>{price|currency:EUR}</code></td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.75rem;"><code>number</code></td>
+                <td style="padding: 0.75rem;">DECIMALS</td>
+                <td style="padding: 0.75rem;">Format number</td>
+                <td style="padding: 0.75rem;"><code>{value|number:2}</code></td>
+              </tr>
+              <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 0.75rem;"><code>json</code></td>
+                <td style="padding: 0.75rem; color: var(--text-secondary);">None</td>
+                <td style="padding: 0.75rem;">Convert to JSON string</td>
+                <td style="padding: 0.75rem;"><code>{data|json}</code></td>
+              </tr>
+              <tr>
+                <td style="padding: 0.75rem;"><code>escape</code></td>
+                <td style="padding: 0.75rem; color: var(--text-secondary);">None</td>
+                <td style="padding: 0.75rem;">Escape HTML entities</td>
+                <td style="padding: 0.75rem;"><code>{html|escape}</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Filter Examples</h4>
+
+          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Text transformation:</h5>
+          <div class="code-example"><pre>{name|upper}        → "JOHN DOE"
+{name|lower}        → "john doe"
+{name|capitalize}   → "John doe"</pre></div>
+
+          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Truncation:</h5>
+          <div class="code-example"><pre>{text|truncate:20}  → "This is a long te..."</pre></div>
+
+          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Date formatting:</h5>
+          <div class="code-example"><pre>{date|date:YYYY-MM-DD}      → "2026-02-06"
+{date|date:DD/MM/YYYY}      → "06/02/2026"
+{date|date:MMMM D, YYYY}    → "February 6, 2026"</pre></div>
+
+          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Currency formatting:</h5>
+          <div class="code-example"><pre>{price|currency:USD}  → "$29.99"
+{price|currency:EUR}  → "€29.99"
+{price|currency:GBP}  → "£29.99"</pre></div>
+
+          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">Number formatting:</h5>
+          <div class="code-example"><pre>{value|number:2}   → "3.14"
+{value|number:0}   → "3"</pre></div>
+
+          <h5 style="font-size: 1rem; margin-top: 1rem; color: #764ba2;">HTML escaping:</h5>
+          <div class="code-example"><pre>{html|escape}  → "&lt;script&gt;alert('xss')&lt;/script&gt;"</pre></div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Chaining Filters</h4>
+          <p>Combine multiple filters for complex transformations.</p>
+          
+          <div class="code-example"><pre>/* Lowercase then truncate */
+{text|lower|truncate:50}
+
+/* Escape HTML then truncate for safety */
+{description|escape|truncate:100}
+
+/* Format number then add currency symbol */
+{price|number:2|currency:EUR}
+
+/* Capitalize then truncate name */
+{author|capitalize|truncate:30}</pre></div>
+
+          <div class="note">
+            <strong>Execution order:</strong> Filters execute left-to-right. Each filter receives the output of the previous filter as its input.
+          </div>
+        </div>
+      </section>
+
+      <!-- 13. Complete Example -->
+      <section id="complete-example" class="section">
+        <h2>13. 🎯 Complete Example</h2>
+
+        <p>This comprehensive example demonstrates all Blocks features working together: blocks, inline elements, variables, filters, attributes, and metadata.</p>
+
+        <div class="syntax-item">
+          <h4>Full Document Example</h4>
+          
+          <div class="code-example"><pre>---
+title: User Guide
+version: 2.0
+author: Documentation Team
+base_url: https://example.com
+api_endpoint: /api/v2
+price: 29.99
+install_date: 2026-02-06
+---
+
+::: section #intro .hero
+---
+background: gradient
+color: white
+---
+
+/* Welcome to strong:{title}[.brand] version {version}! */
+
+Guide written by: {author|capitalize}
+
+Visit our link:${base_url}/docs[.external target="_blank"] for more info.
+
+Current price: {price|currency:EUR}
+Installation date: {install_date|date:DD/MM/YYYY}
+
+:::
+
+::: note #installation .important
+---
+platform: linux
+required: true
+---
+
+Install using package manager:
+
+```bash #install-cmd .copy-button
+sudo apt-get install blocks
+```
+
+API endpoint: code:${base_url}${api_endpoint}[.api-path]
+
+Status: span:operational[.status .status-ok data-status="ok"]
+:::
+
+::: warning #security .critical
+---
+severity: high
+auto_dismiss: false
+---
+
+Always use strong:HTTPS connections[.secure] when accessing:
+link:${base_url}${api_endpoint}[.api-link target="_blank"]
+
+Price: {price|currency:USD} or {price|currency:EUR}
+:::</pre></div>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Feature Breakdown</h4>
+          
+          <p><strong>1. Global Metadata (frontmatter):</strong></p>
+          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+            <li>Document-level configuration</li>
+            <li>Variables available throughout the document</li>
+          </ul>
+
+          <p style="margin-top: 1rem;"><strong>2. Generic Blocks with Attributes:</strong></p>
+          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+            <li><code>::: section #intro .hero</code> – Block with ID and class</li>
+            <li>Local metadata for block-specific configuration</li>
+          </ul>
+
+          <p style="margin-top: 1rem;"><strong>3. Inline Elements:</strong></p>
+          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+            <li><code>strong:{title}[.brand]</code> – Emphasis with variable and class</li>
+            <li><code>link:${base_url}/docs[.external target="_blank"]</code> – Link with interpolation and attributes</li>
+            <li><code>code:${base_url}${api_endpoint}[.api-path]</code> – Code inline with variables</li>
+            <li><code>span:operational[.status .status-ok data-status="ok"]</code> – Custom element with data attributes</li>
+          </ul>
+
+          <p style="margin-top: 1rem;"><strong>4. Variables:</strong></p>
+          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+            <li>Simple: <code>{title}</code>, <code>{version}</code></li>
+            <li>Interpolated: <code>${base_url}</code>, <code>${api_endpoint}</code></li>
+            <li>Filtered: <code>{author|capitalize}</code>, <code>{price|currency:EUR}</code></li>
+          </ul>
+
+          <p style="margin-top: 1rem;"><strong>5. Filters:</strong></p>
+          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+            <li><code>capitalize</code> – Transform text</li>
+            <li><code>currency:EUR</code> – Format with argument</li>
+            <li><code>date:DD/MM/YYYY</code> – Custom date format</li>
+          </ul>
+
+          <p style="margin-top: 1rem;"><strong>6. Code Blocks:</strong></p>
+          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+            <li>Backtick blocks with attributes: <code>```bash #install-cmd .copy-button</code></li>
+          </ul>
+
+          <p style="margin-top: 1rem;"><strong>7. Comments:</strong></p>
+          <ul style="margin-left: 2rem; margin-top: 0.5rem; color: var(--text-secondary);">
+            <li>Block comments: <code>/* Welcome to ... */</code></li>
+            <li>Can contain inline elements and variables</li>
+          </ul>
+        </div>
+
+        <div class="syntax-item">
+          <h4>Try It Yourself</h4>
+          <p>Copy this example to the playground to see how all features work together!</p>
+          <p><a href="public/playground.html" target="_blank" style="color: #667eea; font-weight: 600; font-size: 1.1rem;">🧪 Open Playground →</a></p>
         </div>
       </section>
 

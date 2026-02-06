@@ -6,4 +6,4 @@
 export { Preprocessor } from './preprocessor.js';
 export { BrowserFileReader } from './io-browser.js';
 export { createFileReader } from './io.js';
-export type { PreprocessorOptions, PreprocessResult, PreprocessorError, FileReader } from './types.js';
+export type { PreprocessorConfig, PreprocessorResult, PreprocessorError, FileReader } from './types.js';

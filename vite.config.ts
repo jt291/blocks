@@ -14,6 +14,9 @@ export default defineConfig({
       external: ["chevrotain", "node:fs/promises", "node:path", "node:fs", "node:url"],
     },
   },
+    optimizeDeps: {
+    exclude: ['node:fs/promises', 'node:path']
+  },
   test: {
     globals: true,
     environment: "node",

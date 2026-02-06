@@ -34,7 +34,7 @@ function getLineNumber(token: IToken | undefined): number | string {
 function processTokenImage(tok: IToken): string {
   // Check if this is an escaped token (token name starts with "Escaped")
   const typeName = tok.tokenType?.name;
-  if (typeName && typeName.startsWith("Escaped")) {
+  if (typeName?.startsWith("Escaped")) {
     // Remove the leading backslash to get the literal character
     return tok.image.substring(1);
   }

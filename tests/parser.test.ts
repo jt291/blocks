@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { parse } from "../src/index";
 
 describe("Parser", () => {
@@ -1018,7 +1018,9 @@ more text
 
       expect(result.errors).toHaveLength(0);
       // The backtick should be treated as text since no closing delimiter is found
-      expect(result.ast.children.some((node) => node.type === "Text")).toBe(true);
+      expect(result.ast.children.some((node) => node.type === "Text")).toBe(
+        true,
+      );
     });
 
     it("should treat unclosed inline script as text (no closing delimiter found)", () => {
@@ -1026,7 +1028,9 @@ more text
 
       expect(result.errors).toHaveLength(0);
       // The exclamation mark should be treated as text since no closing delimiter is found
-      expect(result.ast.children.some((node) => node.type === "Text")).toBe(true);
+      expect(result.ast.children.some((node) => node.type === "Text")).toBe(
+        true,
+      );
     });
 
     it("should treat unclosed inline generic as text (no closing delimiter found)", () => {
@@ -1034,7 +1038,9 @@ more text
 
       expect(result.errors).toHaveLength(0);
       // The colon should be treated as text since no closing delimiter is found
-      expect(result.ast.children.some((node) => node.type === "Text")).toBe(true);
+      expect(result.ast.children.some((node) => node.type === "Text")).toBe(
+        true,
+      );
     });
 
     it("should provide specific error for generic block length mismatch", () => {
@@ -1160,7 +1166,9 @@ more text
 
       expect(result.errors).toHaveLength(0);
       // The colon should be treated as text since no closing delimiter is found
-      expect(result.ast.children.some((node) => node.type === "Text")).toBe(true);
+      expect(result.ast.children.some((node) => node.type === "Text")).toBe(
+        true,
+      );
     });
 
     it("should treat unclosed code delimiter as text (no error)", () => {
@@ -1170,7 +1178,9 @@ more text
 
       expect(result.errors).toHaveLength(0);
       // The backtick should be treated as text since no closing delimiter is found
-      expect(result.ast.children.some((node) => node.type === "Text")).toBe(true);
+      expect(result.ast.children.some((node) => node.type === "Text")).toBe(
+        true,
+      );
     });
 
     it("should treat unclosed script delimiter as text (no error)", () => {
@@ -1180,7 +1190,9 @@ more text
 
       expect(result.errors).toHaveLength(0);
       // The exclamation mark should be treated as text since no closing delimiter is found
-      expect(result.ast.children.some((node) => node.type === "Text")).toBe(true);
+      expect(result.ast.children.some((node) => node.type === "Text")).toBe(
+        true,
+      );
     });
 
     it("should handle demo complète without errors", () => {
@@ -1287,7 +1299,9 @@ Content
       const result = parse("A ` and : and ! all as text");
 
       expect(result.errors).toHaveLength(0);
-      expect(result.ast.children.every((node) => node.type === "Text")).toBe(true);
+      expect(result.ast.children.every((node) => node.type === "Text")).toBe(
+        true,
+      );
       // Verify the delimiters are preserved in the text
       const fullText = result.ast.children.map((node) => node.value).join("");
       expect(fullText).toBe("A ` and : and ! all as text");
@@ -1327,7 +1341,7 @@ Content
       expect(result.errors).toHaveLength(0);
       expect(result.ast.children).toHaveLength(1);
       expect(result.ast.children[0].type).toBe("GenericBlock");
-      
+
       const content = result.ast.children[0].content;
       // Should have parsed the colon as text and the backticks as valid inline code
       expect(content.some((node) => node.type === "CodeInline")).toBe(true);
@@ -1375,7 +1389,9 @@ Content
         expect(result.errors).toHaveLength(0);
         expect(result.ast.children).toHaveLength(1);
         expect(result.ast.children[0].type).toBe("Text");
-        expect(result.ast.children[0].value).toBe("Use #include for directives");
+        expect(result.ast.children[0].value).toBe(
+          "Use #include for directives",
+        );
       });
 
       it("should not parse escaped hash as comment block directive", () => {
@@ -1442,7 +1458,9 @@ Content
         expect(result.errors).toHaveLength(0);
         expect(result.ast.children).toHaveLength(1);
         expect(result.ast.children[0].type).toBe("Text");
-        expect(result.ast.children[0].value).toBe("Use !script! for inline scripts");
+        expect(result.ast.children[0].value).toBe(
+          "Use !script! for inline scripts",
+        );
       });
 
       it("should not parse escaped exclamations as script block delimiter", () => {
@@ -1462,7 +1480,9 @@ Content
         expect(result.errors).toHaveLength(0);
         expect(result.ast.children).toHaveLength(1);
         expect(result.ast.children[0].type).toBe("Text");
-        expect(result.ast.children[0].value).toBe("Use type:content for inline generics");
+        expect(result.ast.children[0].value).toBe(
+          "Use type:content for inline generics",
+        );
       });
 
       it("should not parse escaped colons as generic block delimiter", () => {
@@ -1526,18 +1546,24 @@ Content
         expect(result.errors).toHaveLength(0);
         expect(result.ast.children).toHaveLength(1);
         expect(result.ast.children[0].type).toBe("Text");
-        expect(result.ast.children[0].value).toBe("Metadata uses --- delimiters");
+        expect(result.ast.children[0].value).toBe(
+          "Metadata uses --- delimiters",
+        );
       });
     });
 
     describe("Escaped dollar ($)", () => {
       it("should treat escaped dollar as literal text", () => {
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: testing literal ${var} syntax
         const result = parse("Variables use \\${var} syntax");
 
         expect(result.errors).toHaveLength(0);
         expect(result.ast.children).toHaveLength(1);
         expect(result.ast.children[0].type).toBe("Text");
-        expect(result.ast.children[0].value).toBe("Variables use ${var} syntax");
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: testing literal ${var} syntax
+        expect(result.ast.children[0].value).toBe(
+          "Variables use ${var} syntax",
+        );
       });
     });
 
@@ -1563,12 +1589,16 @@ Content
 
     describe("Multiple escapes", () => {
       it("should handle multiple escaped characters in one line", () => {
-        const result = parse("Use \\#include, \\`code\\`, \\{var\\}, and type\\:content");
+        const result = parse(
+          "Use \\#include, \\`code\\`, \\{var\\}, and type\\:content",
+        );
 
         expect(result.errors).toHaveLength(0);
         expect(result.ast.children).toHaveLength(1);
         expect(result.ast.children[0].type).toBe("Text");
-        expect(result.ast.children[0].value).toBe("Use #include, `code`, {var}, and type:content");
+        expect(result.ast.children[0].value).toBe(
+          "Use #include, `code`, {var}, and type:content",
+        );
       });
 
       it("should handle escaped characters in block content", () => {
@@ -1582,7 +1612,9 @@ Content
       });
 
       it("should handle escaped characters in code block", () => {
-        const result = parse("```\nThe \\#include directive\n\\`\\`\\` for code blocks\n```");
+        const result = parse(
+          "```\nThe \\#include directive\n\\`\\`\\` for code blocks\n```",
+        );
 
         expect(result.errors).toHaveLength(0);
         expect(result.ast.children[0]).toMatchObject({
@@ -1666,4 +1698,3 @@ Use type\\:content for inline generics
     });
   });
 });
-

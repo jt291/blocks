@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { createLexer } from "../src/lexer/lexer";
 import * as tokens from "../src/lexer/tokens";
 
@@ -208,4 +208,3 @@ describe("Lexer", () => {
     });
   });
 });
-

@@ -19,15 +19,19 @@ export class BrowserFileReader implements FileReader {
   }
   
   resolve(basePath: string, includePath: string): string {
-    // Dans le browser, utiliser manipulation de strings pour résoudre les chemins
-    if (includePath.startsWith('/')) {
-      // Chemin absolu
+    // Handle absolute URLs (http://, https://, //)
+    if (/^https?:\/\//.test(includePath) || includePath.startsWith('//')) {
       return includePath;
     }
     
-    // Chemin relatif
+    // Handle absolute paths (starting with /)
+    if (includePath.startsWith('/')) {
+      return includePath;
+    }
+    
+    // Handle relative paths
     const baseDir = basePath ? this.getDirectory(basePath) : this.basePath;
-    return this.normalizePath(baseDir + '/' + includePath);
+    return this.normalizePath(baseDir, includePath);
   }
   
   private getDirectory(filePath: string): string {
@@ -35,11 +39,18 @@ export class BrowserFileReader implements FileReader {
     return lastSlash >= 0 ? filePath.substring(0, lastSlash) : '';
   }
   
-  private normalizePath(path: string): string {
-    // Résoudre les '..' et '.'
-    const parts = path.split('/').filter(p => p !== '');
+  private normalizePath(base: string, relative: string): string {
+    // Combine base and relative paths
+    const combined = base ? `${base}/${relative}` : relative;
+    
+    // Split into parts
+    const parts = combined.split('/').filter(p => p !== '');
     const result: string[] = [];
     
+    // Track if path was absolute
+    const isAbsolute = combined.startsWith('/');
+    
+    // Process path parts
     for (const part of parts) {
       if (part === '..') {
         result.pop();
@@ -48,6 +59,8 @@ export class BrowserFileReader implements FileReader {
       }
     }
     
-    return '/' + result.join('/');
+    // Reconstruct path, preserving absolute/relative nature
+    const normalized = result.join('/');
+    return isAbsolute ? '/' + normalized : normalized;
   }
 }

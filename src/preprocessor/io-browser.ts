@@ -26,7 +26,11 @@ export class BrowserFileReader implements FileReader {
     }
     
     // Chemin relatif
-    const baseDir = basePath ? this.getDirectory(basePath) : this.basePath;
+    let baseDir = basePath ? this.getDirectory(basePath) : this.basePath;
+    // If baseDir is empty (file is in root), use this.basePath
+    if (!baseDir || baseDir === '') {
+      baseDir = this.basePath;
+    }
     return this.normalizePath(baseDir + '/' + includePath);
   }
   

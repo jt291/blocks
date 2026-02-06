@@ -119,7 +119,6 @@
       display: flex;
       flex-direction: column;
       border-right: 1px solid var(--border);
-      transition: flex 0.3s ease;
       background: var(--bg-primary);
     }
     
@@ -127,21 +126,63 @@
       border-right: none;
     }
     
-    .input-panel.hidden {
-      flex: 0 0 40px;
-      min-width: 40px;
+    /* View mode controls */
+    .view-mode {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.5rem;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .view-mode legend {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      padding: 0 0.25rem;
+    }
+
+    .view-mode label {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+
+    /* Fully hide panels based on view mode */
+    .layout.input-only .output-panel {
+      display: none !important;
+    }
+
+    .layout.output-only .input-panel {
+      display: none !important;
+    }
+
+    .layout.both .input-panel,
+    .layout.both .output-panel {
+      display: flex !important;
+    }
+
+    /* Input container with line numbers */
+    .input-container {
+      display: flex;
+      flex: 1;
       overflow: hidden;
     }
-    
-    .output-panel.hidden {
-      flex: 0 0 40px;
-      min-width: 40px;
+
+    .line-numbers {
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      padding: 1rem 0.5rem;
+      text-align: right;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      user-select: none;
+      border-right: 1px solid var(--border);
+      min-width: 3em;
       overflow: hidden;
-    }
-    
-    .input-panel.hidden #input,
-    .output-panel.hidden #output {
-      display: none;
     }
     
     .panel-header {
@@ -160,20 +201,11 @@
       color: var(--text);
     }
     
-    .panel-header button {
-      padding: 0.25rem 0.75rem;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: var(--bg-primary);
-      font-size: 0.75rem;
-      cursor: pointer;
-      color: var(--text);
-    }
-    
     #input {
       flex: 1;
       border: none;
       padding: 1rem;
+      padding-left: 0.5rem;
       font-family: 'Monaco', 'Menlo', monospace;
       font-size: 0.875rem;
       line-height: 1.5;
@@ -269,13 +301,6 @@
       font-size: 1.25rem;
     }
     
-    /* Disabled button state */
-    .panel-header button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      background: var(--bg-secondary);
-    }
-    
     /* Responsive layout for mobile */
     @media (max-width: 768px) {
       .layout {
@@ -291,24 +316,6 @@
       
       .output-panel {
         border-bottom: none;
-      }
-      
-      /* Hidden panels on mobile */
-      .input-panel.hidden {
-        height: 40px !important;
-        flex: 0 0 40px !important;
-      }
-      
-      .output-panel.hidden {
-        height: 40px !important;
-        flex: 0 0 40px !important;
-      }
-      
-      /* Panel headers on mobile when hidden */
-      .input-panel.hidden .panel-header,
-      .output-panel.hidden .panel-header {
-        writing-mode: horizontal-tb;
-        text-orientation: mixed;
       }
     }
   </style>
@@ -326,19 +333,27 @@
     <label>
       Example:
       <select id="example-select">
-        <option value="custom">Custom (current input)</option>
-        <optgroup label="Basic Examples">
-          <option value="basic">Basic Document</option>
-          <option value="with-includes">With Includes (Preprocessor)</option>
-          <option value="python-code">Python Code Block</option>
-          <option value="javascript-code">JavaScript Code Block</option>
-          <option value="nested-includes">Nested Includes</option>
-          <option value="metadata">Document with Metadata</option>
+        <option value="custom">Custom</option>
+        
+        <optgroup label="Basic Syntax">
+          <option value="comment">Comments</option>
+          <option value="code-backticks">Code Block (```)</option>
+          <option value="code-exclamation">Code Block (!!!)</option>
+          <option value="metadata">Metadata (---)</option>
         </optgroup>
-        <optgroup label="Error Examples">
-          <option value="error-unclosed">Error: Unclosed Block</option>
-          <option value="error-syntax">Error: Invalid Syntax</option>
-          <option value="error-circular">Error: Circular Include</option>
+        
+        <optgroup label="Preprocessor">
+          <option value="include-simple">Simple Include</option>
+          <option value="include-in-code">Include in Code Block</option>
+          <option value="include-nested">Nested Includes</option>
+        </optgroup>
+        
+        <optgroup label="Errors">
+          <option value="error-unclosed-backticks">Unclosed ``` Block</option>
+          <option value="error-unclosed-exclamation">Unclosed !!! Block</option>
+          <option value="error-unclosed-metadata">Unclosed --- Metadata</option>
+          <option value="error-missing-include">Missing Include File</option>
+          <option value="error-circular-include">Circular Include (info)</option>
         </optgroup>
       </select>
     </label>
@@ -368,15 +383,32 @@
       <input type="checkbox" id="autoProcess">
       Auto Process
     </label>
+    
+    <fieldset class="view-mode">
+      <legend>View:</legend>
+      <label>
+        <input type="radio" name="view-mode" value="both" checked>
+        Both
+      </label>
+      <label>
+        <input type="radio" name="view-mode" value="input-only">
+        Input Only
+      </label>
+      <label>
+        <input type="radio" name="view-mode" value="output-only">
+        Output Only
+      </label>
+    </fieldset>
   </div>
   
-  <div class="layout">
+  <div class="layout both">
     <div class="input-panel" id="input-panel">
       <div class="panel-header">
         <h2>Input</h2>
-        <button id="toggle-input" title="Hide input panel">◀ Hide</button>
       </div>
-      <textarea id="input" spellcheck="false">/* #include header.blocks */
+      <div class="input-container">
+        <div class="line-numbers" id="line-numbers"></div>
+        <textarea id="input" spellcheck="false">/* #include header.blocks */
 
 # Main Document
 
@@ -405,6 +437,7 @@ console.log("Debug mode:", CONFIG.debug);
 #include nested.blocks
 
 /* #include footer.blocks */</textarea>
+      </div>
     </div>
     
     <div class="output-panel" id="output-panel">
@@ -416,7 +449,6 @@ console.log("Debug mode:", CONFIG.debug);
             <span id="time">-</span>
           </div>
         </div>
-        <button id="toggle-output" title="Hide output panel">Hide ▶</button>
       </div>
       <div style="flex: 1; overflow: auto; padding: 1rem;">
         <div id="included-files" class="included-files">
@@ -436,86 +468,128 @@ console.log("Debug mode:", CONFIG.debug);
     
     // Examples
     const EXAMPLES = {
-      'basic': `# Welcome to Blocks
+      // === BASIC SYNTAX (One feature per example) ===
+      'comment': `/* This is a comment */
 
-This is a basic document with:
-- Headings
-- Lists
-- Code blocks
+/* Multi-line comment
+   spans multiple lines
+   and is ignored by parser */
 
-\`\`\`python
-print("Hello, Blocks!")
-\`\`\``,
+Content outside comments is parsed.`,
 
-      'with-includes': `# Document with Includes
-
-#include header.blocks
-
-## Main Content
-
-Some content here.
+      'code-backticks': `Example of a code block using backticks:
 
 \`\`\`python
-#include utils.py
+def hello():
+    print("Hello, World!")
 \`\`\`
 
-#include footer.blocks`,
+The code block above uses triple backticks.`,
 
-      'python-code': `# Python Examples
-
-\`\`\`python
-def hello(name):
-    return f"Hello, {name}!"
-
-result = hello("World")
-print(result)
-\`\`\``,
-
-      'javascript-code': `# JavaScript Examples
+      'code-exclamation': `Example of a code block using exclamation marks:
 
 !!!javascript
-function hello(name) {
-  return \`Hello, \${name}!\`;
+function hello() {
+  console.log("Hello, World!");
 }
+!!!
 
-const result = hello("World");
-console.log(result);
-!!!`,
-
-      'nested-includes': `# Nested Includes Demo
-
-#include nested.blocks
-
-This demonstrates recursive include processing.`,
+The code block above uses triple exclamation marks.`,
 
       'metadata': `---
 title: My Document
 author: John Doe
 date: 2026-02-06
+tags: [example, test]
 ---
 
-# Content
+Document content starts after the metadata block.
 
-Document with frontmatter metadata.`,
+Metadata uses YAML format between triple dashes.`,
 
-      'error-unclosed': `# Error Example: Unclosed Block
+      // === PREPROCESSOR EXAMPLES ===
+      'include-simple': `Simple file inclusion:
+
+#include header.blocks
+
+Main content here.
+
+#include footer.blocks
+
+The #include directive loads external files.`,
+
+      'include-in-code': `Include a file inside a code block:
+
+\`\`\`python
+#include utils.py
+
+# Now use the included functions
+result = process_data("test")
+print(result)
+\`\`\`
+
+The included file content replaces the #include line.`,
+
+      'include-nested': `Nested includes demonstration:
+
+#include nested.blocks
+
+The nested.blocks file itself includes other files,
+demonstrating recursive include processing.`,
+
+      // === ERROR EXAMPLES (Actually trigger errors) ===
+      'error-unclosed-backticks': `/* Error Example: Unclosed Code Block */
+
+This example demonstrates an unclosed code block:
 
 \`\`\`python
 def broken():
-    print("Missing closing delimiter")
-# Missing closing \`\`\``,
+    print("This code block is never closed")
+# Missing closing \`\`\`
 
-      'error-syntax': `# Error Example: Invalid Syntax
+This will cause a parse error.`,
 
-!!!invalid-fence
-This uses !!! without a language
-No closing fence provided`,
+      'error-unclosed-exclamation': `/* Error Example: Unclosed Exclamation Block */
 
-      'error-circular': `# Error Example: Circular Include
+This example demonstrates an unclosed code block:
 
-This would create an infinite loop if test-a.blocks and test-b.blocks include each other.
+!!!javascript
+function broken() {
+  console.log("This code block is never closed");
+}
+// Missing closing !!!
 
-#include test-a.blocks`,
+This will cause a parse error.`,
+
+      'error-unclosed-metadata': `/* Error Example: Unclosed Metadata Block */
+
+This example demonstrates unclosed metadata:
+
+---
+title: Broken Document
+author: Test
+# Missing closing ---
+
+This content is incorrectly treated as metadata.`,
+
+      'error-missing-include': `/* Error Example: Missing Include File */
+
+This example tries to include a file that doesn't exist:
+
+#include this-file-does-not-exist.blocks
+
+This will cause a preprocessor error (404 Not Found).`,
+
+      'error-circular-include': `/* Error Example: Circular Include */
+
+To test this, you would need:
+- File A includes File B
+- File B includes File A
+
+This creates an infinite loop.
+
+Note: This example won't actually trigger the error
+unless you create the circular files.`,
     };
     
     // Configuration
@@ -525,6 +599,7 @@ This would create an infinite loop if test-a.blocks and test-b.blocks include ea
     
     // Elements
     const inputEl = document.getElementById('input');
+    const lineNumbersEl = document.getElementById('line-numbers');
     const outputEl = document.getElementById('output');
     const errorsEl = document.getElementById('errors');
     const successEl = document.getElementById('success');
@@ -537,36 +612,32 @@ This would create an infinite loop if test-a.blocks and test-b.blocks include ea
     const autoProcessCheckbox = document.getElementById('autoProcess');
     const exampleSelect = document.getElementById('example-select');
     const outputModeSelect = document.getElementById('output-mode');
-    const inputPanel = document.getElementById('input-panel');
-    const outputPanel = document.getElementById('output-panel');
-    const toggleInputBtn = document.getElementById('toggle-input');
-    const toggleOutputBtn = document.getElementById('toggle-output');
-    
-    // Panel visibility state
-    let inputVisible = true;
-    let outputVisible = true;
+    const layoutEl = document.querySelector('.layout');
     
     // Current content and parse result
     let currentPreprocessResult = null;
     let currentParseResult = null;
     
     /**
-     * Update panel visibility and button states
+     * Update line numbers display
      */
-    function updatePanels() {
-      // Update panel visibility
-      inputPanel.classList.toggle('hidden', !inputVisible);
-      outputPanel.classList.toggle('hidden', !outputVisible);
-      
-      // Update button text
-      toggleInputBtn.textContent = inputVisible ? '◀ Hide' : 'Show ▶';
-      toggleOutputBtn.textContent = outputVisible ? 'Hide ▶' : '◀ Show';
-      
-      // Disable hide buttons when only one panel is visible
-      // Can't hide the last visible panel
-      toggleInputBtn.disabled = !outputVisible;
-      toggleOutputBtn.disabled = !inputVisible;
+    function updateLineNumbers() {
+      const lines = inputEl.value.split('\n');
+      const numbers = lines.map((_, i) => i + 1).join('\n');
+      lineNumbersEl.textContent = numbers;
     }
+    
+    /**
+     * Sync line numbers scrolling with textarea
+     */
+    inputEl.addEventListener('scroll', (e) => {
+      lineNumbersEl.scrollTop = e.target.scrollTop;
+    });
+    
+    /**
+     * Update line numbers on input
+     */
+    inputEl.addEventListener('input', updateLineNumbers);
     
     /**
      * Escape HTML for safe display
@@ -695,11 +766,24 @@ This would create an infinite loop if test-a.blocks and test-b.blocks include ea
     // Event listeners
     parseBtn.addEventListener('click', processAndParse);
     
+    // View mode selector
+    document.querySelectorAll('input[name="view-mode"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        layoutEl.className = 'layout ' + e.target.value;
+      });
+    });
+    
+    // Auto-reparse on preprocessor toggle
+    enablePreprocessorCheckbox.addEventListener('change', () => {
+      processAndParse();
+    });
+    
     // Example selector
     exampleSelect.addEventListener('change', (e) => {
       const example = e.target.value;
       if (example !== 'custom' && EXAMPLES[example]) {
         inputEl.value = EXAMPLES[example];
+        updateLineNumbers();
         processAndParse();
       }
     });
@@ -711,27 +795,6 @@ This would create an infinite loop if test-a.blocks and test-b.blocks include ea
       }
     });
     
-    // Panel toggles
-    toggleInputBtn.addEventListener('click', () => {
-      if (!outputVisible) {
-        // Can't hide input if output is already hidden
-        alert('Cannot hide both panels. Show the output panel first.');
-        return;
-      }
-      inputVisible = !inputVisible;
-      updatePanels();
-    });
-    
-    toggleOutputBtn.addEventListener('click', () => {
-      if (!inputVisible) {
-        // Can't hide output if input is already hidden
-        alert('Cannot hide both panels. Show the input panel first.');
-        return;
-      }
-      outputVisible = !outputVisible;
-      updatePanels();
-    });
-    
     // Auto process
     let autoProcessTimeout;
     inputEl.addEventListener('input', () => {
@@ -741,8 +804,8 @@ This would create an infinite loop if test-a.blocks and test-b.blocks include ea
       }
     });
     
-    // Initialize panel state
-    updatePanels();
+    // Initialize line numbers
+    updateLineNumbers();
     
     // Initial parse
     processAndParse();

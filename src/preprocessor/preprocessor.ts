@@ -1,10 +1,22 @@
 import { createFileReader } from "./io.js";
 import type {
   FileReader,
+  Include,
+  LineMap,
   PreprocessorConfig,
   PreprocessorError,
   PreprocessorResult,
 } from "./types.js";
+
+/**
+ * Result from processing content
+ */
+interface ProcessResult {
+  content: string;
+  includes: Include[];
+  lineMap: LineMap[];
+  errors: PreprocessorError[];
+}
 
 /**
  * Preprocessor for handling #include directives
@@ -14,7 +26,6 @@ export class Preprocessor {
   private fileReaderPromise: Promise<FileReader>;
   private cache: Map<string, string>;
   private includedFiles: Set<string>;
-  private errors: PreprocessorError[];
 
   constructor(config: PreprocessorConfig) {
     this.config = {
@@ -26,7 +37,6 @@ export class Preprocessor {
     this.fileReaderPromise = createFileReader(this.config.basePath);
     this.cache = new Map();
     this.includedFiles = new Set();
-    this.errors = [];
   }
 
   /**
@@ -41,13 +51,12 @@ export class Preprocessor {
   ): Promise<PreprocessorResult> {
     // Reset state
     this.includedFiles.clear();
-    this.errors = [];
 
     // Wait for fileReader to be ready
     const fileReader = await this.fileReaderPromise;
 
     // Process content with empty stack
-    const processedContent = await this.processContent(
+    const result = await this.processContent(
       content,
       currentFile,
       0,
@@ -56,9 +65,11 @@ export class Preprocessor {
     );
 
     return {
-      content: processedContent,
+      content: result.content,
       includedFiles: Array.from(this.includedFiles),
-      errors: this.errors,
+      includes: result.includes,
+      lineMap: result.lineMap,
+      errors: result.errors,
     };
   }
 
@@ -72,57 +83,85 @@ export class Preprocessor {
     depth: number,
     fileReader: FileReader,
     stack: string[],
-  ): Promise<string> {
+  ): Promise<ProcessResult> {
+    const result: ProcessResult = {
+      content: "",
+      includes: [],
+      lineMap: [],
+      errors: [],
+    };
+
     // Check maximum depth
     if (depth > this.config.maxDepth) {
-      this.errors.push({
+      result.errors.push({
         type: "max_depth_exceeded",
         message: `Maximum include depth (${this.config.maxDepth}) exceeded`,
         file: currentFile,
       });
-      return content;
+      result.content = content;
+      return result;
     }
 
-    // Pattern to detect #include directives
-    // Can appear in comments or directly in code
-    const includePattern = /#include\s+([^\s\n]+)/g;
+    const lines = content.split("\n");
+    const outputLines: string[] = [];
+    let outputLineNumber = 1;
 
-    let result = content;
-    const matches = Array.from(content.matchAll(includePattern));
-
-    // Process each #include found
-    for (const match of matches) {
-      const includePath = match[1];
-      if (!includePath) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line && line !== "") {
+        // Handle undefined line (shouldn't happen with split, but for type safety)
         continue;
       }
-      const fullMatch = match[0];
+      const sourceLine = i + 1;
+
+      // Check if line contains #include (can be anywhere in the line, including in comments)
+      const includeMatch = line.match(/#include\s+([^\s\n]+)/);
+
+      if (!includeMatch) {
+        // Regular line - add to output and map it
+        outputLines.push(line);
+        result.lineMap.push({
+          outputLine: outputLineNumber,
+          sourceFile: currentFile || "input",
+          sourceLine,
+        });
+        outputLineNumber++;
+        continue;
+      }
+
+      // Process include directive
+      const includePath = includeMatch[1]?.trim();
+      if (!includePath) {
+        outputLines.push(line);
+        result.lineMap.push({
+          outputLine: outputLineNumber,
+          sourceFile: currentFile || "input",
+          sourceLine,
+        });
+        outputLineNumber++;
+        continue;
+      }
 
       // Resolve the path of the file to include
       const resolvedPath = fileReader.resolve(currentFile, includePath);
 
-      // Check for circular includes (A→B→A loop)
+      // Check for circular includes
       if (stack.includes(resolvedPath)) {
         const error: PreprocessorError = {
           type: "circular_include",
-          message: `Circular include detected: ${includePath} (would create infinite loop: ${[...stack, resolvedPath].join(' → ')})`,
+          message: `Circular include detected: ${includePath} (would create infinite loop: ${[...stack, resolvedPath].join(" → ")})`,
           file: currentFile,
+          line: sourceLine,
         };
-        this.errors.push(error);
-        continue;
-      }
-
-      // Check for duplicate includes (already processed and cached)
-      if (this.includedFiles.has(resolvedPath)) {
-        // File already included - replace with cached content
-        if (this.config.cache) {
-          const cachedContent = this.cache.get(resolvedPath);
-          if (cachedContent !== undefined) {
-            // Replace this occurrence with cached content
-            result = result.replace(fullMatch, cachedContent);
-          }
-        }
-        // Skip reprocessing the file
+        result.errors.push(error);
+        // Keep the #include line in output
+        outputLines.push(line);
+        result.lineMap.push({
+          outputLine: outputLineNumber,
+          sourceFile: currentFile || "input",
+          sourceLine,
+        });
+        outputLineNumber++;
         continue;
       }
 
@@ -135,7 +174,6 @@ export class Preprocessor {
           if (cachedContent !== undefined) {
             includedContent = cachedContent;
           } else {
-            // Cache miss - read file and cache it
             includedContent = await fileReader.read(resolvedPath);
             this.cache.set(resolvedPath, includedContent);
           }
@@ -146,8 +184,8 @@ export class Preprocessor {
         // Add to list of included files
         this.includedFiles.add(resolvedPath);
 
-        // Recursively process included content with updated stack
-        const processedIncluded = await this.processContent(
+        // Recursively process included content
+        const nestedResult = await this.processContent(
           includedContent,
           resolvedPath,
           depth + 1,
@@ -155,13 +193,62 @@ export class Preprocessor {
           [...stack, resolvedPath],
         );
 
-        // Cache the processed content for future duplicate includes
-        if (this.config.cache) {
-          this.cache.set(resolvedPath, processedIncluded);
+        // Create include entry
+        const include: Include = {
+          path: includePath,
+          resolvedPath,
+          content: includedContent,
+          children: nestedResult.includes,
+          depth,
+        };
+        result.includes.push(include);
+
+        // Replace the #include directive in the line with the nested content
+        const fullMatch = includeMatch[0]; // The full match "#include file.ext"
+        const processedLine = line.replace(fullMatch, nestedResult.content);
+
+        // If the replacement is multiline, split it up
+        const replacementLines = processedLine.split("\n");
+
+        // Add all lines from the replacement
+        for (let j = 0; j < replacementLines.length; j++) {
+          const replacementLine = replacementLines[j];
+          if (replacementLine === undefined) continue;
+
+          outputLines.push(replacementLine);
+
+          // For line mapping, map the first line to the source line
+          // and subsequent lines to nested content's source
+          if (j === 0) {
+            result.lineMap.push({
+              outputLine: outputLineNumber,
+              sourceFile: currentFile || "input",
+              sourceLine,
+            });
+          } else {
+            // Map to nested content
+            const nestedMapIndex = j - 1;
+            const nestedMap = nestedResult.lineMap[nestedMapIndex];
+            if (nestedMap) {
+              result.lineMap.push({
+                outputLine: outputLineNumber,
+                sourceFile: nestedMap.sourceFile,
+                sourceLine: nestedMap.sourceLine,
+              });
+            } else {
+              // Fallback if we don't have enough mappings
+              result.lineMap.push({
+                outputLine: outputLineNumber,
+                sourceFile: resolvedPath,
+                sourceLine: j,
+              });
+            }
+          }
+          outputLineNumber++;
         }
 
-        // Replace the #include directive with content
-        result = result.replace(fullMatch, processedIncluded);
+        // Collect nested errors
+        result.errors.push(...nestedResult.errors);
       } catch (error) {
         // Handle read errors
         let errorMessage = "Unknown error";
@@ -169,17 +256,28 @@ export class Preprocessor {
           errorMessage = error.message;
         }
 
-        this.errors.push({
+        result.errors.push({
           type:
             error instanceof Error && error.message.includes("fetch")
               ? "file_not_found"
               : "read_error",
           message: `Failed to include ${includePath}: ${errorMessage}`,
           file: currentFile,
+          line: sourceLine,
         });
+
+        // Keep the #include line in output on error
+        outputLines.push(line);
+        result.lineMap.push({
+          outputLine: outputLineNumber,
+          sourceFile: currentFile || "input",
+          sourceLine,
+        });
+        outputLineNumber++;
       }
     }
 
+    result.content = outputLines.join("\n");
     return result;
   }
 

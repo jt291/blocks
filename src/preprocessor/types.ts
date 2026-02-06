@@ -23,6 +23,56 @@ export interface PreprocessorConfig {
 }
 
 /**
+ * Include file information with hierarchy
+ */
+export interface Include {
+  /**
+   * Original path from #include directive
+   */
+  path: string;
+
+  /**
+   * Resolved absolute path
+   */
+  resolvedPath: string;
+
+  /**
+   * File content
+   */
+  content: string;
+
+  /**
+   * Nested includes (children)
+   */
+  children: Include[];
+
+  /**
+   * Nesting depth (0 = top level)
+   */
+  depth: number;
+}
+
+/**
+ * Line mapping for source maps
+ */
+export interface LineMap {
+  /**
+   * Line number in preprocessed output (1-based)
+   */
+  outputLine: number;
+
+  /**
+   * Original source file path
+   */
+  sourceFile: string;
+
+  /**
+   * Line number in original source file (1-based)
+   */
+  sourceLine: number;
+}
+
+/**
  * Preprocessor result
  */
 export interface PreprocessorResult {
@@ -32,9 +82,19 @@ export interface PreprocessorResult {
   content: string;
 
   /**
-   * List of included files (for debugging)
+   * List of included files (for debugging) - flat list
    */
   includedFiles: string[];
+
+  /**
+   * Hierarchical include tree
+   */
+  includes: Include[];
+
+  /**
+   * Source map for line number tracking
+   */
+  lineMap: LineMap[];
 
   /**
    * Errors encountered (non-blocking if configured)

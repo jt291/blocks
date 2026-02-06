@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Blocks Playground</title>
   <style>
+    :root {
+      --primary: #0969da;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f6f8fa;
+      --border: #d0d7de;
+      --text: #24292f;
+      --text-secondary: #57606a;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -12,141 +21,185 @@
     }
     
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       height: 100vh;
       display: flex;
       flex-direction: column;
-      background: #f5f5f5;
+      background: var(--bg-secondary);
     }
     
-    header {
-      background: #2c3e50;
-      color: white;
+    .playground-header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
       padding: 1rem 2rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    header h1 {
-      font-size: 1.5rem;
-      font-weight: 600;
-    }
-    
-    .info {
-      margin-top: 0.5rem;
-      font-size: 0.875rem;
-      color: #ecf0f1;
-    }
-    
-    main {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      padding: 1rem;
-      overflow: hidden;
-    }
-    
-    .panel {
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    
-    .panel-header {
-      background: #34495e;
-      color: white;
-      padding: 0.75rem 1rem;
-      font-weight: 600;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
     
-    .panel-content {
-      flex: 1;
-      overflow: auto;
-      padding: 1rem;
-    }
-    
-    textarea {
-      width: 100%;
-      height: 100%;
-      border: none;
-      resize: none;
-      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-      font-size: 0.875rem;
-      line-height: 1.5;
-      padding: 0;
-    }
-    
-    textarea:focus {
-      outline: none;
-    }
-    
-    pre {
+    .playground-header h1 {
       margin: 0;
-      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-      font-size: 0.875rem;
-      line-height: 1.5;
-      white-space: pre-wrap;
-      word-wrap: break-word;
+      font-size: 1.5rem;
+      color: var(--text);
     }
     
-    .controls {
-      padding: 1rem;
-      background: white;
-      border-top: 1px solid #e0e0e0;
+    .playground-header nav {
       display: flex;
       gap: 1rem;
-      align-items: center;
     }
     
-    button {
-      background: #3498db;
-      color: white;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 4px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
+    .playground-header a {
+      color: var(--primary);
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
       transition: background 0.2s;
     }
     
-    button:hover {
-      background: #2980b9;
+    .playground-header a:hover {
+      background: var(--bg-primary);
     }
+
     
-    button:active {
-      transform: translateY(1px);
-    }
-    
-    .checkbox-group {
+    .controls {
+      background: var(--bg-secondary);
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border);
       display: flex;
       gap: 1rem;
+      flex-wrap: wrap;
       align-items: center;
     }
     
-    label {
+    .controls label {
       display: flex;
       align-items: center;
       gap: 0.5rem;
       font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+    
+    .controls select {
+      padding: 0.375rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-primary);
+      font-size: 0.875rem;
       cursor: pointer;
     }
     
-    input[type="checkbox"] {
+    .controls button {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--primary);
+      color: white;
+      font-size: 0.875rem;
+      font-weight: 500;
       cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    
+    .controls button:hover {
+      opacity: 0.9;
+    }
+    
+    .controls input[type="checkbox"] {
+      cursor: pointer;
+    }
+    
+    .layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    
+    .input-panel, .output-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+      transition: flex 0.3s ease;
+      background: var(--bg-primary);
+    }
+    
+    .output-panel {
+      border-right: none;
+    }
+    
+    .input-panel.hidden {
+      flex: 0 0 40px;
+      min-width: 40px;
+      overflow: hidden;
+    }
+    
+    .output-panel.hidden {
+      flex: 0 0 40px;
+      min-width: 40px;
+      overflow: hidden;
+    }
+    
+    .input-panel.hidden #input,
+    .output-panel.hidden #output {
+      display: none;
+    }
+    
+    .panel-header {
+      background: var(--bg-secondary);
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .panel-header h2 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    
+    .panel-header button {
+      padding: 0.25rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-primary);
+      font-size: 0.75rem;
+      cursor: pointer;
+      color: var(--text);
+    }
+    
+    #input {
+      flex: 1;
+      border: none;
+      padding: 1rem;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      resize: none;
+      outline: none;
+    }
+    
+    #output {
+      flex: 1;
+      padding: 1rem;
+      overflow: auto;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.875rem;
+    }
+    
+    #output pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
     }
     
     .stats {
       display: flex;
       gap: 1rem;
       font-size: 0.75rem;
-      color: #7f8c8d;
+      color: var(--text-secondary);
     }
     
     .stat {
@@ -208,21 +261,79 @@
     .included-files-list {
       margin-left: 1rem;
     }
+    
+    .coming-soon {
+      padding: 2rem;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 1.25rem;
+    }
   </style>
 </head>
 <body>
-  <header>
+  <header class="playground-header">
     <h1>🧱 Blocks Playground</h1>
-    <div class="info">Test the Blocks language parser with #include preprocessor support</div>
+    <nav>
+      <a href="cheatsheet.html" target="_blank">📖 Cheatsheet</a>
+      <a href="https://github.com/jt291/blocks" target="_blank">📦 GitHub</a>
+    </nav>
   </header>
   
-  <main>
-    <div class="panel">
+  <div class="controls">
+    <label>
+      Example:
+      <select id="example-select">
+        <option value="custom">Custom (current input)</option>
+        <optgroup label="Basic Examples">
+          <option value="basic">Basic Document</option>
+          <option value="with-includes">With Includes (Preprocessor)</option>
+          <option value="python-code">Python Code Block</option>
+          <option value="javascript-code">JavaScript Code Block</option>
+          <option value="nested-includes">Nested Includes</option>
+          <option value="metadata">Document with Metadata</option>
+        </optgroup>
+        <optgroup label="Error Examples">
+          <option value="error-unclosed">Error: Unclosed Block</option>
+          <option value="error-syntax">Error: Invalid Syntax</option>
+          <option value="error-circular">Error: Circular Include</option>
+        </optgroup>
+      </select>
+    </label>
+    
+    <label>
+      Output Mode:
+      <select id="output-mode">
+        <option value="ast">AST (JSON)</option>
+        <option value="html-rendered">HTML (Rendered)</option>
+        <option value="html-source">HTML (Source)</option>
+        <option value="markdown">Markdown</option>
+        <option value="preprocessed">Preprocessed (Raw)</option>
+      </select>
+    </label>
+    
+    <button id="parseBtn">Parse</button>
+    
+    <label>
+      <input type="checkbox" id="prettyPrint" checked>
+      Pretty Print
+    </label>
+    <label>
+      <input type="checkbox" id="enablePreprocessor" checked>
+      Enable Preprocessor
+    </label>
+    <label>
+      <input type="checkbox" id="autoProcess">
+      Auto Process
+    </label>
+  </div>
+  
+  <div class="layout">
+    <div class="input-panel" id="input-panel">
       <div class="panel-header">
-        Input (Blocks)
+        <h2>Input</h2>
+        <button id="toggle-input" title="Hide input panel">◀ Hide</button>
       </div>
-      <div class="panel-content">
-        <textarea id="input" spellcheck="false">/* #include header.blocks */
+      <textarea id="input" spellcheck="false">/* #include header.blocks */
 
 # Main Document
 
@@ -251,46 +362,28 @@ console.log("Debug mode:", CONFIG.debug);
 #include nested.blocks
 
 /* #include footer.blocks */</textarea>
-      </div>
     </div>
     
-    <div class="panel">
+    <div class="output-panel" id="output-panel">
       <div class="panel-header">
-        Output (AST)
+        <h2>Output</h2>
         <div class="stats">
           <div class="stat">
             <span class="stat-label">Time:</span>
             <span id="time">-</span>
           </div>
         </div>
+        <button id="toggle-output" title="Hide output panel">Hide ▶</button>
       </div>
-      <div class="panel-content">
+      <div style="flex: 1; overflow: auto; padding: 1rem;">
         <div id="included-files" class="included-files">
           <div class="included-files-title">📁 Included files:</div>
           <div class="included-files-list" id="included-files-list"></div>
         </div>
         <div id="success" class="success"></div>
         <div id="errors" class="errors"></div>
-        <pre id="output"></pre>
+        <div id="output"></div>
       </div>
-    </div>
-  </main>
-  
-  <div class="controls">
-    <button id="parseBtn">Parse</button>
-    <div class="checkbox-group">
-      <label>
-        <input type="checkbox" id="prettyPrint" checked>
-        Pretty Print
-      </label>
-      <label>
-        <input type="checkbox" id="enablePreprocessor" checked>
-        Enable Preprocessor
-      </label>
-      <label>
-        <input type="checkbox" id="autoProcess">
-        Auto Process
-      </label>
     </div>
   </div>
 
@@ -298,10 +391,95 @@ console.log("Debug mode:", CONFIG.debug);
     import { Preprocessor } from '../dist/preprocessor/index.js';
     import { parse } from '../dist/index.js';
     
+    // Examples
+    const EXAMPLES = {
+      'basic': `# Welcome to Blocks
+
+This is a basic document with:
+- Headings
+- Lists
+- Code blocks
+
+\`\`\`python
+print("Hello, Blocks!")
+\`\`\``,
+
+      'with-includes': `# Document with Includes
+
+#include header.blocks
+
+## Main Content
+
+Some content here.
+
+\`\`\`python
+#include utils.py
+\`\`\`
+
+#include footer.blocks`,
+
+      'python-code': `# Python Examples
+
+\`\`\`python
+def hello(name):
+    return f"Hello, {name}!"
+
+result = hello("World")
+print(result)
+\`\`\``,
+
+      'javascript-code': `# JavaScript Examples
+
+!!!javascript
+function hello(name) {
+  return \`Hello, \${name}!\`;
+}
+
+const result = hello("World");
+console.log(result);
+!!!`,
+
+      'nested-includes': `# Nested Includes Demo
+
+#include nested.blocks
+
+This demonstrates recursive include processing.`,
+
+      'metadata': `---
+title: My Document
+author: John Doe
+date: 2026-02-06
+---
+
+# Content
+
+Document with frontmatter metadata.`,
+
+      'error-unclosed': `# Error Example: Unclosed Block
+
+\`\`\`python
+def broken():
+    print("Missing closing delimiter")
+# Missing closing \`\`\``,
+
+      'error-syntax': `# Error Example: Invalid Syntax
+
+!!!invalid-fence
+This uses !!! without a language
+No closing fence provided`,
+
+      'error-circular': `# Error Example: Circular Include
+
+This would create an infinite loop if test-a.blocks and test-b.blocks include each other.
+
+#include test-a.blocks`,
+    };
+    
     // Configuration
     const preprocessor = new Preprocessor({
       basePath: './includes/'  // Relative to playground.html
-    });    
+    });
+    
     // Elements
     const inputEl = document.getElementById('input');
     const outputEl = document.getElementById('output');
@@ -314,9 +492,60 @@ console.log("Debug mode:", CONFIG.debug);
     const prettyPrintCheckbox = document.getElementById('prettyPrint');
     const enablePreprocessorCheckbox = document.getElementById('enablePreprocessor');
     const autoProcessCheckbox = document.getElementById('autoProcess');
+    const exampleSelect = document.getElementById('example-select');
+    const outputModeSelect = document.getElementById('output-mode');
+    const inputPanel = document.getElementById('input-panel');
+    const outputPanel = document.getElementById('output-panel');
+    const toggleInputBtn = document.getElementById('toggle-input');
+    const toggleOutputBtn = document.getElementById('toggle-output');
+    
+    // Panel visibility state
+    let inputVisible = true;
+    let outputVisible = true;
+    
+    // Current content and parse result
+    let currentPreprocessResult = null;
+    let currentParseResult = null;
     
     /**
-     * Traiter et parser le contenu
+     * Escape HTML for safe display
+     */
+    function escapeHTML(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+    
+    /**
+     * Render output based on selected mode
+     */
+    function renderOutput(mode, preprocessResult, parseResult) {
+      switch(mode) {
+        case 'ast':
+          const indent = prettyPrintCheckbox.checked ? 2 : 0;
+          outputEl.innerHTML = `<pre><code>${escapeHTML(JSON.stringify(parseResult.ast, null, indent))}</code></pre>`;
+          break;
+          
+        case 'html-rendered':
+          outputEl.innerHTML = `<div class="coming-soon">🚧 HTML renderer coming soon! See AST for now.</div>`;
+          break;
+          
+        case 'html-source':
+          outputEl.innerHTML = `<div class="coming-soon">🚧 HTML source view coming soon! See AST for now.</div>`;
+          break;
+          
+        case 'markdown':
+          outputEl.innerHTML = `<div class="coming-soon">🚧 Markdown formatter coming soon! See AST for now.</div>`;
+          break;
+          
+        case 'preprocessed':
+          outputEl.innerHTML = `<pre><code>${escapeHTML(preprocessResult.content)}</code></pre>`;
+          break;
+      }
+    }
+    
+    /**
+     * Process and parse the content
      */
     async function processAndParse() {
       const input = inputEl.value;
@@ -327,7 +556,7 @@ console.log("Debug mode:", CONFIG.debug);
         let includedFiles = [];
         let preprocessorErrors = [];
         
-        // 1. Préprocesseur (si activé)
+        // 1. Preprocessor (if enabled)
         if (enablePreprocessorCheckbox.checked) {
           console.log('🔄 Running preprocessor...');
           const preprocessResult = await preprocessor.process(input, 'playground.blocks');
@@ -335,6 +564,7 @@ console.log("Debug mode:", CONFIG.debug);
           content = preprocessResult.content;
           includedFiles = preprocessResult.includedFiles;
           preprocessorErrors = preprocessResult.errors;
+          currentPreprocessResult = preprocessResult;
           
           console.log('✅ Preprocessor complete');
           if (includedFiles.length > 0) {
@@ -345,19 +575,21 @@ console.log("Debug mode:", CONFIG.debug);
           }
         } else {
           console.log('⏭️ Preprocessor disabled');
+          currentPreprocessResult = { content: input, includedFiles: [], errors: [] };
         }
         
-        // 2. Parser
+        // 2. Parse
         console.log('🔄 Parsing...');
         const parseResult = parse(content);
+        currentParseResult = parseResult;
         console.log('✅ Parse complete');
         
         const endTime = performance.now();
         const duration = (endTime - startTime).toFixed(2);
         
-        // 3. Afficher les résultats
+        // 3. Display results
         
-        // Fichiers inclus
+        // Included files
         if (includedFiles.length > 0) {
           includedFilesListEl.innerHTML = includedFiles
             .map(f => `<div>• ${f}</div>`)
@@ -367,11 +599,10 @@ console.log("Debug mode:", CONFIG.debug);
           includedFilesEl.classList.remove('visible');
         }
         
-        // AST
-        const indent = prettyPrintCheckbox.checked ? 2 : 0;
-        outputEl.textContent = JSON.stringify(parseResult.ast, null, indent);
+        // Render output based on mode
+        renderOutput(outputModeSelect.value, currentPreprocessResult, currentParseResult);
         
-        // Erreurs
+        // Errors
         const allErrors = [
           ...preprocessorErrors.map(e => `[Preprocessor] ${e.message}`),
           ...parseResult.errors
@@ -387,7 +618,7 @@ console.log("Debug mode:", CONFIG.debug);
           successEl.classList.add('visible');
         }
         
-        // Temps
+        // Time
         timeEl.textContent = `${duration}ms`;
         
       } catch (error) {
@@ -402,6 +633,35 @@ console.log("Debug mode:", CONFIG.debug);
     
     // Event listeners
     parseBtn.addEventListener('click', processAndParse);
+    
+    // Example selector
+    exampleSelect.addEventListener('change', (e) => {
+      const example = e.target.value;
+      if (example !== 'custom' && EXAMPLES[example]) {
+        inputEl.value = EXAMPLES[example];
+        processAndParse();
+      }
+    });
+    
+    // Output mode selector
+    outputModeSelect.addEventListener('change', () => {
+      if (currentPreprocessResult && currentParseResult) {
+        renderOutput(outputModeSelect.value, currentPreprocessResult, currentParseResult);
+      }
+    });
+    
+    // Panel toggles
+    toggleInputBtn.addEventListener('click', () => {
+      inputVisible = !inputVisible;
+      inputPanel.classList.toggle('hidden', !inputVisible);
+      toggleInputBtn.textContent = inputVisible ? '◀ Hide' : 'Show ▶';
+    });
+    
+    toggleOutputBtn.addEventListener('click', () => {
+      outputVisible = !outputVisible;
+      outputPanel.classList.toggle('hidden', !outputVisible);
+      toggleOutputBtn.textContent = outputVisible ? 'Hide ▶' : '◀ Show';
+    });
     
     // Auto process
     let autoProcessTimeout;

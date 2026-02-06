@@ -649,6 +649,54 @@ unless you create the circular files.`,
     }
     
     /**
+     * Render hierarchical include tree
+     */
+    function renderIncludeTree(includes, parentElement, indent = 0) {
+      if (!includes || includes.length === 0) {
+        return;
+      }
+      
+      const ul = document.createElement('ul');
+      ul.style.listStyle = 'none';
+      ul.style.paddingLeft = indent > 0 ? '1.5rem' : '0';
+      ul.style.margin = '0';
+      
+      includes.forEach(inc => {
+        const li = document.createElement('li');
+        li.style.fontFamily = 'monospace';
+        li.style.fontSize = '0.875rem';
+        li.style.marginBottom = '0.25rem';
+        
+        const prefix = indent > 0 ? '├─ ' : '• ';
+        li.textContent = prefix + inc.path;
+        
+        ul.appendChild(li);
+        
+        if (inc.children && inc.children.length > 0) {
+          renderIncludeTree(inc.children, li, indent + 1);
+        }
+      });
+      
+      parentElement.appendChild(ul);
+    }
+    
+    /**
+     * Map error line number using source map
+     */
+    function mapErrorLine(lineNumber, lineMap) {
+      if (!lineMap || lineMap.length === 0) {
+        return { file: 'input', line: lineNumber };
+      }
+      
+      const mapping = lineMap.find(m => m.outputLine === lineNumber);
+      if (mapping) {
+        return { file: mapping.sourceFile, line: mapping.sourceLine };
+      }
+      
+      return { file: 'input', line: lineNumber };
+    }
+    
+    /**
      * Render output based on selected mode
      */
     function renderOutput(mode, preprocessResult, parseResult) {
@@ -707,7 +755,13 @@ unless you create the circular files.`,
           }
         } else {
           console.log('⏭️ Preprocessor disabled');
-          currentPreprocessResult = { content: input, includedFiles: [], errors: [] };
+          currentPreprocessResult = { 
+            content: input, 
+            includedFiles: [], 
+            includes: [],
+            lineMap: [],
+            errors: [] 
+          };
         }
         
         // 2. Parse
@@ -721,11 +775,10 @@ unless you create the circular files.`,
         
         // 3. Display results
         
-        // Included files
-        if (includedFiles.length > 0) {
-          includedFilesListEl.innerHTML = includedFiles
-            .map(f => `<div>• ${f}</div>`)
-            .join('');
+        // Included files - hierarchical tree
+        if (enablePreprocessorCheckbox.checked && currentPreprocessResult.includes && currentPreprocessResult.includes.length > 0) {
+          includedFilesListEl.innerHTML = '';
+          renderIncludeTree(currentPreprocessResult.includes, includedFilesListEl);
           includedFilesEl.classList.add('visible');
         } else {
           includedFilesEl.classList.remove('visible');
@@ -734,11 +787,30 @@ unless you create the circular files.`,
         // Render output based on mode
         renderOutput(outputModeSelect.value, currentPreprocessResult, currentParseResult);
         
-        // Errors
-        const allErrors = [
-          ...preprocessorErrors.map(e => `[Preprocessor] ${e.message}`),
-          ...parseResult.errors
-        ];
+        // Errors with source mapping
+        const allErrors = [];
+        
+        // Preprocessor errors with line info
+        for (const e of preprocessorErrors) {
+          const lineInfo = e.line ? `:${e.line}` : '';
+          allErrors.push(`[Preprocessor] ${e.file}${lineInfo} - ${e.message}`);
+        }
+        
+        // Parser errors with source mapping
+        const lineMap = currentPreprocessResult.lineMap || [];
+        for (const errorMsg of parseResult.errors) {
+          // Try to extract line number from error message
+          const lineMatch = errorMsg.match(/line (\d+)/i);
+          if (lineMatch && lineMap.length > 0) {
+            const errorLine = parseInt(lineMatch[1], 10);
+            const mapped = mapErrorLine(errorLine, lineMap);
+            // Replace the line number in the error message
+            const newMsg = errorMsg.replace(/line (\d+)/i, `${mapped.file}:${mapped.line}`);
+            allErrors.push(newMsg);
+          } else {
+            allErrors.push(errorMsg);
+          }
+        }
         
         if (allErrors.length > 0) {
           errorsEl.textContent = allErrors.join('\n');

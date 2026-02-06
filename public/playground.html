@@ -349,8 +349,6 @@
           <option value="metadata">Metadata (---)</option>
           <option value="inline-code">Inline Code (`)</option>
           <option value="inline-emphasis">Inline Emphasis (!/:)</option>
-          <option value="block-generic">Generic Blocks (:::)</option>
-          <option value="block-generic-nested">Nested Generic Blocks</option>
         </optgroup>
         
         <optgroup label="Preprocessor">
@@ -536,39 +534,6 @@ Text with !emphasis! using exclamation marks.
 Text with :emphasis: using colons.
 
 Note: Rendering depends on formatter implementation.`,
-
-      'block-generic': `Generic block examples:
-
-:::
-This is a basic generic block.
-Generic blocks use ::: delimiter.
-:::
-
-More content between blocks.
-
-:::
-Another generic block.
-Multiple blocks can be used in a document.
-:::
-`,
-
-      'block-generic-nested': `Nested generic blocks:
-
-:::outer
-Outer block content
-
-  ::::inner
-  Inner block content
-  
-    :::::deepest
-    Deeply nested content
-    :::::
-  
-  Back to inner level
-  ::::
-
-Back to outer level
-:::`,
 
       // === PREPROCESSOR EXAMPLES ===
       'include-simple': `Simple file inclusion:

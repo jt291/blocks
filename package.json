@@ -12,6 +12,14 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./preprocessor": {
+      "import": "./dist/preprocessor/index.js",
+      "types": "./dist/preprocessor/index.d.ts"
+    },
+    "./preprocessor/browser": {
+      "import": "./dist/preprocessor/browser.js",
+      "types": "./dist/preprocessor/browser.d.ts"
     }
   },
   "files": [

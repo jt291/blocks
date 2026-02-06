@@ -4,7 +4,12 @@ import type { FileReader } from "./types.js";
  * Détecte si on est dans un environnement browser
  */
 function isBrowser(): boolean {
-  return typeof window !== 'undefined' && typeof fetch !== 'undefined';
+  // Si on a process.versions.node, on est dans Node
+  try {
+    return typeof process === 'undefined' || !process.versions?.node;
+  } catch {
+    return true; // Si process n'existe pas, on est dans le browser
+  }
 }
 
 /**
@@ -18,9 +23,8 @@ export async function createFileReader(basePath: string): Promise<FileReader> {
     // Import dynamique du module browser
     const { BrowserFileReader } = await import('./io-browser.js');
     return new BrowserFileReader(basePath);
-  } else {
-    // Import dynamique du module Node
-    const { NodeFileReader } = await import('./io-node.js');
-    return new NodeFileReader(basePath);
   }
+  // Import dynamique du module Node
+  const { NodeFileReader } = await import('./io-node.js');
+  return new NodeFileReader(basePath);
 }

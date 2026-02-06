@@ -829,28 +829,9 @@ export class BlocksParser extends EmbeddedActionsParser {
       { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
     ]);
 
-    // For escaped tokens, return the literal character (remove the backslash)
-    let value = token.image;
-    if (
-      token.tokenType === tokens.EscapedHash ||
-      token.tokenType === tokens.EscapedBacktick ||
-      token.tokenType === tokens.EscapedExclamation ||
-      token.tokenType === tokens.EscapedColon ||
-      token.tokenType === tokens.EscapedLBrace ||
-      token.tokenType === tokens.EscapedRBrace ||
-      token.tokenType === tokens.EscapedLBracket ||
-      token.tokenType === tokens.EscapedRBracket ||
-      token.tokenType === tokens.EscapedDash ||
-      token.tokenType === tokens.EscapedDollar ||
-      token.tokenType === tokens.EscapedBackslash
-    ) {
-      // Remove the leading backslash to get the literal character
-      value = value.substring(1);
-    }
-
     const node: TextNode = {
       type: "Text",
-      value: value,
+      value: processTokenImage(token),
     };
 
     return node;

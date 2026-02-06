@@ -88,7 +88,17 @@ Absolute paths work as expected in both environments.
 ## Configuration Options
 
 ### `basePath` (required)
-Base directory for resolving files. In the browser, this is typically a path like `/public/`. In Node.js, it can be any directory path.
+
+Base directory for resolving files.
+
+- **Browser**: Can be relative (e.g., `'./includes/'` or `'includes/'`) or absolute (e.g., `'/public/includes/'`)
+  - Relative paths are resolved relative to the HTML file location
+  - Absolute paths are resolved from the server root
+- **Node.js**: Absolute or relative file system paths (e.g., `'./content'` or `'/home/user/content'`)
+
+The basePath is used when resolving include directives. For example, with `basePath: './includes/'`:
+- `#include header.blocks` → fetches `./includes/header.blocks`
+- `#include /absolute.blocks` → fetches `/absolute.blocks` (absolute paths are not affected by basePath)
 
 ### `maxDepth` (optional, default: 10)
 Maximum depth of nested includes to prevent infinite loops.
@@ -140,15 +150,56 @@ console.log(parseResult.ast);
 In the browser, the preprocessor uses `fetch` to load files:
 
 ```javascript
+import { Preprocessor } from 'blocks/preprocessor/browser';
+
 const preprocessor = new Preprocessor({
-  basePath: '/public/content/'
+  basePath: './includes/'  // Relative to the HTML file
 });
 
 // Fetch and process
-const response = await fetch('/public/content/main.blocks');
+const response = await fetch('./content/main.blocks');
 const content = await response.text();
-const result = await preprocessor.process(content, '/public/content/main.blocks');
+const result = await preprocessor.process(content, './content/main.blocks');
 ```
+
+### Path Resolution in Browser
+
+The browser preprocessor correctly handles both relative and absolute paths:
+
+**Relative Paths** (recommended for portability):
+```javascript
+// Relative to current location
+const preprocessor = new Preprocessor({ basePath: './includes/' });
+// or
+const preprocessor = new Preprocessor({ basePath: 'includes/' });
+
+// Includes will be fetched from: ./includes/header.blocks
+```
+
+**Absolute Paths**:
+```javascript
+// Absolute from server root
+const preprocessor = new Preprocessor({ basePath: '/public/includes/' });
+
+// Includes will be fetched from: /public/includes/header.blocks
+```
+
+**Absolute URLs**:
+```javascript
+// URLs are passed through unchanged
+#include https://cdn.example.com/lib.js
+#include //cdn.example.com/lib.js
+```
+
+### Playground Example
+
+See `public/playground.html` for a complete working example. Run the playground:
+
+```bash
+npm run dev:playground
+```
+
+Then open `http://localhost:3000/` in your browser.
 
 ## API Reference
 

@@ -114,7 +114,15 @@ export class Preprocessor {
 
       // Check for duplicate includes (already processed and cached)
       if (this.includedFiles.has(resolvedPath)) {
-        // This is normal behavior - file is cached, skip silently
+        // File already included - replace with cached content
+        if (this.config.cache) {
+          const cachedContent = this.cache.get(resolvedPath);
+          if (cachedContent !== undefined) {
+            // Replace this occurrence with cached content
+            result = result.replace(fullMatch, cachedContent);
+          }
+        }
+        // Skip reprocessing the file
         continue;
       }
 
@@ -146,6 +154,11 @@ export class Preprocessor {
           fileReader,
           [...stack, resolvedPath],
         );
+
+        // Cache the processed content for future duplicate includes
+        if (this.config.cache) {
+          this.cache.set(resolvedPath, processedIncluded);
+        }
 
         // Replace the #include directive with content
         result = result.replace(fullMatch, processedIncluded);

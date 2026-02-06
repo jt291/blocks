@@ -268,6 +268,49 @@
       color: var(--text-secondary);
       font-size: 1.25rem;
     }
+    
+    /* Disabled button state */
+    .panel-header button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: var(--bg-secondary);
+    }
+    
+    /* Responsive layout for mobile */
+    @media (max-width: 768px) {
+      .layout {
+        flex-direction: column !important;
+      }
+      
+      .input-panel, .output-panel {
+        width: 100% !important;
+        height: 50% !important;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      
+      .output-panel {
+        border-bottom: none;
+      }
+      
+      /* Hidden panels on mobile */
+      .input-panel.hidden {
+        height: 40px !important;
+        flex: 0 0 40px !important;
+      }
+      
+      .output-panel.hidden {
+        height: 40px !important;
+        flex: 0 0 40px !important;
+      }
+      
+      /* Panel headers on mobile when hidden */
+      .input-panel.hidden .panel-header,
+      .output-panel.hidden .panel-header {
+        writing-mode: horizontal-tb;
+        text-orientation: mixed;
+      }
+    }
   </style>
 </head>
 <body>
@@ -508,6 +551,24 @@ This would create an infinite loop if test-a.blocks and test-b.blocks include ea
     let currentParseResult = null;
     
     /**
+     * Update panel visibility and button states
+     */
+    function updatePanels() {
+      // Update panel visibility
+      inputPanel.classList.toggle('hidden', !inputVisible);
+      outputPanel.classList.toggle('hidden', !outputVisible);
+      
+      // Update button text
+      toggleInputBtn.textContent = inputVisible ? '◀ Hide' : 'Show ▶';
+      toggleOutputBtn.textContent = outputVisible ? 'Hide ▶' : '◀ Show';
+      
+      // Disable hide buttons when only one panel is visible
+      // Can't hide the last visible panel
+      toggleInputBtn.disabled = !outputVisible;
+      toggleOutputBtn.disabled = !inputVisible;
+    }
+    
+    /**
      * Escape HTML for safe display
      */
     function escapeHTML(str) {
@@ -652,15 +713,23 @@ This would create an infinite loop if test-a.blocks and test-b.blocks include ea
     
     // Panel toggles
     toggleInputBtn.addEventListener('click', () => {
+      if (!outputVisible) {
+        // Can't hide input if output is already hidden
+        alert('Cannot hide both panels. Show the output panel first.');
+        return;
+      }
       inputVisible = !inputVisible;
-      inputPanel.classList.toggle('hidden', !inputVisible);
-      toggleInputBtn.textContent = inputVisible ? '◀ Hide' : 'Show ▶';
+      updatePanels();
     });
     
     toggleOutputBtn.addEventListener('click', () => {
+      if (!inputVisible) {
+        // Can't hide output if input is already hidden
+        alert('Cannot hide both panels. Show the input panel first.');
+        return;
+      }
       outputVisible = !outputVisible;
-      outputPanel.classList.toggle('hidden', !outputVisible);
-      toggleOutputBtn.textContent = outputVisible ? 'Hide ▶' : '◀ Show';
+      updatePanels();
     });
     
     // Auto process
@@ -671,6 +740,9 @@ This would create an infinite loop if test-a.blocks and test-b.blocks include ea
         autoProcessTimeout = setTimeout(processAndParse, 500);
       }
     });
+    
+    // Initialize panel state
+    updatePanels();
     
     // Initial parse
     processAndParse();

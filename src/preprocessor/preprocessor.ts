@@ -47,7 +47,12 @@ export class Preprocessor {
     const fileReader = await this.fileReaderPromise;
 
     // Process content
-    const processedContent = await this.processContent(content, currentFile, 0, fileReader);
+    const processedContent = await this.processContent(
+      content,
+      currentFile,
+      0,
+      fileReader,
+    );
 
     return {
       content: processedContent,
@@ -108,7 +113,14 @@ export class Preprocessor {
         let includedContent: string;
 
         if (this.config.cache && this.cache.has(resolvedPath)) {
-          includedContent = this.cache.get(resolvedPath)!;
+          const cachedContent = this.cache.get(resolvedPath);
+          if (cachedContent !== undefined) {
+            includedContent = cachedContent;
+          } else {
+            // Cache miss - re-read file
+            includedContent = await fileReader.read(resolvedPath);
+            this.cache.set(resolvedPath, includedContent);
+          }
         } else {
           includedContent = await fileReader.read(resolvedPath);
 

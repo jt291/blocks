@@ -22,6 +22,90 @@ config.block
 
 See [LANGUAGE.md](LANGUAGE.md) for complete language specification.
 
+## Syntax Overview
+
+### Blocks
+
+**Generic blocks:**
+```blocks
+::: blockType #id .class1 .class2 %option1 %option2 key=value
+Block content
+:::
+```
+
+**Code blocks:**
+```blocks
+``` language #id .class %option key=value
+Code content
+```
+```
+
+**Alternative code blocks:**
+```blocks
+!!! language #id .class %option key=value
+Code content
+!!!
+```
+
+### Inline Elements
+
+**Format:**
+```blocks
+inlineType:content[#id .class %option key=value]
+```
+
+**Examples:**
+```blocks
+Code: code:print("hello")[.highlight %copy]
+Link: link:https://example.com[#link1 .external]
+Emphasis: strong:important text[.urgent]
+```
+
+### Variables
+
+**Simple variables:**
+```blocks
+{varname}
+{varname|filter}
+{varname|filter:arg1:arg2}
+```
+
+**Interpolated variables:**
+```blocks
+${varname}
+${object.property}
+${array[0]}
+```
+
+### Metadata
+
+**Global metadata (document frontmatter):**
+```blocks
+---
+title: Document Title
+author: John Doe
+date: 2026-02-06
+---
+```
+
+**Local metadata (block-level):**
+```blocks
+::: blockType #id .class
+---
+key: value
+nested:
+  property: value
+---
+Block content
+:::
+```
+
+📖 **[View Complete Syntax Documentation →](docs/syntax.md)**
+
+📚 **[View Comprehensive Examples →](docs/examples.md)**
+
+🎮 **[Try the Interactive Playground →](public/playground.html)**
+
 ## Installation
 
 ```bash

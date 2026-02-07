@@ -3,33 +3,350 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blocks development</title>
+  <title>Blocks Language Playground</title>
+  <link rel="stylesheet" href="/playground.css">
   <script src="https://unpkg.com/@alenaksu/json-viewer@2.1.0/dist/json-viewer.bundle.js"></script>
 </head>
 <body>
-  <h3>Langage de blocs</h3>
-  <div style="display:flex;gap:0.5rem;justify-content:space-between;">
-<textarea style="flex:1 1 auto;">::: #container
+  <div class="playground-container">
+    <!-- Header -->
+    <div class="playground-header">
+      <h1>🧱 Blocks Language Playground</h1>
+      <p>Interactive parser and AST visualizer</p>
+    </div>
+
+    <!-- Error Banner -->
+    <div class="error-banner" id="errorBanner">
+      <strong>⚠️ Parse Errors:</strong>
+      <ul class="error-list" id="errorList"></ul>
+    </div>
+
+    <!-- Examples -->
+    <div class="examples-bar">
+      <button class="btn" data-example="simple">Simple Block</button>
+      <button class="btn" data-example="nested">Nested Blocks</button>
+      <button class="btn" data-example="attributes">Attributes</button>
+      <button class="btn" data-example="inline">Inline Elements</button>
+      <button class="btn" data-example="codeblock">Code Block</button>
+      <button class="btn" data-example="comments">Comments</button>
+      <button class="btn btn-primary" id="parseBtn">🔄 Parse</button>
+    </div>
+
+    <!-- Layout -->
+    <div class="playground-layout">
+      <!-- Left: Source Input -->
+      <div class="playground-left">
+        <textarea 
+          class="source-editor" 
+          id="sourceInput" 
+          placeholder="Type or paste Blocks code here...
+Example:
+:::section {#main .container}
+This is a paragraph with `inline code`.
+:::"
+          spellcheck="false"
+        >::: #container
 ligne 1
 ligne 2
 :::</textarea>
-  <json-viewer id="ast" style="flex:1 1 auto;"></json-viewer>
+      </div>
 
+      <!-- Right: Output Tabs -->
+      <div class="playground-right">
+        <!-- Tabs -->
+        <div class="tabs">
+          <button class="tab active" data-tab="tokens">🔤 Tokens</button>
+          <button class="tab" data-tab="astTree">🌳 AST Tree</button>
+          <button class="tab" data-tab="astJson">📄 AST JSON</button>
+        </div>
+
+        <!-- Tokens Tab -->
+        <div class="tab-content active" id="tokensTab">
+          <div class="tokens-list" id="tokensList"></div>
+        </div>
+
+        <!-- AST Tree Tab -->
+        <div class="tab-content" id="astTreeTab">
+          <div class="ast-tree" id="astTree"></div>
+        </div>
+
+        <!-- AST JSON Tab -->
+        <div class="tab-content json-container" id="astJsonTab">
+          <json-viewer id="astJson"></json-viewer>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions-bar">
+          <button class="btn" id="copyJsonBtn">📋 Copy JSON</button>
+          <button class="btn" id="clearBtn">🗑️ Clear</button>
+        </div>
+      </div>
+    </div>
   </div>
+
   <script type="module">
     import { parse } from './src/index.ts';
-    const textarea = document.body.querySelector('textarea');
-    const astContainer = document.getElementById('ast');
-    if (textarea) {
-      const input = textarea.value;
-      const ast = parse(input);
-      if (ast?.errors.length) {
-        console.error('Errors:', ast.errors);
-      } else {
-        astContainer.data = ast.ast;
+    import { createLexer } from './src/lexer/lexer.ts';
+
+    // Examples
+    const examples = {
+      simple: `:::section
+Hello, Blocks!
+:::`,
+      nested: `:::outer
+Text in outer block
+
+::::inner
+Nested content
+::::
+:::`,
+      attributes: `:::div {#main .container .flex ?dismissible lang=fr theme=dark}
+Block with attributes
+:::`,
+      inline: `Text with \`inline code\` and :emphasis: and !script!.`,
+      codeblock: `\`\`\`javascript
+function hello() {
+  console.log("Hello, world!");
+}
+\`\`\``,
+      comments: `// This is a line comment
+/* This is a 
+   block comment */
+:::section
+content
+:::`
+    };
+
+    // State
+    let currentTokens = [];
+    let currentAST = null;
+    let nodeIdCounter = 0;
+
+    // Elements
+    const sourceInput = document.getElementById('sourceInput');
+    const errorBanner = document.getElementById('errorBanner');
+    const errorList = document.getElementById('errorList');
+    const tokensList = document.getElementById('tokensList');
+    const astTree = document.getElementById('astTree');
+    const astJson = document.getElementById('astJson');
+    const parseBtn = document.getElementById('parseBtn');
+    const copyJsonBtn = document.getElementById('copyJsonBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const targetTab = tab.dataset.tab;
+        
+        // Update active tab
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        // Update active content
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById(`${targetTab}Tab`).classList.add('active');
+      });
+    });
+
+    // Example buttons
+    document.querySelectorAll('[data-example]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const example = btn.dataset.example;
+        sourceInput.value = examples[example];
+        parseSource();
+      });
+    });
+
+    // Parse button
+    parseBtn.addEventListener('click', () => {
+      parseSource();
+    });
+
+    // Auto-parse on input (debounced)
+    let parseTimeout;
+    sourceInput.addEventListener('input', () => {
+      clearTimeout(parseTimeout);
+      parseTimeout = setTimeout(parseSource, 500);
+    });
+
+    // Copy JSON
+    copyJsonBtn.addEventListener('click', () => {
+      if (currentAST) {
+        navigator.clipboard.writeText(JSON.stringify(currentAST, null, 2));
+        copyJsonBtn.textContent = '✅ Copied!';
+        setTimeout(() => {
+          copyJsonBtn.textContent = '📋 Copy JSON';
+        }, 2000);
       }
-      console.log('ast',ast);
+    });
+
+    // Clear
+    clearBtn.addEventListener('click', () => {
+      sourceInput.value = '';
+      currentTokens = [];
+      currentAST = null;
+      tokensList.innerHTML = '<p class="empty-state">No tokens yet. Type some code!</p>';
+      astTree.innerHTML = '<p class="empty-state">No AST yet. Type some code!</p>';
+      astJson.data = null;
+      errorBanner.classList.remove('visible');
+    });
+
+    // Parse source
+    function parseSource() {
+      const source = sourceInput.value;
+
+      if (!source.trim()) {
+        clearBtn.click();
+        return;
+      }
+
+      try {
+        // Tokenize
+        const lexer = createLexer();
+        const { tokens } = lexer.tokenize(source);
+        currentTokens = tokens;
+
+        // Parse
+        const result = parse(source);
+        currentAST = result.ast;
+
+        // Display errors
+        if (result.errors.length > 0) {
+          errorList.innerHTML = result.errors.map(e => `<li>${e}</li>`).join('');
+          errorBanner.classList.add('visible');
+        } else {
+          errorBanner.classList.remove('visible');
+        }
+
+        // Render views
+        renderTokens(tokens);
+        renderASTTree(result.ast);
+        renderASTJSON(result.ast);
+
+      } catch (error) {
+        errorList.innerHTML = `<li>${error.message}</li>`;
+        errorBanner.classList.add('visible');
+      }
     }
+
+    // Render tokens
+    function renderTokens(tokens) {
+      if (tokens.length === 0) {
+        tokensList.innerHTML = '<p class="empty-state">No tokens</p>';
+        return;
+      }
+
+      tokensList.innerHTML = tokens
+        .map((token, idx) => {
+          const type = token.tokenType.name;
+          const value = token.image.replace(/\n/g, '\\n').replace(/\t/g, '\\t');
+          const loc = `L${token.startLine}:${token.startColumn}`;
+          
+          return `
+            <div class="token-item">
+              <span class="token-type">${type}</span>
+              <span class="token-value">${escapeHtml(value)}</span>
+              <span class="token-location">${loc}</span>
+            </div>
+          `;
+        })
+        .join('');
+    }
+
+    // Render AST Tree
+    function renderASTTree(ast) {
+      nodeIdCounter = 0; // Reset counter for each render
+      astTree.innerHTML = renderASTNode(ast, 0);
+      
+      // Add event delegation for toggle functionality
+      astTree.addEventListener('click', (e) => {
+        const header = e.target.closest('.ast-node-header');
+        if (header) {
+          const nodeId = header.dataset.nodeId;
+          const childrenContainer = header.nextElementSibling;
+          if (childrenContainer && childrenContainer.classList.contains('ast-node-children')) {
+            childrenContainer.classList.toggle('collapsed');
+            const toggle = header.querySelector('.ast-toggle');
+            if (toggle) {
+              toggle.textContent = childrenContainer.classList.contains('collapsed') ? '▶' : '▼';
+            }
+          }
+        }
+      });
+    }
+
+    function renderASTNode(node, depth) {
+      if (!node) return '';
+
+      const type = node.type || 'Unknown';
+      let info = '';
+      let children = [];
+
+      // Extract node info
+      if (node.type === 'GenericBlock') {
+        info = `name="${node.name}"`;
+        children = node.content || [];
+      } else if (node.type === 'CodeBlock') {
+        info = node.language ? `lang="${node.language}"` : '';
+        children = node.content || [];
+      } else if (node.type === 'GenericInline') {
+        info = `name="${node.name}"`;
+        children = node.content || [];
+      } else if (node.type === 'Text') {
+        const preview = node.value.substring(0, 50);
+        info = `"${preview}${node.value.length > 50 ? '...' : ''}"`;
+      } else if (node.type === 'Document') {
+        children = node.children || [];
+      } else if (node.content) {
+        children = Array.isArray(node.content) ? node.content : [];
+      }
+
+      // Render attributes
+      if (node.attributes) {
+        const attrs = [];
+        if (node.attributes.id) attrs.push(`#${node.attributes.id}`);
+        if (node.attributes.classes?.length) attrs.push(`.${node.attributes.classes.join('.')}`);
+        if (attrs.length) info += ` {${attrs.join(' ')}}`;
+      }
+
+      const hasChildren = children.length > 0;
+      const nodeId = `node-${nodeIdCounter++}`;
+
+      let html = `
+        <div class="ast-node">
+          <div class="ast-node-header" data-node-id="${nodeId}">
+            <span class="ast-toggle">${hasChildren ? '▼' : '  '}</span>
+            <span class="ast-node-type">${type}</span>
+            ${info ? `<span class="ast-node-info">${escapeHtml(info)}</span>` : ''}
+          </div>
+      `;
+
+      if (hasChildren) {
+        html += `<div class="ast-node-children" id="${nodeId}">`;
+        children.forEach(child => {
+          html += renderASTNode(child, depth + 1);
+        });
+        html += '</div>';
+      }
+
+      html += '</div>';
+      return html;
+    }
+
+    // Render AST JSON
+    function renderASTJSON(ast) {
+      astJson.data = ast;
+    }
+
+    // Escape HTML
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // Initial parse
+    parseSource();
   </script>
 </body>
 </html>

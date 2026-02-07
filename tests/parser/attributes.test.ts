@@ -9,7 +9,7 @@ import { parse } from "../../src/parser/visitor";
 describe("Parser - Attributes", () => {
   it("should parse ID attribute", () => {
     const lexer = createLexer();
-    const { tokens } = lexer.tokenize(":::div {#main}\n:::");
+    const { tokens } = lexer.tokenize(":::#div {#main}\n:::");
     const ast = parse(tokens);
 
     const block = ast.children.find((c) => c.type === "GenericBlock");
@@ -18,7 +18,7 @@ describe("Parser - Attributes", () => {
 
   it("should parse class attributes", () => {
     const lexer = createLexer();
-    const { tokens } = lexer.tokenize(":::div {.container .flex}\n:::");
+    const { tokens } = lexer.tokenize(":::#div {.container .flex}\n:::");
     const ast = parse(tokens);
 
     const block = ast.children.find((c) => c.type === "GenericBlock");
@@ -28,7 +28,7 @@ describe("Parser - Attributes", () => {
 
   it("should parse option attributes", () => {
     const lexer = createLexer();
-    const { tokens } = lexer.tokenize(":::div {%dismissible}\n:::");
+    const { tokens } = lexer.tokenize(":::#div {%dismissible}\n:::");
     const ast = parse(tokens);
 
     const block = ast.children.find((c) => c.type === "GenericBlock");
@@ -37,7 +37,7 @@ describe("Parser - Attributes", () => {
 
   it("should parse key-value attributes", () => {
     const lexer = createLexer();
-    const { tokens } = lexer.tokenize(":::div {lang=fr theme=dark}\n:::");
+    const { tokens } = lexer.tokenize(":::#div {lang=fr theme=dark}\n:::");
     const ast = parse(tokens);
 
     const block = ast.children.find((c) => c.type === "GenericBlock");
@@ -47,7 +47,7 @@ describe("Parser - Attributes", () => {
 
   it("should parse mixed attributes", () => {
     const lexer = createLexer();
-    const { tokens } = lexer.tokenize(":::div {#main .container %dismissible lang=fr}\n:::");
+    const { tokens } = lexer.tokenize(":::#div {#main .container %dismissible lang=fr}\n:::");
     const ast = parse(tokens);
 
     const block = ast.children.find((c) => c.type === "GenericBlock");

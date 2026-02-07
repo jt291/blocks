@@ -17,7 +17,6 @@ import {
   CommentInlineNode,
   Attributes,
   Metadata,
-  Position,
   Location,
 } from "../types/ast";
 import { createParser } from "./index";
@@ -323,28 +322,28 @@ export class BlocksVisitor extends BaseBlocksVisitor {
   /**
    * Visit ID attribute
    */
-  attrId(ctx: any): void {
+  attrId(_ctx: any): void {
     // Handled by attributes visitor
   }
 
   /**
    * Visit class attribute
    */
-  attrClass(ctx: any): void {
+  attrClass(_ctx: any): void {
     // Handled by attributes visitor
   }
 
   /**
    * Visit option attribute
    */
-  attrOption(ctx: any): void {
+  attrOption(_ctx: any): void {
     // Handled by attributes visitor
   }
 
   /**
    * Visit key-value attribute
    */
-  attrKeyValue(ctx: any): void {
+  attrKeyValue(_ctx: any): void {
     // Handled by attributes visitor
   }
 
@@ -394,7 +393,7 @@ export class BlocksVisitor extends BaseBlocksVisitor {
       new RegExp(`\\${delimiter}([^${delimiter}]*)\\${delimiter}\\s*\\{([^}]+)\\}`)
     );
 
-    if (withAttrs) {
+    if (withAttrs && withAttrs[1] !== undefined && withAttrs[2] !== undefined) {
       const content = withAttrs[1];
       const attrsStr = withAttrs[2];
       const attributes = this.parseAttributesString(attrsStr);
@@ -403,7 +402,7 @@ export class BlocksVisitor extends BaseBlocksVisitor {
 
     // Without attributes
     const match = image.match(new RegExp(`\\${delimiter}([^${delimiter}]*)\\${delimiter}`));
-    const content = match ? match[1] : "";
+    const content = match && match[1] !== undefined ? match[1] : "";
 
     return { content };
   }
@@ -430,10 +429,12 @@ export class BlocksVisitor extends BaseBlocksVisitor {
         attrs.options.push(part.slice(1));
       } else if (part.includes("=")) {
         const [key, value] = part.split("=");
-        if (key.startsWith("@")) {
-          attrs.events[key.slice(1)] = value;
-        } else {
-          attrs.keyValues[key] = value;
+        if (key && value !== undefined) {
+          if (key.startsWith("@")) {
+            attrs.events[key.slice(1)] = value;
+          } else {
+            attrs.keyValues[key] = value;
+          }
         }
       }
     });
@@ -465,8 +466,7 @@ export class BlocksVisitor extends BaseBlocksVisitor {
    * Get location from context
    */
   private getLocationFromCtx(ctx: any): Location {
-    const tokens = Object.values(ctx)
-      .flat()
+    const tokens = (Object.values(ctx).flat() as any[])
       .filter((v): v is IToken => v && typeof v === "object" && "startOffset" in v);
 
     const first = tokens[0];

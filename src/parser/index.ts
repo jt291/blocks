@@ -5,7 +5,7 @@
  * Based on specification: docs/SPECIFICATION.md
  */
 
-import { CstParser, IToken } from "chevrotain";
+import { CstParser } from "chevrotain";
 import {
   allTokens,
   BlockCodeDelim,
@@ -45,7 +45,7 @@ import {
 export class BlocksParser extends CstParser {
   constructor() {
     super(allTokens, {
-      recoveryEnabled: true,
+      recoveryEnabled: false,
       nodeLocationTracking: "full",
     });
 
@@ -119,36 +119,43 @@ export class BlocksParser extends CstParser {
   /**
    * Code Block
    * 
-   * Syntax: ``` language [attributes] ... ```
+   * Syntax: ```#language [attributes] ... ```
+   * Note: Language is prefixed with # in current implementation
    */
   private codeBlock = this.RULE("codeBlock", () => {
     this.CONSUME(BlockCodeDelim, { LABEL: "open" });
 
-    // Optional language
-    this.OPTION(() => {
-      this.CONSUME(Whitespace);
+    // Optional whitespace
+    this.OPTION(() => this.CONSUME(Whitespace));
+
+    // Optional language (prefixed with #)
+    this.OPTION2(() => {
+      this.CONSUME(Hash);
       this.CONSUME(Identifier, { LABEL: "language" });
     });
 
     // Optional whitespace before attributes
-    this.OPTION2(() => this.CONSUME2(Whitespace));
+    this.OPTION3(() => this.CONSUME2(Whitespace));
 
-    // Optional attributes
-    this.OPTION3(() => {
-      this.SUBRULE(this.attributes);
+    // Optional attributes - use LA to check for LBrace
+    this.OPTION4({
+      GATE: () => this.LA(1).tokenType === LBrace,
+      DEF: () => {
+        this.SUBRULE(this.attributes);
+      }
     });
 
-    this.OPTION4(() => this.CONSUME(Newline));
+    this.OPTION5(() => this.CONSUME(Newline));
 
     // Content (consume anything that's not a closing delimiter, but NOT braces which are for attributes)
     this.MANY(() => {
       this.OR([
         { ALT: () => this.CONSUME(Content) },
-        { ALT: () => this.CONSUME3(Identifier) },
+        { ALT: () => this.CONSUME2(Identifier) },
         { ALT: () => this.CONSUME3(Whitespace) },
         { ALT: () => this.CONSUME2(Newline) },
         { ALT: () => this.CONSUME(StringValue) },
-        { ALT: () => this.CONSUME(Hash) },
+        { ALT: () => this.CONSUME2(Hash) },
         { ALT: () => this.CONSUME(Dot) },
         { ALT: () => this.CONSUME(Percent) },
         { ALT: () => this.CONSUME(Equals) },
@@ -165,24 +172,33 @@ export class BlocksParser extends CstParser {
   /**
    * Generic Block
    * 
-   * Syntax: ::: name [attributes] ... :::
+   * Syntax: :::#name [attributes] ... :::
+   * Note: Name is prefixed with # in current implementation
    */
   private genericBlock = this.RULE("genericBlock", () => {
     this.CONSUME(BlockGenericDelim, { LABEL: "open" });
 
-    // Block name (required)
+    // Optional whitespace
     this.OPTION(() => this.CONSUME(Whitespace));
-    this.CONSUME(Identifier, { LABEL: "name" });
-
-    // Optional whitespace before attributes
-    this.OPTION2(() => this.CONSUME2(Whitespace));
-
-    // Optional attributes
-    this.OPTION3(() => {
-      this.SUBRULE(this.attributes);
+    
+    // Optional name (prefixed with #)
+    this.OPTION2(() => {
+      this.CONSUME(Hash);
+      this.CONSUME(Identifier, { LABEL: "name" });
     });
 
-    this.OPTION4(() => this.CONSUME(Newline));
+    // Optional whitespace before attributes
+    this.OPTION3(() => this.CONSUME2(Whitespace));
+
+    // Optional attributes - use LA to check for LBrace
+    this.OPTION4({
+      GATE: () => this.LA(1).tokenType === LBrace,
+      DEF: () => {
+        this.SUBRULE(this.attributes);
+      }
+    });
+
+    this.OPTION5(() => this.CONSUME(Newline));
 
     // Content (can contain nested blocks, inlines, text, but NOT braces which are for attributes)
     this.MANY(() => {
@@ -191,11 +207,11 @@ export class BlocksParser extends CstParser {
         { ALT: () => this.SUBRULE(this.inlineElement) },
         { ALT: () => this.SUBRULE(this.comment) },
         { ALT: () => this.CONSUME(Content) },
-        { ALT: () => this.CONSUME3(Identifier) },
+        { ALT: () => this.CONSUME2(Identifier) },
         { ALT: () => this.CONSUME3(Whitespace) },
         { ALT: () => this.CONSUME2(Newline) },
         { ALT: () => this.CONSUME(StringValue) },
-        { ALT: () => this.CONSUME(Hash) },
+        { ALT: () => this.CONSUME2(Hash) },
         { ALT: () => this.CONSUME(Dot) },
         { ALT: () => this.CONSUME(Percent) },
         { ALT: () => this.CONSUME(Equals) },

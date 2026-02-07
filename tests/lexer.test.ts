@@ -206,5 +206,70 @@ describe("Lexer", () => {
       expect(result.tokens[0].image).toBe("\\");
       // The 'x' will be tokenized as Content or Identifier
     });
+
+    it("should tokenize escaped dot", () => {
+      const lexer = createLexer();
+      const result = lexer.tokenize("\\.");
+
+      expect(result.tokens[0].tokenType).toBe(tokens.EscapedDot);
+      expect(result.tokens[0].image).toBe("\\.");
+    });
+
+    it("should tokenize escaped question mark", () => {
+      const lexer = createLexer();
+      const result = lexer.tokenize("\\?");
+
+      expect(result.tokens[0].tokenType).toBe(tokens.EscapedQuestion);
+      expect(result.tokens[0].image).toBe("\\?");
+    });
+
+    it("should tokenize escaped pipe", () => {
+      const lexer = createLexer();
+      const result = lexer.tokenize("\\|");
+
+      expect(result.tokens[0].tokenType).toBe(tokens.EscapedPipe);
+      expect(result.tokens[0].image).toBe("\\|");
+    });
+
+    it("should tokenize line continuation (backslash followed by newline)", () => {
+      const lexer = createLexer();
+      const result = lexer.tokenize("test\\\nmore");
+
+      const lineContinuationToken = result.tokens.find(
+        (t) => t.tokenType === tokens.LineContinuation,
+      );
+      expect(lineContinuationToken).toBeDefined();
+      expect(lineContinuationToken?.image).toBe("\\\n");
+    });
+
+    it("should tokenize line continuation with CRLF", () => {
+      const lexer = createLexer();
+      const result = lexer.tokenize("test\\\r\nmore");
+
+      const lineContinuationToken = result.tokens.find(
+        (t) => t.tokenType === tokens.LineContinuation,
+      );
+      expect(lineContinuationToken).toBeDefined();
+      expect(lineContinuationToken?.image).toBe("\\\r\n");
+    });
+
+    it("should tokenize multiple line continuations", () => {
+      const lexer = createLexer();
+      const result = lexer.tokenize("line1\\\nline2\\\nline3");
+
+      const lineContinuationTokens = result.tokens.filter(
+        (t) => t.tokenType === tokens.LineContinuation,
+      );
+      expect(lineContinuationTokens.length).toBe(2);
+    });
+
+    it("should tokenize all new escape sequences together", () => {
+      const lexer = createLexer();
+      const result = lexer.tokenize("\\.\\?\\|");
+
+      expect(result.tokens[0].tokenType).toBe(tokens.EscapedDot);
+      expect(result.tokens[1].tokenType).toBe(tokens.EscapedQuestion);
+      expect(result.tokens[2].tokenType).toBe(tokens.EscapedPipe);
+    });
   });
 });

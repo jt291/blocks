@@ -182,6 +182,26 @@ export const EscapedBackslash = createToken({
   pattern: /\\\\/,
 });
 
+export const EscapedDot = createToken({
+  name: "EscapedDot",
+  pattern: /\\\./,
+});
+
+export const EscapedQuestion = createToken({
+  name: "EscapedQuestion",
+  pattern: /\\\?/,
+});
+
+export const EscapedPipe = createToken({
+  name: "EscapedPipe",
+  pattern: /\\\|/,
+});
+
+export const LineContinuation = createToken({
+  name: "LineContinuation",
+  pattern: /\\(?:\r\n|\n)/,
+});
+
 export const Backslash = createToken({
   name: "Backslash",
   pattern: /\\/,
@@ -222,6 +242,7 @@ export const allTokens = [
 
   // === ESCAPE SEQUENCES (HIGHEST PRIORITY) ===
   EscapedBackslash, // \\ must be BEFORE single backslash
+  LineContinuation, // \<newline> for line continuation
   EscapedHash, // \#
   EscapedBacktick, // \`
   EscapedExclamation, // \!
@@ -232,6 +253,9 @@ export const allTokens = [
   EscapedRBracket, // \]
   EscapedDash, // \-
   EscapedDollar, // \$
+  EscapedDot, // \.
+  EscapedQuestion, // \?
+  EscapedPipe, // \|
   Backslash, // \ (for unknown escapes or trailing backslash)
 
   // === BLOCK DELIMITERS (3+ characters) BEFORE INLINE DELIMITERS ===

@@ -120,6 +120,7 @@ content
     // State
     let currentTokens = [];
     let currentAST = null;
+    let nodeIdCounter = 0;
 
     // Elements
     const sourceInput = document.getElementById('sourceInput');
@@ -184,8 +185,8 @@ content
       sourceInput.value = '';
       currentTokens = [];
       currentAST = null;
-      tokensList.innerHTML = '<p style="color: #64748b;">No tokens yet. Type some code!</p>';
-      astTree.innerHTML = '<p style="color: #64748b;">No AST yet. Type some code!</p>';
+      tokensList.innerHTML = '<p class="empty-state">No tokens yet. Type some code!</p>';
+      astTree.innerHTML = '<p class="empty-state">No AST yet. Type some code!</p>';
       astJson.data = null;
       errorBanner.classList.remove('visible');
     });
@@ -231,7 +232,7 @@ content
     // Render tokens
     function renderTokens(tokens) {
       if (tokens.length === 0) {
-        tokensList.innerHTML = '<p style="color: #64748b;">No tokens</p>';
+        tokensList.innerHTML = '<p class="empty-state">No tokens</p>';
         return;
       }
 
@@ -254,7 +255,24 @@ content
 
     // Render AST Tree
     function renderASTTree(ast) {
+      nodeIdCounter = 0; // Reset counter for each render
       astTree.innerHTML = renderASTNode(ast, 0);
+      
+      // Add event delegation for toggle functionality
+      astTree.addEventListener('click', (e) => {
+        const header = e.target.closest('.ast-node-header');
+        if (header) {
+          const nodeId = header.dataset.nodeId;
+          const childrenContainer = header.nextElementSibling;
+          if (childrenContainer && childrenContainer.classList.contains('ast-node-children')) {
+            childrenContainer.classList.toggle('collapsed');
+            const toggle = header.querySelector('.ast-toggle');
+            if (toggle) {
+              toggle.textContent = childrenContainer.classList.contains('collapsed') ? '▶' : '▼';
+            }
+          }
+        }
+      });
     }
 
     function renderASTNode(node, depth) {
@@ -292,11 +310,11 @@ content
       }
 
       const hasChildren = children.length > 0;
-      const nodeId = `node-${Math.random().toString(36).substr(2, 9)}`;
+      const nodeId = `node-${nodeIdCounter++}`;
 
       let html = `
         <div class="ast-node">
-          <div class="ast-node-header" onclick="toggleNode('${nodeId}')">
+          <div class="ast-node-header" data-node-id="${nodeId}">
             <span class="ast-toggle">${hasChildren ? '▼' : '  '}</span>
             <span class="ast-node-type">${type}</span>
             ${info ? `<span class="ast-node-info">${escapeHtml(info)}</span>` : ''}
@@ -314,18 +332,6 @@ content
       html += '</div>';
       return html;
     }
-
-    // Toggle AST node
-    window.toggleNode = function(nodeId) {
-      const node = document.getElementById(nodeId);
-      if (node) {
-        node.classList.toggle('collapsed');
-        const toggle = node.previousElementSibling.querySelector('.ast-toggle');
-        if (toggle) {
-          toggle.textContent = node.classList.contains('collapsed') ? '▶' : '▼';
-        }
-      }
-    };
 
     // Render AST JSON
     function renderASTJSON(ast) {

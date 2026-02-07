@@ -320,3 +320,8 @@ json-viewer {
 .hidden {
   display: none !important;
 }
+
+.empty-state {
+  color: var(--text-muted);
+  padding: 1rem;
+}

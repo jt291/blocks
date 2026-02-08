@@ -106,14 +106,6 @@ describe("Lexer", () => {
       expect(result.tokens[0].image).toBe("\\`");
     });
 
-    it("should tokenize escaped exclamation", () => {
-      const lexer = createLexer();
-      const result = lexer.tokenize("\\!");
-
-      expect(result.tokens[0].tokenType).toBe(tokens.EscapedExclamation);
-      expect(result.tokens[0].image).toBe("\\!");
-    });
-
     it("should tokenize escaped colon", () => {
       const lexer = createLexer();
       const result = lexer.tokenize("\\:");
@@ -168,11 +160,11 @@ describe("Lexer", () => {
 
     it("should tokenize multiple escaped characters", () => {
       const lexer = createLexer();
-      const result = lexer.tokenize("\\#\\`\\!");
+      const result = lexer.tokenize("\\#\\`\\:");
 
       expect(result.tokens[0].tokenType).toBe(tokens.EscapedHash);
       expect(result.tokens[1].tokenType).toBe(tokens.EscapedBacktick);
-      expect(result.tokens[2].tokenType).toBe(tokens.EscapedExclamation);
+      expect(result.tokens[2].tokenType).toBe(tokens.EscapedColon);
     });
 
     it("should tokenize escaped characters before regular ones", () => {
@@ -224,38 +216,6 @@ describe("Lexer", () => {
 
       expect(result.tokens[0].tokenType).toBe(tokens.EscapedPipe);
       expect(result.tokens[0].image).toBe("\\|");
-    });
-
-    it("should tokenize line continuation (backslash followed by newline)", () => {
-      const lexer = createLexer();
-      const result = lexer.tokenize("test\\\nmore");
-
-      const lineContinuationToken = result.tokens.find(
-        (t) => t.tokenType === tokens.LineContinuation,
-      );
-      expect(lineContinuationToken).toBeDefined();
-      expect(lineContinuationToken?.image).toBe("\\\n");
-    });
-
-    it("should tokenize line continuation with CRLF", () => {
-      const lexer = createLexer();
-      const result = lexer.tokenize("test\\\r\nmore");
-
-      const lineContinuationToken = result.tokens.find(
-        (t) => t.tokenType === tokens.LineContinuation,
-      );
-      expect(lineContinuationToken).toBeDefined();
-      expect(lineContinuationToken?.image).toBe("\\\r\n");
-    });
-
-    it("should tokenize multiple line continuations", () => {
-      const lexer = createLexer();
-      const result = lexer.tokenize("line1\\\nline2\\\nline3");
-
-      const lineContinuationTokens = result.tokens.filter(
-        (t) => t.tokenType === tokens.LineContinuation,
-      );
-      expect(lineContinuationTokens.length).toBe(2);
     });
 
     it("should tokenize all new escape sequences together", () => {

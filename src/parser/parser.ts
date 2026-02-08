@@ -351,7 +351,7 @@ export class BlocksParser extends EmbeddedActionsParser {
 
     // Try to consume attributes
     let attributes: Attributes | undefined;
-    this.OPTION(() => {
+    this.OPTION2(() => {
       attributes = this.SUBRULE(this.attributes);
     });
 

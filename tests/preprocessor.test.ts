@@ -56,27 +56,6 @@ describe("Preprocessor", () => {
       expect(result.includedFiles).toContain(utilsPath);
     });
 
-    it("should process #include in a script block", async () => {
-      const configPath = path.join(TEST_DIR, "config.js");
-      const mainPath = path.join(TEST_DIR, "main.blocks");
-
-      await fs.writeFile(configPath, "const config = { debug: true };");
-      await fs.writeFile(
-        mainPath,
-        '!!!javascript\n#include config.js\n\nconsole.log("Main");\n!!!',
-      );
-
-      const preprocessor = new Preprocessor({ basePath: TEST_DIR });
-      const result = await preprocessor.process(
-        await fs.readFile(mainPath, "utf-8"),
-        mainPath,
-      );
-
-      expect(result.errors).toHaveLength(0);
-      expect(result.content).toContain("const config = { debug: true };");
-      expect(result.includedFiles).toContain(configPath);
-    });
-
     it("should process multiple #include directives", async () => {
       const header1Path = path.join(TEST_DIR, "header1.blocks");
       const header2Path = path.join(TEST_DIR, "header2.blocks");

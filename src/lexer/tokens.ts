@@ -79,10 +79,10 @@ export const LBrace = createToken({
   pattern: /{/,
 });
 
-export const RBrace = createToken({
-  name: "RBrace",
-  pattern: /}/,
-});
+// Note: RBrace is not needed in v1.0 spec since attributes use [...]
+// The } character is only used for closing script expressions ${...}
+// So RBrace is just an alias for ScriptExprEnd
+export const RBrace = ScriptExprEnd;
 
 export const Hash = createToken({
   name: "Hash",
@@ -267,7 +267,7 @@ export const allTokens = [
   LBracket,
   RBracket,
   LBrace,
-  RBrace,
+  // Note: RBrace is an alias for ScriptExprEnd, not a separate token
   Hash,
   Dot,
   At,

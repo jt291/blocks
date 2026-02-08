@@ -1,4 +1,6 @@
 import type { IToken } from "chevrotain";
+import { evaluate } from "./interpreter/interpreter.js";
+import { render } from "./interpreter/renderer.js";
 import { createLexer } from "./lexer/lexer.js";
 import type {
   BlockNode,
@@ -10,14 +12,20 @@ import type {
 } from "./parser/ast.js";
 import { createParser } from "./parser/parser.js";
 
+export type { EvaluationContext, RenderOptions } from "./interpreter/index.js";
+// Export interpreter
+export {
+  evaluate,
+  Interpreter,
+  Renderer,
+  render,
+} from "./interpreter/index.js";
 // Export lexer - use explicit exports to avoid conflicts between lexer.ts and tokens.ts
-export { createLexer, BlocksLexer as BlocksLexerClass } from "./lexer/lexer.js";
+export { BlocksLexer as BlocksLexerClass, createLexer } from "./lexer/lexer.js";
 export { allTokens } from "./lexer/tokens.js";
-
 // Export parser and AST
 export * from "./parser/ast.js";
 export * from "./parser/parser.js";
-
 // Export preprocessor
 export * from "./preprocessor/index.js";
 
@@ -199,4 +207,38 @@ export function parse(input: string): ParseResult {
       errors: [errorMessage],
     };
   }
+}
+
+/**
+ * Process Blocks source code: Parse → Evaluate → Render
+ */
+export function process(
+  source: string,
+  context?: { variables?: Record<string, any> },
+): {
+  output: string;
+  ast: any;
+  errors: any[];
+} {
+  // Parse
+  const { ast, errors } = parse(source);
+
+  if (errors.length > 0) {
+    return { output: "", ast, errors };
+  }
+
+  // Evaluate - convert context to EvaluationContext
+  const evalContext = context
+    ? { variables: context.variables || {} }
+    : undefined;
+  const evaluated = evaluate(ast, evalContext);
+
+  // Render
+  const output = render(evaluated);
+
+  return {
+    output,
+    ast: evaluated,
+    errors: [],
+  };
 }

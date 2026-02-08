@@ -49,7 +49,7 @@ export interface GenericBlockNode extends Node {
   type: "GenericBlock";
   name?: string;
   attributes?: Attributes;
-  content: (BlockNode | InlineNode | TextNode)[];
+  content: (BlockNode | InlineNode | ScriptNode | TextNode)[];
 }
 
 // Inline nodes
@@ -71,7 +71,7 @@ export interface CodeInlineNode extends InlineNode {
 
 export interface GenericInlineNode extends InlineNode {
   type: "GenericInline";
-  content: (InlineNode | TextNode)[];
+  content: (InlineNode | ScriptNode | TextNode)[];
 }
 
 export interface ScriptNode extends Node {

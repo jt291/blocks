@@ -33,7 +33,7 @@ describe("Parser - Basic", () => {
     expect(ast.type).toBe("Document");
     const codeBlock = ast.children.find((c) => c.type === "CodeBlock");
     expect(codeBlock).toBeDefined();
-    expect(codeBlock.language).toBe("python");
+    expect(codeBlock.name).toBe("python");
   });
 
   it("should parse generic block", () => {

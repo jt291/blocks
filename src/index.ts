@@ -10,10 +10,15 @@ import type {
 } from "./parser/ast.js";
 import { createParser } from "./parser/parser.js";
 
-export * from "./lexer/lexer.js";
-export * from "./lexer/tokens.js";
+// Export lexer - use explicit exports to avoid conflicts between lexer.ts and tokens.ts
+export { createLexer, BlocksLexer as BlocksLexerClass } from "./lexer/lexer.js";
+export { allTokens } from "./lexer/tokens.js";
+
+// Export parser and AST
 export * from "./parser/ast.js";
 export * from "./parser/parser.js";
+
+// Export preprocessor
 export * from "./preprocessor/index.js";
 
 export interface ParseResult {

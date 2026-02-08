@@ -114,7 +114,7 @@ export class BlocksParser extends EmbeddedActionsParser {
         { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
         { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
         { ALT: () => this.CONSUME(tokens.LBrace) },
-        { ALT: () => this.CONSUME(tokens.RBrace) },
+        { ALT: () => this.CONSUME(tokens.ScriptExprEnd) },
         { ALT: () => this.CONSUME(tokens.LBracket) },
         { ALT: () => this.CONSUME(tokens.RBracket) },
         { ALT: () => this.CONSUME(tokens.Hash) },
@@ -155,6 +155,10 @@ export class BlocksParser extends EmbeddedActionsParser {
     // Consume language name (required)
     const nameToken = this.CONSUME(tokens.Identifier);
     const name = nameToken.image;
+
+    if (!name || name.trim() === "") {
+      throw new Error("Code block language name is required");
+    }
 
     // Skip whitespace after name
     this.MANY2(() => {
@@ -203,7 +207,7 @@ export class BlocksParser extends EmbeddedActionsParser {
         { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
         { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
         { ALT: () => this.CONSUME2(tokens.LBrace) },
-        { ALT: () => this.CONSUME(tokens.RBrace) },
+        { ALT: () => this.CONSUME(tokens.ScriptExprEnd) },
         { ALT: () => this.CONSUME(tokens.LBracket) },
         { ALT: () => this.CONSUME(tokens.RBracket) },
         { ALT: () => this.CONSUME(tokens.Hash) },
@@ -318,6 +322,10 @@ export class BlocksParser extends EmbeddedActionsParser {
     const nameToken = this.CONSUME(tokens.Identifier);
     const name = nameToken.image;
 
+    if (!name || name.trim() === "") {
+      throw new Error("Generic block name is required");
+    }
+
     // Skip whitespace after name
     this.MANY2(() => {
       this.CONSUME2(tokens.Whitespace);
@@ -419,7 +427,7 @@ export class BlocksParser extends EmbeddedActionsParser {
         { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
         { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
         { ALT: () => this.CONSUME(tokens.LBrace) },
-        { ALT: () => this.CONSUME(tokens.RBrace) },
+        { ALT: () => this.CONSUME(tokens.ScriptExprEnd) },
         { ALT: () => this.CONSUME(tokens.LBracket) },
         { ALT: () => this.CONSUME(tokens.RBracket) },
         { ALT: () => this.CONSUME(tokens.Hash) },
@@ -455,6 +463,10 @@ export class BlocksParser extends EmbeddedActionsParser {
     const nameToken = this.CONSUME(tokens.Identifier);
     const name = nameToken.image;
 
+    if (!name || name.trim() === "") {
+      throw new Error("Inline code name is required");
+    }
+
     // Consume opening backtick
     this.CONSUME(tokens.InlineCodeDelim);
 
@@ -483,7 +495,7 @@ export class BlocksParser extends EmbeddedActionsParser {
         // Other delimiters (not backtick)
         { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
         { ALT: () => this.CONSUME(tokens.LBrace) },
-        { ALT: () => this.CONSUME(tokens.RBrace) },
+        { ALT: () => this.CONSUME(tokens.ScriptExprEnd) },
         { ALT: () => this.CONSUME(tokens.Hash) },
         { ALT: () => this.CONSUME(tokens.Dot) },
         { ALT: () => this.CONSUME(tokens.At) },
@@ -528,6 +540,10 @@ export class BlocksParser extends EmbeddedActionsParser {
     const nameToken = this.CONSUME(tokens.Identifier);
     const name = nameToken.image;
 
+    if (!name || name.trim() === "") {
+      throw new Error("Inline generic name is required");
+    }
+
     // Consume colon separator
     this.CONSUME(tokens.InlineGenericDelim);
 
@@ -566,7 +582,7 @@ export class BlocksParser extends EmbeddedActionsParser {
           { ALT: () => this.CONSUME2(tokens.InlineGenericDelim) },
           { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
           { ALT: () => this.CONSUME(tokens.LBrace) },
-          { ALT: () => this.CONSUME(tokens.RBrace) },
+          { ALT: () => this.CONSUME(tokens.ScriptExprEnd) },
           { ALT: () => this.CONSUME(tokens.RBracket) },
           { ALT: () => this.CONSUME(tokens.Hash) },
           { ALT: () => this.CONSUME(tokens.Dot) },
@@ -632,7 +648,7 @@ export class BlocksParser extends EmbeddedActionsParser {
       { ALT: () => this.CONSUME(tokens.Newline) },
       { ALT: () => this.CONSUME(tokens.StringValue) },
       { ALT: () => this.CONSUME(tokens.LBrace) },
-      { ALT: () => this.CONSUME(tokens.RBrace) },
+      { ALT: () => this.CONSUME(tokens.ScriptExprEnd) },
       { ALT: () => this.CONSUME(tokens.LBracket) },
       { ALT: () => this.CONSUME(tokens.RBracket) },
       { ALT: () => this.CONSUME(tokens.Hash) },

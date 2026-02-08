@@ -207,10 +207,11 @@ export const StringValue = createToken({
   pattern: /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^\s{}[\]#.%=`!:@?]+/,
 });
 
-// Content token - matches any character sequence
+// Content token - matches any character sequence except special delimiters
+// Uses negative lookahead to exclude ${ sequence
 export const Content = createToken({
   name: "Content",
-  pattern: /[^/*:`${}\[\]@?\n]+/,
+  pattern: /(?!\$\{)[^/*:`{}\[\]@?\n]+/,
 });
 
 export const AnyChar = createToken({

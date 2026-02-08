@@ -1,124 +1,50 @@
-import { EOF as ChevrotainEOF, createToken } from "chevrotain";
+import { createToken, Lexer } from "chevrotain";
 
-// Export EOF token from Chevrotain
-export const EOF = ChevrotainEOF;
-
-// Whitespace and structural tokens
+// ==============================================
+// WHITESPACE
+// ==============================================
 export const Whitespace = createToken({
   name: "Whitespace",
   pattern: /[ \t]+/,
+  group: Lexer.SKIPPED,
 });
 
 export const Newline = createToken({
   name: "Newline",
-  pattern: /\n|\r\n/,
+  pattern: /\r?\n/,
 });
 
-// Block delimiters
-export const BlockCommentStart = createToken({
-  name: "BlockCommentStart",
-  pattern: /\/\*/,
+// ==============================================
+// ESCAPE SEQUENCES (HIGHEST PRIORITY)
+// ==============================================
+export const EscapedBackslash = createToken({
+  name: "EscapedBackslash",
+  pattern: /\\\\/,
 });
 
-export const BlockCommentEnd = createToken({
-  name: "BlockCommentEnd",
-  pattern: /\*\//,
-});
-
-export const BlockCodeDelim = createToken({
-  name: "BlockCodeDelim",
-  pattern: /`{3,}/, // 3 or more backticks
-});
-
-export const BlockGenericDelim = createToken({
-  name: "BlockGenericDelim",
-  pattern: /:{3,}/, // 3 or more colons
-});
-
-// Script expression delimiters for ${ ... }
-export const ScriptExprStart = createToken({
-  name: "ScriptExprStart",
-  pattern: /\$\{/,
-});
-
-export const ScriptExprEnd = createToken({
-  name: "ScriptExprEnd",
-  pattern: /\}/,
-});
-
-// Inline comment (special case - goes to end of line)
-export const InlineCommentStart = createToken({
-  name: "InlineCommentStart",
-  pattern: /\/\//,
-});
-
-// Individual delimiter tokens (for fallback/punctuation)
-export const InlineCodeDelim = createToken({
-  name: "InlineCodeDelim",
-  pattern: /`/,
-});
-
-export const InlineGenericDelim = createToken({
-  name: "InlineGenericDelim",
-  pattern: /:/,
-});
-
-// Attribute tokens
-export const LBracket = createToken({
-  name: "LBracket",
-  pattern: /\[/,
-});
-
-export const RBracket = createToken({
-  name: "RBracket",
-  pattern: /\]/,
-});
-
-export const LBrace = createToken({
-  name: "LBrace",
-  pattern: /{/,
-});
-
-// Note: RBrace is not needed in v1.0 spec since attributes use [...]
-// The } character is only used for closing script expressions ${...}
-// So RBrace is just an alias for ScriptExprEnd
-export const RBrace = ScriptExprEnd;
-
-export const Hash = createToken({
-  name: "Hash",
-  pattern: /#/,
-});
-
-export const Dot = createToken({
-  name: "Dot",
-  pattern: /\./,
-});
-
-export const At = createToken({
-  name: "At",
-  pattern: /@/,
-});
-
-export const Question = createToken({
-  name: "Question",
-  pattern: /\?/,
-});
-
-export const Percent = createToken({
-  name: "Percent",
-  pattern: /%/,
-});
-
-export const Equals = createToken({
-  name: "Equals",
-  pattern: /=/,
-});
-
-// Escape tokens - backslash followed by special characters
-// These must be defined BEFORE their non-escaped counterparts to have priority
 export const EscapedHash = createToken({
   name: "EscapedHash",
   pattern: /\\#/,
+});
+
+export const EscapedDot = createToken({
+  name: "EscapedDot",
+  pattern: /\\\./,
+});
+
+export const EscapedQuestion = createToken({
+  name: "EscapedQuestion",
+  pattern: /\\\?/,
+});
+
+export const EscapedAt = createToken({
+  name: "EscapedAt",
+  pattern: /\\@/,
+});
+
+export const EscapedDollar = createToken({
+  name: "EscapedDollar",
+  pattern: /\\\$/,
 });
 
 export const EscapedBacktick = createToken({
@@ -126,14 +52,14 @@ export const EscapedBacktick = createToken({
   pattern: /\\`/,
 });
 
-export const EscapedExclamation = createToken({
-  name: "EscapedExclamation",
-  pattern: /\\!/,
-});
-
 export const EscapedColon = createToken({
   name: "EscapedColon",
   pattern: /\\:/,
+});
+
+export const EscapedPipe = createToken({
+  name: "EscapedPipe",
+  pattern: /\\\|/,
 });
 
 export const EscapedLBrace = createToken({
@@ -161,42 +87,152 @@ export const EscapedDash = createToken({
   pattern: /\\-/,
 });
 
-export const EscapedDollar = createToken({
-  name: "EscapedDollar",
-  pattern: /\\\$/,
-});
-
-export const EscapedBackslash = createToken({
-  name: "EscapedBackslash",
-  pattern: /\\\\/,
-});
-
-export const EscapedDot = createToken({
-  name: "EscapedDot",
-  pattern: /\\\./,
-});
-
-export const EscapedQuestion = createToken({
-  name: "EscapedQuestion",
-  pattern: /\\\?/,
-});
-
-export const EscapedPipe = createToken({
-  name: "EscapedPipe",
-  pattern: /\\\|/,
-});
-
-export const LineContinuation = createToken({
-  name: "LineContinuation",
-  pattern: /\\(?:\r\n|\n)/,
-});
-
 export const Backslash = createToken({
   name: "Backslash",
   pattern: /\\/,
 });
 
-// Identifier for names, keys, values
+// ==============================================
+// BLOCK DELIMITERS (MULTI-CHAR BEFORE SINGLE)
+// ==============================================
+
+// Comment block: /* ... */
+export const BlockCommentStart = createToken({
+  name: "BlockCommentStart",
+  pattern: /\/\*/,
+});
+
+export const BlockCommentEnd = createToken({
+  name: "BlockCommentEnd",
+  pattern: /\*\//,
+});
+
+// Comment inline: //
+export const InlineCommentStart = createToken({
+  name: "InlineCommentStart",
+  pattern: /\/\//,
+});
+
+// Code block: ``` ... ```
+export const BlockCodeDelim = createToken({
+  name: "BlockCodeDelim",
+  pattern: /```/,
+});
+
+// Generic block: ::: ... :::
+export const BlockGenericDelim = createToken({
+  name: "BlockGenericDelim",
+  pattern: /:{3,}/,  // 3 or more colons
+});
+
+// ==============================================
+// INLINE DELIMITERS
+// ==============================================
+
+// Backtick for code inline: name`content`
+export const Backtick = createToken({
+  name: "Backtick",
+  pattern: /`/,
+});
+
+// Alias for backward compatibility
+export const InlineCodeDelim = Backtick;
+
+// Colon for generic inline: name:content
+export const Colon = createToken({
+  name: "Colon",
+  pattern: /:/,
+});
+
+// Alias for backward compatibility
+export const InlineGenericDelim = Colon;
+
+// ==============================================
+// SCRIPT EXPRESSIONS: ${ ... }
+// ==============================================
+
+// Dollar sign + brace
+export const ScriptExprStart = createToken({
+  name: "ScriptExprStart",
+  pattern: /\$\{/,
+});
+
+export const Dollar = createToken({
+  name: "Dollar",
+  pattern: /\$/,
+});
+
+export const LBrace = createToken({
+  name: "LBrace",
+  pattern: /{/,
+});
+
+export const RBrace = createToken({
+  name: "RBrace",
+  pattern: /}/,
+});
+
+// Alias for backward compatibility
+export const ScriptExprEnd = RBrace;
+
+// ==============================================
+// ATTRIBUTES: [ ... ]
+// ==============================================
+
+export const LBracket = createToken({
+  name: "LBracket",
+  pattern: /\[/,
+});
+
+export const RBracket = createToken({
+  name: "RBracket",
+  pattern: /\]/,
+});
+
+// Attribute markers
+export const Hash = createToken({
+  name: "Hash",
+  pattern: /#/,
+});
+
+export const Dot = createToken({
+  name: "Dot",
+  pattern: /\./,
+});
+
+export const Question = createToken({
+  name: "Question",
+  pattern: /\?/,
+});
+
+export const At = createToken({
+  name: "At",
+  pattern: /@/,
+});
+
+export const Percent = createToken({
+  name: "Percent",
+  pattern: /%/,
+});
+
+export const Equals = createToken({
+  name: "Equals",
+  pattern: /=/,
+});
+
+// ==============================================
+// METADATA: --- ... ---
+// ==============================================
+
+export const MetadataDelim = createToken({
+  name: "MetadataDelim",
+  pattern: /---/,
+});
+
+// ==============================================
+// IDENTIFIERS AND VALUES
+// ==============================================
+
 export const Identifier = createToken({
   name: "Identifier",
   pattern: /[a-zA-Z_][a-zA-Z0-9_-]*/,
@@ -204,14 +240,21 @@ export const Identifier = createToken({
 
 export const StringValue = createToken({
   name: "StringValue",
-  pattern: /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^\s{}[\]#.%=`!:@?]+/,
+  pattern: /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/,
 });
 
-// Content token - matches any character sequence except special delimiters
-// Uses negative lookahead to exclude ${ sequence
+export const Number = createToken({
+  name: "Number",
+  pattern: /[0-9]+(\.[0-9]+)?/,
+});
+
+// ==============================================
+// CONTENT (CATCH-ALL)
+// ==============================================
+
 export const Content = createToken({
   name: "Content",
-  pattern: /(?!\$\{)[^/*:`{}\[\]@?\n]+/,
+  pattern: /[^\s\[\]\{\}\(\)#\.\?@=`:\$\|\\\/]+/,
 });
 
 export const AnyChar = createToken({
@@ -219,68 +262,72 @@ export const AnyChar = createToken({
   pattern: /./,
 });
 
-// All tokens array for the lexer
-// IMPORTANT: Order matters! Specific patterns must be tested BEFORE generic ones.
-// - Escape sequences FIRST (highest priority)
-// - Block delimiters (3+ chars) BEFORE inline delimiters
-// - Script expressions ${...} must be BEFORE { and }
+// ==============================================
+// TOKEN LIST (ORDER MATTERS!)
+// ==============================================
+
 export const allTokens = [
-  // Whitespace and newlines first
+  // Whitespace
   Whitespace,
   Newline,
 
-  // === ESCAPE SEQUENCES (HIGHEST PRIORITY) ===
-  EscapedBackslash, // \\ must be BEFORE single backslash
-  LineContinuation, // \<newline> for line continuation
-  EscapedHash, // \#
-  EscapedBacktick, // \`
-  EscapedExclamation, // \!
-  EscapedColon, // \:
-  EscapedLBrace, // \{
-  EscapedRBrace, // \}
-  EscapedLBracket, // \[
-  EscapedRBracket, // \]
-  EscapedDash, // \-
-  EscapedDollar, // \$
-  EscapedDot, // \.
-  EscapedQuestion, // \?
-  EscapedPipe, // \|
-  Backslash, // \ (for unknown escapes or trailing backslash)
+  // Escape sequences (HIGHEST PRIORITY)
+  EscapedBackslash,
+  EscapedHash,
+  EscapedDot,
+  EscapedQuestion,
+  EscapedAt,
+  EscapedDollar,
+  EscapedBacktick,
+  EscapedColon,
+  EscapedPipe,
+  EscapedLBrace,
+  EscapedRBrace,
+  EscapedLBracket,
+  EscapedRBracket,
+  EscapedDash,
 
-  // === BLOCK DELIMITERS (3+ characters) BEFORE INLINE DELIMITERS ===
-  BlockCommentStart, // /*
-  BlockCommentEnd, // */
-  BlockCodeDelim, // `{3,} must be tested BEFORE `
-  BlockGenericDelim, // :{3,} must be tested BEFORE :
+  // Multi-char tokens (BEFORE single chars)
+  BlockCommentStart,
+  BlockCommentEnd,
+  InlineCommentStart,
+  BlockCodeDelim,
+  BlockGenericDelim,
+  ScriptExprStart,
+  MetadataDelim,
 
-  // === SCRIPT EXPRESSIONS (BEFORE BRACES) ===
-  ScriptExprStart, // ${ must be tested BEFORE {
-  ScriptExprEnd, // } used for both script end and attributes
-
-  // === INLINE COMMENT (special case) ===
-  InlineCommentStart, // //
-
-  // === INDIVIDUAL DELIMITERS (for punctuation fallback) ===
-  InlineCodeDelim, // ` (single backtick as punctuation)
-  InlineGenericDelim, // : (single colon as punctuation)
-
-  // Attribute tokens
+  // Single char delimiters
+  Backtick,
+  Colon,
+  Dollar,
+  LBrace,
+  RBrace,
   LBracket,
   RBracket,
-  LBrace,
-  // Note: RBrace is an alias for ScriptExprEnd, not a separate token
   Hash,
   Dot,
-  At,
   Question,
+  At,
   Percent,
   Equals,
+  Backslash,
 
-  // Identifiers and values
-  Identifier,
+  // Values
   StringValue,
+  Number,
+  Identifier,
 
-  // Catch-all tokens (last)
+  // Catch-all
   Content,
   AnyChar,
 ];
+
+// ==============================================
+// LEXER
+// ==============================================
+
+export const BlocksLexer = new Lexer(allTokens);
+
+export function createLexer() {
+  return BlocksLexer;
+}

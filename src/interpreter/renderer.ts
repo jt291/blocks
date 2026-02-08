@@ -51,7 +51,9 @@ export class Renderer {
   private renderDocumentChild(
     node: BlockNode | InlineNode | ScriptNode | TextNode,
   ): string {
-    switch (node.type) {
+    const nodeType = node.type;
+    
+    switch (nodeType) {
       case "Script":
         return this.renderScript(node as ScriptNode);
 
@@ -85,9 +87,11 @@ export class Renderer {
    * Render a generic block child node
    */
   private renderGenericBlockChild(
-    node: BlockNode | InlineNode | TextNode,
+    node: BlockNode | InlineNode | ScriptNode | TextNode,
   ): string {
-    switch (node.type) {
+    const nodeType = node.type;
+    
+    switch (nodeType) {
       case "Script":
         return this.renderScript(node as ScriptNode);
 
@@ -120,8 +124,12 @@ export class Renderer {
   /**
    * Render a generic inline child node
    */
-  private renderGenericInlineChild(node: InlineNode | TextNode): string {
-    switch (node.type) {
+  private renderGenericInlineChild(
+    node: InlineNode | ScriptNode | TextNode,
+  ): string {
+    const nodeType = node.type;
+    
+    switch (nodeType) {
       case "Script":
         return this.renderScript(node as ScriptNode);
 

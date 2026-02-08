@@ -42,13 +42,15 @@ export class Interpreter {
   private visitDocumentChild(
     node: BlockNode | InlineNode | ScriptNode | TextNode,
   ): BlockNode | InlineNode | ScriptNode | TextNode {
-    if (node.type === "Script") {
+    const nodeType = node.type;
+    
+    if (nodeType === "Script") {
       return this.evaluateScript(node as ScriptNode);
     }
-    if (node.type === "GenericBlock") {
+    if (nodeType === "GenericBlock") {
       return this.visitGenericBlock(node as GenericBlockNode);
     }
-    if (node.type === "GenericInline") {
+    if (nodeType === "GenericInline") {
       return this.visitGenericInline(node as GenericInlineNode);
     }
     // Text, comments, code blocks don't need evaluation
@@ -69,15 +71,17 @@ export class Interpreter {
    * Visit a generic block child node
    */
   private visitGenericBlockChild(
-    node: BlockNode | InlineNode | TextNode,
-  ): BlockNode | InlineNode | TextNode {
-    if (node.type === "Script") {
+    node: BlockNode | InlineNode | ScriptNode | TextNode,
+  ): BlockNode | InlineNode | ScriptNode | TextNode {
+    const nodeType = node.type;
+    
+    if (nodeType === "Script") {
       return this.evaluateScript(node as ScriptNode);
     }
-    if (node.type === "GenericBlock") {
+    if (nodeType === "GenericBlock") {
       return this.visitGenericBlock(node as GenericBlockNode);
     }
-    if (node.type === "GenericInline") {
+    if (nodeType === "GenericInline") {
       return this.visitGenericInline(node as GenericInlineNode);
     }
     return node;
@@ -97,12 +101,14 @@ export class Interpreter {
    * Visit a generic inline child node
    */
   private visitGenericInlineChild(
-    node: InlineNode | TextNode,
-  ): InlineNode | TextNode {
-    if (node.type === "Script") {
+    node: InlineNode | ScriptNode | TextNode,
+  ): InlineNode | ScriptNode | TextNode {
+    const nodeType = node.type;
+    
+    if (nodeType === "Script") {
       return this.evaluateScript(node as ScriptNode);
     }
-    if (node.type === "GenericInline") {
+    if (nodeType === "GenericInline") {
       return this.visitGenericInline(node as GenericInlineNode);
     }
     return node;

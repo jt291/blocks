@@ -63,7 +63,26 @@ export class BlocksParser extends EmbeddedActionsParser {
           { ALT: () => this.SUBRULE(this.blockElement) },
           { ALT: () => this.SUBRULE(this.inlineElement) },
           { ALT: () => this.SUBRULE(this.scriptExpression) },
-          { ALT: () => this.SUBRULE(this.textElement) },
+          {
+            GATE: () => {
+              // Only parse as text if it's NOT an inline element pattern
+              const la1 = this.LA(1);
+              const la2 = this.LA(2);
+              
+              // Don't consume if it matches inline patterns
+              if (la1.tokenType === tokens.Identifier) {
+                if (la2.tokenType === tokens.Backtick || la2.tokenType === tokens.Colon) {
+                  return false; // Let inlineElement handle it
+                }
+              }
+              if (la1.tokenType === tokens.InlineCommentStart) {
+                return false; // Let inlineElement handle it
+              }
+              
+              return true; // Parse as text
+            },
+            ALT: () => this.SUBRULE(this.textElement)
+          },
         ]);
         if (child) children.push(child);
       });
@@ -361,7 +380,26 @@ export class BlocksParser extends EmbeddedActionsParser {
           { ALT: () => this.SUBRULE(this.blockElement) },
           { ALT: () => this.SUBRULE(this.inlineElement) },
           { ALT: () => this.SUBRULE(this.scriptExpression) },
-          { ALT: () => this.SUBRULE(this.textElement) },
+          {
+            GATE: () => {
+              // Only parse as text if it's NOT an inline element pattern
+              const la1 = this.LA(1);
+              const la2 = this.LA(2);
+              
+              // Don't consume if it matches inline patterns
+              if (la1.tokenType === tokens.Identifier) {
+                if (la2.tokenType === tokens.Backtick || la2.tokenType === tokens.Colon) {
+                  return false; // Let inlineElement handle it
+                }
+              }
+              if (la1.tokenType === tokens.InlineCommentStart) {
+                return false; // Let inlineElement handle it
+              }
+              
+              return true; // Parse as text
+            },
+            ALT: () => this.SUBRULE(this.textElement)
+          },
         ]);
         if (child) content.push(child);
       },
@@ -625,44 +663,67 @@ export class BlocksParser extends EmbeddedActionsParser {
     return node;
   });
 
-  // Text element
+  // Text element - consume all tokens that aren't structural delimiters
   private textElement = this.RULE("textElement", (): TextNode => {
-    const token = this.OR([
-      // Escaped tokens - treat as literal text with their unescaped value
-      { ALT: () => this.CONSUME(tokens.EscapedHash) },
-      { ALT: () => this.CONSUME(tokens.EscapedBacktick) },
-      { ALT: () => this.CONSUME(tokens.EscapedColon) },
-      { ALT: () => this.CONSUME(tokens.EscapedLBrace) },
-      { ALT: () => this.CONSUME(tokens.EscapedRBrace) },
-      { ALT: () => this.CONSUME(tokens.EscapedLBracket) },
-      { ALT: () => this.CONSUME(tokens.EscapedRBracket) },
-      { ALT: () => this.CONSUME(tokens.EscapedDash) },
-      { ALT: () => this.CONSUME(tokens.EscapedDollar) },
-      { ALT: () => this.CONSUME(tokens.EscapedBackslash) },
-      { ALT: () => this.CONSUME(tokens.EscapedDot) },
-      { ALT: () => this.CONSUME(tokens.EscapedQuestion) },
-      { ALT: () => this.CONSUME(tokens.Backslash) },
-      // Regular text tokens
-      { ALT: () => this.CONSUME(tokens.Content) },
-      { ALT: () => this.CONSUME(tokens.Whitespace) },
-      { ALT: () => this.CONSUME(tokens.Newline) },
-      { ALT: () => this.CONSUME(tokens.StringValue) },
-      { ALT: () => this.CONSUME(tokens.LBrace) },
-      { ALT: () => this.CONSUME(tokens.ScriptExprEnd) },
-      { ALT: () => this.CONSUME(tokens.LBracket) },
-      { ALT: () => this.CONSUME(tokens.RBracket) },
-      { ALT: () => this.CONSUME(tokens.Hash) },
-      { ALT: () => this.CONSUME(tokens.Dot) },
-      { ALT: () => this.CONSUME(tokens.At) },
-      { ALT: () => this.CONSUME(tokens.Question) },
-      { ALT: () => this.CONSUME(tokens.Percent) },
-      { ALT: () => this.CONSUME(tokens.Equals) },
-      { ALT: () => this.CONSUME(tokens.AnyChar) },
-    ]);
+    const textTokens: IToken[] = [];
+    
+    this.AT_LEAST_ONE({
+      GATE: () => {
+        const la = this.LA(1);
+        // Stop at structural delimiters (block/inline/script starts)
+        return (
+          la.tokenType !== tokens.BlockCodeDelim &&
+          la.tokenType !== tokens.BlockGenericDelim &&
+          la.tokenType !== tokens.BlockCommentStart &&
+          la.tokenType !== tokens.InlineCommentStart &&
+          la.tokenType !== tokens.ScriptExprStart
+        );
+      },
+      DEF: () => {
+        const token = this.OR([
+          // Escaped tokens - treat as literal text with their unescaped value
+          { ALT: () => this.CONSUME(tokens.EscapedHash) },
+          { ALT: () => this.CONSUME(tokens.EscapedBacktick) },
+          { ALT: () => this.CONSUME(tokens.EscapedColon) },
+          { ALT: () => this.CONSUME(tokens.EscapedLBrace) },
+          { ALT: () => this.CONSUME(tokens.EscapedRBrace) },
+          { ALT: () => this.CONSUME(tokens.EscapedLBracket) },
+          { ALT: () => this.CONSUME(tokens.EscapedRBracket) },
+          { ALT: () => this.CONSUME(tokens.EscapedDash) },
+          { ALT: () => this.CONSUME(tokens.EscapedDollar) },
+          { ALT: () => this.CONSUME(tokens.EscapedBackslash) },
+          { ALT: () => this.CONSUME(tokens.EscapedDot) },
+          { ALT: () => this.CONSUME(tokens.EscapedQuestion) },
+          { ALT: () => this.CONSUME(tokens.Backslash) },
+          // Regular text tokens
+          { ALT: () => this.CONSUME(tokens.Content) },
+          { ALT: () => this.CONSUME(tokens.Identifier) },
+          { ALT: () => this.CONSUME(tokens.Whitespace) },
+          { ALT: () => this.CONSUME(tokens.Newline) },
+          { ALT: () => this.CONSUME(tokens.StringValue) },
+          { ALT: () => this.CONSUME(tokens.Number) },
+          { ALT: () => this.CONSUME(tokens.Colon) },
+          { ALT: () => this.CONSUME(tokens.Backtick) },
+          { ALT: () => this.CONSUME(tokens.LBrace) },
+          { ALT: () => this.CONSUME(tokens.ScriptExprEnd) },
+          { ALT: () => this.CONSUME(tokens.LBracket) },
+          { ALT: () => this.CONSUME(tokens.RBracket) },
+          { ALT: () => this.CONSUME(tokens.Hash) },
+          { ALT: () => this.CONSUME(tokens.Dot) },
+          { ALT: () => this.CONSUME(tokens.At) },
+          { ALT: () => this.CONSUME(tokens.Question) },
+          { ALT: () => this.CONSUME(tokens.Percent) },
+          { ALT: () => this.CONSUME(tokens.Equals) },
+          { ALT: () => this.CONSUME(tokens.Dollar) },
+          { ALT: () => this.CONSUME(tokens.AnyChar) },
+        ]);
+        textTokens.push(token);
+      },
+    });
 
     const node: TextNode = {
       type: "Text",
-      value: processTokenImage(token),
+      value: textTokens.map((t) => processTokenImage(t)).join(""),
     };
 
     return node;

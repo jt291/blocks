@@ -1,10 +1,10 @@
 import type {
+  BlockNode,
   DocumentNode,
-  ScriptNode,
   GenericBlockNode,
   GenericInlineNode,
-  BlockNode,
   InlineNode,
+  ScriptNode,
   TextNode,
 } from "../parser/ast.js";
 
@@ -43,7 +43,7 @@ export class Interpreter {
     node: BlockNode | InlineNode | ScriptNode | TextNode,
   ): BlockNode | InlineNode | ScriptNode | TextNode {
     const nodeType = node.type;
-    
+
     if (nodeType === "Script") {
       return this.evaluateScript(node as ScriptNode);
     }
@@ -74,7 +74,7 @@ export class Interpreter {
     node: BlockNode | InlineNode | ScriptNode | TextNode,
   ): BlockNode | InlineNode | ScriptNode | TextNode {
     const nodeType = node.type;
-    
+
     if (nodeType === "Script") {
       return this.evaluateScript(node as ScriptNode);
     }
@@ -104,7 +104,7 @@ export class Interpreter {
     node: InlineNode | ScriptNode | TextNode,
   ): InlineNode | ScriptNode | TextNode {
     const nodeType = node.type;
-    
+
     if (nodeType === "Script") {
       return this.evaluateScript(node as ScriptNode);
     }

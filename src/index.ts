@@ -1,4 +1,6 @@
 import type { IToken } from "chevrotain";
+import { evaluate } from "./interpreter/interpreter.js";
+import { render } from "./interpreter/renderer.js";
 import { createLexer } from "./lexer/lexer.js";
 import type {
   BlockNode,
@@ -9,28 +11,23 @@ import type {
   TextNode,
 } from "./parser/ast.js";
 import { createParser } from "./parser/parser.js";
-import { evaluate } from "./interpreter/interpreter.js";
-import { render } from "./interpreter/renderer.js";
 
-// Export lexer - use explicit exports to avoid conflicts between lexer.ts and tokens.ts
-export { createLexer, BlocksLexer as BlocksLexerClass } from "./lexer/lexer.js";
-export { allTokens } from "./lexer/tokens.js";
-
-// Export parser and AST
-export * from "./parser/ast.js";
-export * from "./parser/parser.js";
-
-// Export preprocessor
-export * from "./preprocessor/index.js";
-
+export type { EvaluationContext, RenderOptions } from "./interpreter/index.js";
 // Export interpreter
 export {
-  Interpreter,
   evaluate,
+  Interpreter,
   Renderer,
   render,
 } from "./interpreter/index.js";
-export type { EvaluationContext, RenderOptions } from "./interpreter/index.js";
+// Export lexer - use explicit exports to avoid conflicts between lexer.ts and tokens.ts
+export { BlocksLexer as BlocksLexerClass, createLexer } from "./lexer/lexer.js";
+export { allTokens } from "./lexer/tokens.js";
+// Export parser and AST
+export * from "./parser/ast.js";
+export * from "./parser/parser.js";
+// Export preprocessor
+export * from "./preprocessor/index.js";
 
 export interface ParseResult {
   ast: DocumentNode;
@@ -231,7 +228,9 @@ export function process(
   }
 
   // Evaluate - convert context to EvaluationContext
-  const evalContext = context ? { variables: context.variables || {} } : undefined;
+  const evalContext = context
+    ? { variables: context.variables || {} }
+    : undefined;
   const evaluated = evaluate(ast, evalContext);
 
   // Render

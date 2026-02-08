@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parse, evaluate, render, process } from "../src/index";
+import { evaluate, parse, process, render } from "../src/index";
 
 describe("Interpreter", () => {
   describe("Script evaluation", () => {
@@ -124,9 +124,12 @@ describe("Interpreter", () => {
     });
 
     it("should process with variables", () => {
-      const result = process("Price $${price}, Qty ${qty}, Total ${price*qty}", {
-        variables: { price: 10, qty: 5 },
-      });
+      const result = process(
+        "Price $${price}, Qty ${qty}, Total ${price*qty}",
+        {
+          variables: { price: 10, qty: 5 },
+        },
+      );
 
       expect(result.errors).toHaveLength(0);
       expect(result.output).toContain("10");

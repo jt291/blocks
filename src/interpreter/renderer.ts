@@ -1,15 +1,15 @@
 import type {
-  DocumentNode,
-  ScriptNode,
-  TextNode,
-  GenericBlockNode,
-  GenericInlineNode,
+  BlockNode,
   CodeBlockNode,
   CodeInlineNode,
   CommentBlockNode,
   CommentInlineNode,
-  BlockNode,
+  DocumentNode,
+  GenericBlockNode,
+  GenericInlineNode,
   InlineNode,
+  ScriptNode,
+  TextNode,
 } from "../parser/ast.js";
 
 /**
@@ -42,7 +42,9 @@ export class Renderer {
    * Render document to string
    */
   render(ast: DocumentNode): string {
-    return ast.children.map((child) => this.renderDocumentChild(child)).join("");
+    return ast.children
+      .map((child) => this.renderDocumentChild(child))
+      .join("");
   }
 
   /**
@@ -52,7 +54,7 @@ export class Renderer {
     node: BlockNode | InlineNode | ScriptNode | TextNode,
   ): string {
     const nodeType = node.type;
-    
+
     switch (nodeType) {
       case "Script":
         return this.renderScript(node as ScriptNode);
@@ -90,7 +92,7 @@ export class Renderer {
     node: BlockNode | InlineNode | ScriptNode | TextNode,
   ): string {
     const nodeType = node.type;
-    
+
     switch (nodeType) {
       case "Script":
         return this.renderScript(node as ScriptNode);
@@ -128,7 +130,7 @@ export class Renderer {
     node: InlineNode | ScriptNode | TextNode,
   ): string {
     const nodeType = node.type;
-    
+
     switch (nodeType) {
       case "Script":
         return this.renderScript(node as ScriptNode);

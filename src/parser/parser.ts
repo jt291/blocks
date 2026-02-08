@@ -318,13 +318,12 @@ export class BlocksParser extends EmbeddedActionsParser {
       this.CONSUME(tokens.Whitespace);
     });
 
-    // Consume name (required)
-    const nameToken = this.CONSUME(tokens.Identifier);
-    const name = nameToken.image;
-
-    if (!name || name.trim() === "") {
-      throw new Error("Generic block name is required");
-    }
+    // APRÈS (optionnel)
+    let name: string | undefined;
+    this.OPTION(() => {
+      const nameToken = this.CONSUME(tokens.Identifier);
+      name = nameToken.image;
+    });
 
     // Skip whitespace after name
     this.MANY2(() => {

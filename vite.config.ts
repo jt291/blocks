@@ -2,6 +2,9 @@ import { defineConfig } from "vitest/config";
 import { resolve } from "node:path";
 
 export default defineConfig({
+  server: {
+    open: '/public/playground.html'
+  },
   build: {
     emptyOutDir: false, // Don't clear dist directory
     lib: {

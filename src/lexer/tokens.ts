@@ -30,46 +30,20 @@ export const BlockCodeDelim = createToken({
   pattern: /`{3,}/, // 3 or more backticks
 });
 
-export const BlockScriptDelim = createToken({
-  name: "BlockScriptDelim",
-  pattern: /!{3,}/, // 3 or more exclamation marks
-});
-
 export const BlockGenericDelim = createToken({
   name: "BlockGenericDelim",
   pattern: /:{3,}/, // 3 or more colons
 });
 
-// Inline delimiters - Complete patterns with attributes (MUST be before patterns without attributes)
-export const InlineCodeCompleteWithAttrs = createToken({
-  name: "InlineCodeCompleteWithAttrs",
-  pattern: /`[^`\n]*`\s*\{[^}]+\}/,
+// Script expression delimiters for ${ ... }
+export const ScriptExprStart = createToken({
+  name: "ScriptExprStart",
+  pattern: /\$\{/,
 });
 
-export const InlineScriptCompleteWithAttrs = createToken({
-  name: "InlineScriptCompleteWithAttrs",
-  pattern: /![^!\n]*!\s*\{[^}]+\}/,
-});
-
-export const InlineGenericCompleteWithAttrs = createToken({
-  name: "InlineGenericCompleteWithAttrs",
-  pattern: /:[^:\n]*:\s*\{[^}]+\}/,
-});
-
-// Inline delimiters - Complete patterns without attributes
-export const InlineCodeComplete = createToken({
-  name: "InlineCodeComplete",
-  pattern: /`[^`\n]*`/,
-});
-
-export const InlineScriptComplete = createToken({
-  name: "InlineScriptComplete",
-  pattern: /![^!\n]*!/,
-});
-
-export const InlineGenericComplete = createToken({
-  name: "InlineGenericComplete",
-  pattern: /:[^:\n]*:/,
+export const ScriptExprEnd = createToken({
+  name: "ScriptExprEnd",
+  pattern: /\}/,
 });
 
 // Inline comment (special case - goes to end of line)
@@ -84,17 +58,22 @@ export const InlineCodeDelim = createToken({
   pattern: /`/,
 });
 
-export const InlineScriptDelim = createToken({
-  name: "InlineScriptDelim",
-  pattern: /!/,
-});
-
 export const InlineGenericDelim = createToken({
   name: "InlineGenericDelim",
   pattern: /:/,
 });
 
 // Attribute tokens
+export const LBracket = createToken({
+  name: "LBracket",
+  pattern: /\[/,
+});
+
+export const RBracket = createToken({
+  name: "RBracket",
+  pattern: /\]/,
+});
+
 export const LBrace = createToken({
   name: "LBrace",
   pattern: /{/,
@@ -113,6 +92,16 @@ export const Hash = createToken({
 export const Dot = createToken({
   name: "Dot",
   pattern: /\./,
+});
+
+export const At = createToken({
+  name: "At",
+  pattern: /@/,
+});
+
+export const Question = createToken({
+  name: "Question",
+  pattern: /\?/,
 });
 
 export const Percent = createToken({
@@ -215,13 +204,13 @@ export const Identifier = createToken({
 
 export const StringValue = createToken({
   name: "StringValue",
-  pattern: /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^\s{}#.%=`!:]+/,
+  pattern: /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^\s{}[\]#.%=`!:@?]+/,
 });
 
 // Content token - matches any character sequence
 export const Content = createToken({
   name: "Content",
-  pattern: /[^/*:`!{}\n]+/,
+  pattern: /[^/*:`${}\[\]@?\n]+/,
 });
 
 export const AnyChar = createToken({
@@ -233,8 +222,7 @@ export const AnyChar = createToken({
 // IMPORTANT: Order matters! Specific patterns must be tested BEFORE generic ones.
 // - Escape sequences FIRST (highest priority)
 // - Block delimiters (3+ chars) BEFORE inline delimiters
-// - Complete inline patterns WITH attributes BEFORE patterns WITHOUT attributes
-// - Complete inline patterns BEFORE individual delimiters
+// - Script expressions ${...} must be BEFORE { and }
 export const allTokens = [
   // Whitespace and newlines first
   Whitespace,
@@ -262,32 +250,28 @@ export const allTokens = [
   BlockCommentStart, // /*
   BlockCommentEnd, // */
   BlockCodeDelim, // `{3,} must be tested BEFORE `
-  BlockScriptDelim, // !{3,} must be tested BEFORE !
   BlockGenericDelim, // :{3,} must be tested BEFORE :
 
-  // === COMPLETE INLINE PATTERNS (WITH ATTRIBUTES) - Highest priority ===
-  InlineCodeCompleteWithAttrs, // `content`{attrs}
-  InlineScriptCompleteWithAttrs, // !content!{attrs}
-  InlineGenericCompleteWithAttrs, // :content:{attrs}
-
-  // === COMPLETE INLINE PATTERNS (WITHOUT ATTRIBUTES) ===
-  InlineCodeComplete, // `content`
-  InlineScriptComplete, // !content!
-  InlineGenericComplete, // :content:
+  // === SCRIPT EXPRESSIONS (BEFORE BRACES) ===
+  ScriptExprStart, // ${ must be tested BEFORE {
+  ScriptExprEnd, // } used for both script end and attributes
 
   // === INLINE COMMENT (special case) ===
   InlineCommentStart, // //
 
   // === INDIVIDUAL DELIMITERS (for punctuation fallback) ===
   InlineCodeDelim, // ` (single backtick as punctuation)
-  InlineScriptDelim, // ! (single exclamation as punctuation)
   InlineGenericDelim, // : (single colon as punctuation)
 
   // Attribute tokens
+  LBracket,
+  RBracket,
   LBrace,
   RBrace,
   Hash,
   Dot,
+  At,
+  Question,
   Percent,
   Equals,
 

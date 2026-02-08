@@ -124,12 +124,9 @@ describe("Interpreter", () => {
     });
 
     it("should process with variables", () => {
-      const result = process(
-        "Price $${price}, Qty ${qty}, Total ${price*qty}",
-        {
-          variables: { price: 10, qty: 5 },
-        },
-      );
+      const result = process("Price $ ${price}, Qty ${qty}, Total ${price*qty}", {
+        variables: { price: 10, qty: 5 },
+      });
 
       expect(result.errors).toHaveLength(0);
       expect(result.output).toContain("10");

@@ -18,6 +18,17 @@ export interface EvaluationContext {
 
 /**
  * Interpreter evaluates script expressions in the AST
+ * 
+ * ⚠️ SECURITY WARNING: This interpreter uses the Function constructor to evaluate
+ * JavaScript expressions. This means it can execute arbitrary JavaScript code provided
+ * in script expressions. Only use this with trusted input, or implement additional
+ * sandboxing/validation before passing user input to the interpreter.
+ * 
+ * Consider these security best practices:
+ * - Validate and sanitize all input before parsing
+ * - Restrict the variables available in the context
+ * - Run in a sandboxed environment if processing untrusted input
+ * - Monitor for suspicious expressions or patterns
  */
 export class Interpreter {
   private context: EvaluationContext;

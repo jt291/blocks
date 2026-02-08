@@ -160,7 +160,7 @@ export class Renderer {
       return String(node.result);
     }
     // Fallback: return original expression
-    return `\${${node.content}}`;
+    return "${" + node.content + "}";
   }
 
   /**

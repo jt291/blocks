@@ -9,6 +9,8 @@ import type {
   TextNode,
 } from "./parser/ast.js";
 import { createParser } from "./parser/parser.js";
+import { evaluate } from "./interpreter/interpreter.js";
+import { render } from "./interpreter/renderer.js";
 
 // Export lexer - use explicit exports to avoid conflicts between lexer.ts and tokens.ts
 export { createLexer, BlocksLexer as BlocksLexerClass } from "./lexer/lexer.js";
@@ -20,6 +22,15 @@ export * from "./parser/parser.js";
 
 // Export preprocessor
 export * from "./preprocessor/index.js";
+
+// Export interpreter
+export {
+  Interpreter,
+  evaluate,
+  Renderer,
+  render,
+} from "./interpreter/index.js";
+export type { EvaluationContext, RenderOptions } from "./interpreter/index.js";
 
 export interface ParseResult {
   ast: DocumentNode;
@@ -199,4 +210,36 @@ export function parse(input: string): ParseResult {
       errors: [errorMessage],
     };
   }
+}
+
+/**
+ * Process Blocks source code: Parse → Evaluate → Render
+ */
+export function process(
+  source: string,
+  context?: { variables?: Record<string, any> },
+): {
+  output: string;
+  ast: any;
+  errors: any[];
+} {
+  // Parse
+  const { ast, errors } = parse(source);
+
+  if (errors.length > 0) {
+    return { output: "", ast, errors };
+  }
+
+  // Evaluate - convert context to EvaluationContext
+  const evalContext = context ? { variables: context.variables || {} } : undefined;
+  const evaluated = evaluate(ast, evalContext);
+
+  // Render
+  const output = render(evaluated);
+
+  return {
+    output,
+    ast: evaluated,
+    errors: [],
+  };
 }

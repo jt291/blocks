@@ -98,7 +98,7 @@
   </div>
 
   <script type="module">
-    import { parse, evaluate, render } from './src/index.ts';
+    import { evaluate, parse, render } from './src/index.ts';
     import { createLexer } from './src/lexer/lexer.ts';
 
     // Examples - All Spec v1.0 compliant
@@ -188,7 +188,6 @@ Total: $\${(items.productA+items.productB)*1.1}
     };
 
     // State
-    let currentTokens = [];
     let currentAST = null;
     let currentOutput = '';
     let nodeIdCounter = 0;
@@ -212,11 +211,15 @@ Total: $\${(items.productA+items.productB)*1.1}
         const targetTab = tab.dataset.tab;
         
         // Update active tab
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        for (const t of document.querySelectorAll('.tab')) {
+          t.classList.remove('active');
+        }
         tab.classList.add('active');
         
         // Update active content
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        for (const c of document.querySelectorAll('.tab-content')) {
+          c.classList.remove('active');
+        }
         document.getElementById(`${targetTab}Tab`).classList.add('active');
       });
     });
@@ -264,7 +267,6 @@ Total: $\${(items.productA+items.productB)*1.1}
     clearBtn.addEventListener('click', () => {
       sourceInput.value = '';
       variablesInput.value = '{}';
-      currentTokens = [];
       currentAST = null;
       currentOutput = '';
       outputDisplay.textContent = '';
@@ -300,7 +302,6 @@ Total: $\${(items.productA+items.productB)*1.1}
         // Tokenize
         const lexer = createLexer();
         const { tokens } = lexer.tokenize(source);
-        currentTokens = tokens;
 
         // Parse
         const result = parse(source);

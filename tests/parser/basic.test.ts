@@ -27,7 +27,7 @@ describe("Parser - Basic", () => {
 
   it("should parse code block", () => {
     const lexer = createLexer();
-    const { tokens } = lexer.tokenize("```#python\nprint('hello')\n```");
+    const { tokens } = lexer.tokenize("```python\nprint('hello')\n```");
     const ast = parse(tokens);
 
     expect(ast.type).toBe("Document");
@@ -38,7 +38,7 @@ describe("Parser - Basic", () => {
 
   it("should parse generic block", () => {
     const lexer = createLexer();
-    const { tokens } = lexer.tokenize(":::#section\ncontent\n:::");
+    const { tokens } = lexer.tokenize(":::section\ncontent\n:::");
     const ast = parse(tokens);
 
     const block = ast.children.find((c) => c.type === "GenericBlock");
@@ -48,7 +48,7 @@ describe("Parser - Basic", () => {
 
   it("should parse inline code", () => {
     const lexer = createLexer();
-    const { tokens } = lexer.tokenize("`code`");
+    const { tokens } = lexer.tokenize("code`code`");
     const ast = parse(tokens);
 
     const inline = ast.children.find((c) => c.type === "CodeInline");

@@ -9,7 +9,7 @@ import { parse } from "../../src/parser/visitor";
 describe("Parser - Nesting", () => {
   // TODO: Fix nested block parsing - currently the parser has issues with nesting
   it.skip("should parse nested blocks", () => {
-    const source = ":::#outer\n:::#inner\ncontent\n:::\n:::";
+    const source = ":::outer\n:::inner\ncontent\n:::\n:::";
 
     const lexer = createLexer();
     const { tokens } = lexer.tokenize(source);
@@ -23,7 +23,7 @@ describe("Parser - Nesting", () => {
   });
 
   it("should parse inline inside block", () => {
-    const source = ":::#section\nThis is `inline code` inside a block.\n:::";
+    const source = ":::section\nThis is code`inline code` inside a block.\n:::";
 
     const lexer = createLexer();
     const { tokens } = lexer.tokenize(source);

@@ -19,12 +19,12 @@ describe("Lexer", () => {
     expect(result.tokens[0].tokenType).toBe(tokens.BlockCodeDelim);
   });
 
-  it("should tokenize script block delimiters", () => {
+  it("should tokenize script expression delimiters", () => {
     const lexer = createLexer();
-    const result = lexer.tokenize("!!! script !!!");
+    const result = lexer.tokenize("${expression}");
 
     expect(result.tokens.length).toBeGreaterThan(0);
-    expect(result.tokens[0].tokenType).toBe(tokens.BlockScriptDelim);
+    expect(result.tokens[0].tokenType).toBe(tokens.ScriptExprStart);
   });
 
   it("should tokenize generic block delimiters", () => {
@@ -51,35 +51,30 @@ describe("Lexer", () => {
     expect(result.tokens[0].tokenType).toBe(tokens.InlineCommentStart);
   });
 
-  it("should tokenize inline code complete", () => {
+  it("should tokenize inline code with name", () => {
     const lexer = createLexer();
-    const result = lexer.tokenize("`code`");
+    const result = lexer.tokenize("code`content`");
 
-    expect(result.tokens[0].tokenType).toBe(tokens.InlineCodeComplete);
+    expect(result.tokens.length).toBeGreaterThan(0);
+    expect(result.tokens.some((t) => t.tokenType === tokens.Backtick)).toBe(true);
   });
 
-  it("should tokenize inline script complete", () => {
+  it("should tokenize inline generic with name", () => {
     const lexer = createLexer();
-    const result = lexer.tokenize("!script!");
+    const result = lexer.tokenize("span:text:");
 
-    expect(result.tokens[0].tokenType).toBe(tokens.InlineScriptComplete);
-  });
-
-  it("should tokenize inline generic complete", () => {
-    const lexer = createLexer();
-    const result = lexer.tokenize(":text:");
-
-    expect(result.tokens[0].tokenType).toBe(tokens.InlineGenericComplete);
+    expect(result.tokens.length).toBeGreaterThan(0);
+    expect(result.tokens.some((t) => t.tokenType === tokens.Colon)).toBe(true);
   });
 
   it("should tokenize attributes", () => {
     const lexer = createLexer();
-    const result = lexer.tokenize("{ #id .class %option key=value }");
+    const result = lexer.tokenize("[ #id .class ?option key=value ]");
 
-    expect(result.tokens[0].tokenType).toBe(tokens.LBrace);
+    expect(result.tokens[0].tokenType).toBe(tokens.LBracket);
     expect(result.tokens.some((t) => t.tokenType === tokens.Hash)).toBe(true);
     expect(result.tokens.some((t) => t.tokenType === tokens.Dot)).toBe(true);
-    expect(result.tokens.some((t) => t.tokenType === tokens.Percent)).toBe(
+    expect(result.tokens.some((t) => t.tokenType === tokens.Question)).toBe(
       true,
     );
     expect(result.tokens.some((t) => t.tokenType === tokens.Equals)).toBe(true);

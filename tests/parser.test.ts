@@ -15,29 +15,7 @@ describe("Parser", () => {
       expect(result.ast.children[0].name).toBeUndefined();
     });
 
-    it("should parse comment block with name starting with #", () => {
-      const result = parse("/* #include header.html */");
-
-      expect(result.errors).toEqual([]);
-      expect(result.ast.children[0]).toMatchObject({
-        type: "CommentBlock",
-        name: "include",
-        content: "header.html ",
-      });
-    });
-
-    it("should parse comment block with name and longer content", () => {
-      const result = parse("/* #config some important content */");
-
-      expect(result.errors).toEqual([]);
-      expect(result.ast.children[0]).toMatchObject({
-        type: "CommentBlock",
-        name: "config",
-        content: "some important content ",
-      });
-    });
-
-    it("should treat # in middle of content as content", () => {
+    it("should treat # in content as content", () => {
       const result = parse("/* This has # in the middle */");
 
       expect(result.errors).toEqual([]);
@@ -48,27 +26,24 @@ describe("Parser", () => {
       expect(result.ast.children[0].name).toBeUndefined();
     });
 
-    it("should parse multiline comment with name", () => {
-      const result = parse("/* #ifdef DEBUG\nsome content\n*/");
+    it("should parse multiline comment", () => {
+      const result = parse("/* DEBUG\nsome content\n*/");
 
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
         type: "CommentBlock",
-        name: "ifdef",
         content: expect.stringContaining("DEBUG"),
       });
     });
 
     it("should NOT parse attributes in comment blocks", () => {
-      const result = parse("/* #config { #id .class } content */");
+      const result = parse("/* content [ #id .class ] more */");
 
       expect(result.errors).toEqual([]);
       const node = result.ast.children[0];
       expect(node.type).toBe("CommentBlock");
-      expect(node.name).toBe("config");
       expect(node.attributes).toBeUndefined();
-      // The { #id .class } are part of the content
-      expect(node.content).toContain("{");
+      expect(node.content).toContain("[");
       expect(node.content).toContain("#id");
     });
   });
@@ -85,8 +60,8 @@ describe("Parser", () => {
       });
     });
 
-    it("should parse code block with name", () => {
-      const result = parse('```#javascript\nconsole.log("hello");\n```');
+    it("should parse code block with language", () => {
+      const result = parse('```javascript\nconsole.log("hello");\n```');
 
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
@@ -96,37 +71,13 @@ describe("Parser", () => {
     });
 
     it("should parse code block with multiline content", () => {
-      const result = parse("```#js\nfunction test() {\n  return 42;\n}\n```");
+      const result = parse("```js\nfunction test() {\n  return 42;\n}\n```");
 
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
         type: "CodeBlock",
         name: "js",
         content: expect.stringContaining("function test()"),
-      });
-    });
-  });
-
-  describe("Script blocks", () => {
-    it("should parse simple script block", () => {
-      const result = parse("!!! script content !!!");
-
-      expect(result.errors).toEqual([]);
-      expect(result.ast.children).toHaveLength(1);
-      expect(result.ast.children[0]).toMatchObject({
-        type: "ScriptBlock",
-        // Note: Leading space after delimiter is skipped (consistent with new parser behavior)
-        content: "script content ",
-      });
-    });
-
-    it("should parse script block with name", () => {
-      const result = parse('!!!#python\nprint("hello")\n!!!');
-
-      expect(result.errors).toEqual([]);
-      expect(result.ast.children[0]).toMatchObject({
-        type: "ScriptBlock",
-        name: "python",
       });
     });
   });
@@ -143,7 +94,7 @@ describe("Parser", () => {
     });
 
     it("should parse generic block with name", () => {
-      const result = parse(":::#div\ntext\n:::");
+      const result = parse(":::div\ntext\n:::");
 
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
@@ -162,7 +113,7 @@ describe("Parser", () => {
     });
 
     it("should parse generic block with attributes", () => {
-      const result = parse(":::#section {#main .container}\ncontent\n:::");
+      const result = parse(":::section [#main .container]\ncontent\n:::");
 
       expect(result.errors).toEqual([]);
       const node = result.ast.children[0];
@@ -212,20 +163,8 @@ describe("Parser", () => {
   });
 
   describe("Inline code", () => {
-    it("should parse simple inline code without name", () => {
-      const result = parse("`code`");
-
-      expect(result.errors).toEqual([]);
-      expect(result.ast.children).toHaveLength(1);
-      expect(result.ast.children[0]).toMatchObject({
-        type: "CodeInline",
-        content: "code",
-      });
-      expect(result.ast.children[0].name).toBeUndefined();
-    });
-
     it("should parse inline code with name", () => {
-      const result = parse("`#js console.log()`");
+      const result = parse("js`console.log()`");
 
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
@@ -236,7 +175,7 @@ describe("Parser", () => {
     });
 
     it("should parse inline code with attributes", () => {
-      const result = parse("`code`{.highlight}");
+      const result = parse("code`code`[.highlight]");
 
       expect(result.errors).toEqual([]);
       const node = result.ast.children[0];
@@ -245,7 +184,7 @@ describe("Parser", () => {
     });
 
     it("should parse inline code with name and attributes", () => {
-      const result = parse("`#js code`{.highlight}");
+      const result = parse("js`code`[.highlight]");
 
       expect(result.errors).toEqual([]);
       const node = result.ast.children[0];
@@ -256,65 +195,9 @@ describe("Parser", () => {
     });
   });
 
-  describe("Inline scripts", () => {
-    it("should parse simple inline script without name", () => {
-      const result = parse("!script!");
-
-      expect(result.errors).toEqual([]);
-      expect(result.ast.children).toHaveLength(1);
-      expect(result.ast.children[0]).toMatchObject({
-        type: "ScriptInline",
-        content: "script",
-      });
-      expect(result.ast.children[0].name).toBeUndefined();
-    });
-
-    it("should parse inline script with name", () => {
-      const result = parse("!#js alert()!");
-
-      expect(result.errors).toEqual([]);
-      expect(result.ast.children[0]).toMatchObject({
-        type: "ScriptInline",
-        name: "js",
-        content: "alert()",
-      });
-    });
-
-    it("should parse inline script with attributes", () => {
-      const result = parse("!script!{#id1}");
-
-      expect(result.errors).toEqual([]);
-      const node = result.ast.children[0];
-      expect(node.type).toBe("ScriptInline");
-      expect(node.attributes?.id).toBe("id1");
-    });
-
-    it("should parse inline script with name and attributes", () => {
-      const result = parse("!#py script!{.external}");
-
-      expect(result.errors).toEqual([]);
-      const node = result.ast.children[0];
-      expect(node.type).toBe("ScriptInline");
-      expect(node.name).toBe("py");
-      expect(node.content).toBe("script");
-      expect(node.attributes?.classes).toContain("external");
-    });
-  });
-
   describe("Inline generic", () => {
-    it("should parse simple inline generic without name", () => {
-      const result = parse(":text:");
-
-      expect(result.errors).toEqual([]);
-      expect(result.ast.children).toHaveLength(1);
-      expect(result.ast.children[0]).toMatchObject({
-        type: "GenericInline",
-      });
-      expect(result.ast.children[0].name).toBeUndefined();
-    });
-
     it("should parse inline generic with name", () => {
-      const result = parse(":#link GitHub:");
+      const result = parse("link:GitHub:");
 
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
@@ -324,7 +207,7 @@ describe("Parser", () => {
     });
 
     it("should parse inline generic with attributes", () => {
-      const result = parse(":text:{.emphasis}");
+      const result = parse("text:text:[.emphasis]");
 
       expect(result.errors).toEqual([]);
       const node = result.ast.children[0];
@@ -333,7 +216,7 @@ describe("Parser", () => {
     });
 
     it("should parse inline generic with name and attributes", () => {
-      const result = parse(':#link GitHub:{href="https://github.com"}');
+      const result = parse('link:GitHub:[href="https://github.com"]');
 
       expect(result.errors).toEqual([]);
       const node = result.ast.children[0];
@@ -343,34 +226,33 @@ describe("Parser", () => {
     });
 
     describe("simple cases", () => {
-      it("should parse simple generic inline without name or attributes", () => {
-        const result = parse(":content:");
+      it("should parse simple generic inline with name", () => {
+        const result = parse("span:content:");
 
         expect(result.errors).toEqual([]);
         expect(result.ast.children).toHaveLength(1);
         expect(result.ast.children[0]).toMatchObject({
           type: "GenericInline",
+          name: "span",
         });
-        expect(result.ast.children[0].name).toBeUndefined();
-        expect(result.ast.children[0].attributes).toBeUndefined();
       });
 
       it("should parse generic inline with single word", () => {
-        const result = parse(":bold:");
+        const result = parse("em:bold:");
         expect(result.errors).toEqual([]);
         expect(result.ast.children).toHaveLength(1);
         expect(result.ast.children[0].type).toBe("GenericInline");
       });
 
       it("should parse generic inline with multiple words", () => {
-        const result = parse(":some text here:");
+        const result = parse("span:some text here:");
         expect(result.errors).toEqual([]);
         expect(result.ast.children).toHaveLength(1);
         expect(result.ast.children[0].type).toBe("GenericInline");
       });
 
       it("should parse empty generic inline", () => {
-        const result = parse("::");
+        const result = parse("span::");
         expect(result.errors).toEqual([]);
         expect(result.ast.children).toHaveLength(1);
         expect(result.ast.children[0].type).toBe("GenericInline");
@@ -378,7 +260,7 @@ describe("Parser", () => {
       });
 
       it("should parse generic inline with name but no attributes", () => {
-        const result = parse(":#link GitHub:");
+        const result = parse("link:GitHub:");
         expect(result.errors).toEqual([]);
         expect(result.ast.children).toHaveLength(1);
         expect(result.ast.children[0].name).toBe("link");
@@ -386,7 +268,7 @@ describe("Parser", () => {
       });
 
       it("should parse generic inline with nested code inline", () => {
-        const result = parse(":text with `code` here:");
+        const result = parse("span:text with code`code` here:");
         expect(result.errors).toEqual([]);
         expect(result.ast.children).toHaveLength(1);
         expect(result.ast.children[0].type).toBe("GenericInline");
@@ -406,14 +288,14 @@ describe("Parser", () => {
 
   describe("Attributes parsing", () => {
     it("should parse ID attribute", () => {
-      const result = parse(":::#div {#main-id}\ncontent\n:::");
+      const result = parse(":::div [#main-id]\ncontent\n:::");
 
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0].attributes?.id).toBe("main-id");
     });
 
     it("should parse class attributes", () => {
-      const result = parse(":::#div {.class1 .class2}\ncontent\n:::");
+      const result = parse(":::div [.class1 .class2]\ncontent\n:::");
 
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0].attributes?.classes).toEqual([
@@ -423,7 +305,7 @@ describe("Parser", () => {
     });
 
     it("should parse option attributes", () => {
-      const result = parse(":::#div {%option1 %option2}\ncontent\n:::");
+      const result = parse(":::div [?option1 ?option2]\ncontent\n:::");
 
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0].attributes?.options).toEqual([
@@ -433,7 +315,7 @@ describe("Parser", () => {
     });
 
     it("should parse key-value attributes", () => {
-      const result = parse(":::#div {width=100 height=200}\ncontent\n:::");
+      const result = parse(":::div [width=100 height=200]\ncontent\n:::");
 
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0].attributes?.keyValues).toEqual({
@@ -444,7 +326,7 @@ describe("Parser", () => {
 
     it("should parse mixed attributes", () => {
       const result = parse(
-        ":::#div {#id .class1 .class2 %option key=value}\ncontent\n:::",
+        ":::div [#id .class1 .class2 ?option key=value]\ncontent\n:::",
       );
 
       expect(result.errors).toEqual([]);
@@ -481,52 +363,37 @@ code
   });
 
   describe("Whitespace handling after name", () => {
-    it("should not include space after name in comment block", () => {
-      const result = parse("/* #include header.html */");
-      expect(result.ast.children[0].content).toBe("header.html ");
-    });
-
     it("should not include space after name in inline comment", () => {
       const result = parse("//#todo Fix later\n");
       expect(result.ast.children[0].content).toBe("Fix later");
     });
 
     it("should not include space after name in code inline", () => {
-      const result = parse("`#js alert()`");
+      const result = parse("js`alert()`");
       expect(result.ast.children[0].content).toBe("alert()");
     });
 
-    it("should not include space after name in script inline", () => {
-      const result = parse("!#py script!");
-      expect(result.ast.children[0].content).toBe("script");
-    });
-
     it("should not include space after name in generic inline", () => {
-      const result = parse(":#name content:");
+      const result = parse("name:content:");
       const firstContent = result.ast.children[0].content[0];
       expect(firstContent.type).toBe("Text");
       expect(firstContent.value).toBe("content");
     });
 
-    it("should preserve spaces within content", () => {
-      const result = parse("/* #include my file.txt */");
-      expect(result.ast.children[0].content).toBe("my file.txt ");
-    });
-
     it("should handle multiple spaces after name", () => {
-      const result = parse("`#js    alert()`");
-      expect(result.ast.children[0].content).toBe("alert()");
+      const result = parse("js`   alert()`");
+      expect(result.ast.children[0].content).toBe("   alert()");
     });
 
     it("should handle tab after name", () => {
-      const result = parse("`#js\talert()`");
-      expect(result.ast.children[0].content).toBe("alert()");
+      const result = parse("js`\talert()`");
+      expect(result.ast.children[0].content).toBe("\talert()");
     });
   });
 
-  describe("Code blocks with #name and attributes", () => {
-    it("should parse code block with #name", () => {
-      const result = parse("```#javascript\nconst x = 1;\n```");
+  describe("Code blocks with language and attributes", () => {
+    it("should parse code block with language", () => {
+      const result = parse("```javascript\nconst x = 1;\n```");
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
         type: "CodeBlock",
@@ -535,8 +402,8 @@ code
       });
     });
 
-    it("should parse code block with #name and attributes", () => {
-      const result = parse("```#html {#code1 .highlight}\n<p>content</p>\n```");
+    it("should parse code block with language and attributes", () => {
+      const result = parse("```html [#code1 .highlight]\n<p>content</p>\n```");
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
         type: "CodeBlock",
@@ -549,8 +416,8 @@ code
       });
     });
 
-    it("should parse code block with attributes but no #name", () => {
-      const result = parse("``` {.highlight}\ncode\n```");
+    it("should parse code block with attributes but no language", () => {
+      const result = parse("``` [.highlight]\ncode\n```");
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
         type: "CodeBlock",
@@ -562,46 +429,9 @@ code
     });
   });
 
-  describe("Script blocks with #name and attributes", () => {
-    it("should parse script block with #name", () => {
-      const result = parse('!!!#python\nprint("hello")\n!!!');
-      expect(result.errors).toEqual([]);
-      expect(result.ast.children[0]).toMatchObject({
-        type: "ScriptBlock",
-        name: "python",
-        content: 'print("hello")\n',
-      });
-    });
-
-    it("should parse script block with #name and attributes", () => {
-      const result = parse('!!!#python {#script1}\nprint("hello")\n!!!');
-      expect(result.errors).toEqual([]);
-      expect(result.ast.children[0]).toMatchObject({
-        type: "ScriptBlock",
-        name: "python",
-        content: 'print("hello")\n',
-        attributes: {
-          id: "script1",
-        },
-      });
-    });
-
-    it("should parse script block with attributes but no #name", () => {
-      const result = parse("!!! {#script1}\nalert();\n!!!");
-      expect(result.errors).toEqual([]);
-      expect(result.ast.children[0]).toMatchObject({
-        type: "ScriptBlock",
-        content: "alert();\n",
-        attributes: {
-          id: "script1",
-        },
-      });
-    });
-  });
-
-  describe("Generic blocks with #name and attributes", () => {
-    it("should parse generic block with #name", () => {
-      const result = parse(":::#container\ncontent\n:::");
+  describe("Generic blocks with name and attributes", () => {
+    it("should parse generic block with name", () => {
+      const result = parse(":::container\ncontent\n:::");
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
         type: "GenericBlock",
@@ -609,8 +439,8 @@ code
       });
     });
 
-    it("should parse generic block with #name and attributes", () => {
-      const result = parse(":::#section {#main .wrapper}\ncontent\n:::");
+    it("should parse generic block with name and attributes", () => {
+      const result = parse(":::section [#main .wrapper]\ncontent\n:::");
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
         type: "GenericBlock",
@@ -622,8 +452,8 @@ code
       });
     });
 
-    it("should parse generic block with attributes but no #name", () => {
-      const result = parse("::: {.highlight}\ncontent\n:::");
+    it("should parse generic block with attributes but no name", () => {
+      const result = parse("::: [.highlight]\ncontent\n:::");
       expect(result.errors).toEqual([]);
       expect(result.ast.children[0]).toMatchObject({
         type: "GenericBlock",
@@ -650,7 +480,7 @@ code
     });
 
     it("should parse generic block with named HTML", () => {
-      const result = parse(":::#html\n<p>content</p>\n:::");
+      const result = parse(":::html\n<p>content</p>\n:::");
 
       expect(result.errors).toEqual([]);
       const block = result.ast.children[0];
@@ -663,7 +493,7 @@ code
     });
 
     it("should parse generic block with HTML and attributes", () => {
-      const result = parse(":::#html {#id .class1}\n<p>content</p>\n:::");
+      const result = parse(":::html [#id .class1]\n<p>content</p>\n:::");
 
       expect(result.errors).toEqual([]);
       const block = result.ast.children[0];
@@ -706,7 +536,7 @@ code
 
     it("should parse generic block with mixed content", () => {
       const result = parse(
-        ":::#container\ntext with `code` and <strong>HTML</strong>\n:::",
+        ":::container\ntext with code`code` and <strong>HTML</strong>\n:::",
       );
 
       expect(result.errors).toEqual([]);
@@ -725,7 +555,7 @@ code
     });
 
     it("should parse nested generic blocks with HTML", () => {
-      const result = parse(":::::\n:::#inner\n<p>content</p>\n:::\n:::::");
+      const result = parse(":::::\n:::inner\n<p>content</p>\n:::\n:::::");
 
       // Now supports nested generic blocks with different delimiter lengths
       expect(result.errors).toEqual([]);
@@ -785,7 +615,7 @@ code
 
     it("should parse nested blocks with names", () => {
       const result = parse(
-        ":::#outer\ntext\n:::::#inner\ninner text\n:::::\n:::",
+        ":::outer\ntext\n:::::inner\ninner text\n:::::\n:::",
       );
 
       expect(result.errors).toEqual([]);
@@ -799,7 +629,7 @@ code
 
     it("should parse nested blocks with attributes", () => {
       const result = parse(
-        ":::{.outer}\ntext\n:::::{.inner}\ninner text\n:::::\n:::",
+        ":::[.outer]\ntext\n:::::[.inner]\ninner text\n:::::\n:::",
       );
 
       expect(result.errors).toEqual([]);
@@ -834,10 +664,10 @@ encore du texte
     });
 
     it("should handle mixed content with nested blocks", () => {
-      const result = parse(`:::#container
-text with \`code\`
+      const result = parse(`:::container
+text with code\`code\`
 
-:::::#inner
+:::::inner
 nested content
 :::::
 
@@ -1072,7 +902,7 @@ more text
   // New tests for inline generic delimiter fixes
   describe("Inline generic delimiter fixes", () => {
     it("should not confuse code blocks with inline generics", () => {
-      const input = '```#python\nprint("Hello")\n```';
+      const input = '```python\nprint("Hello")\n```';
 
       const result = parse(input);
 
@@ -1083,7 +913,7 @@ more text
 
     it("should not confuse code blocks with colons in content", () => {
       const input =
-        "```#python {#example1 .highlight %numbered}\nkey: value\nother: data\n```";
+        "```python [#example1 .highlight ?numbered]\nkey: value\nother: data\n```";
 
       const result = parse(input);
 
@@ -1093,28 +923,8 @@ more text
       expect(result.ast.children[0].content).toContain("key: value");
     });
 
-    it("should not confuse script blocks with inline generics", () => {
-      const input = "!!!#init\nsetupApp();\n!!!";
-
-      const result = parse(input);
-
-      expect(result.errors).toHaveLength(0);
-      expect(result.ast.children[0].type).toBe("ScriptBlock");
-      expect(result.ast.children[0].name).toBe("init");
-    });
-
-    it("should not confuse script blocks with colons in content", () => {
-      const input = "!!!#init {.executable}\nconst obj = { a: 1, b: 2 };\n!!!";
-
-      const result = parse(input);
-
-      expect(result.errors).toHaveLength(0);
-      expect(result.ast.children[0].type).toBe("ScriptBlock");
-      expect(result.ast.children[0].content).toContain("a: 1");
-    });
-
     it("should not confuse generic blocks with inline generics", () => {
-      const input = "::::#outer {.container}\nContent here\n::::";
+      const input = "::::outer [.container]\nContent here\n::::";
 
       const result = parse(input);
 
@@ -1124,7 +934,7 @@ more text
     });
 
     it("should parse valid inline generics correctly", () => {
-      const input = "Text with :emphasis: inline.";
+      const input = "Text with em:emphasis: inline.";
 
       const result = parse(input);
 
@@ -1136,7 +946,7 @@ more text
     });
 
     it("should parse multiple inline generics correctly", () => {
-      const input = "Text with :emphasis: and :strong: inlines.";
+      const input = "Text with em:emphasis: and strong:strong: inlines.";
 
       const result = parse(input);
 
@@ -1148,14 +958,13 @@ more text
     });
 
     it("should parse mixed inline types correctly", () => {
-      const input = "Text with `code`, !script!, and :generic: inlines.";
+      const input = "Text with code`code` and generic:generic: inlines.";
 
       const result = parse(input);
 
       expect(result.errors).toHaveLength(0);
       const types = result.ast.children.map((c) => c.type);
       expect(types).toContain("CodeInline");
-      expect(types).toContain("ScriptInline");
       expect(types).toContain("GenericInline");
     });
 
@@ -1196,29 +1005,24 @@ more text
     });
 
     it("should handle demo complète without errors", () => {
-      const input = `\`\`\`#python {#example1 .highlight %numbered}
+      const input = `\`\`\`python [#example1 .highlight ?numbered]
 print("Hello")
 \`\`\`
 
-!!!#init {.executable}
-setupApp();
-!!!
-
-::::#outer {.container}
+::::outer [.container]
 Content
 ::::`;
 
       const result = parse(input);
 
       expect(result.errors).toHaveLength(0);
-      expect(result.ast.children).toHaveLength(5); // 3 blocks + 2 newlines/whitespace between
+      expect(result.ast.children).toHaveLength(3); // 2 blocks + 1 newline/whitespace between
 
       // Find the actual block elements (not Text nodes)
       const blocks = result.ast.children.filter((c) => c.type !== "Text");
-      expect(blocks).toHaveLength(3);
+      expect(blocks).toHaveLength(2);
       expect(blocks[0].type).toBe("CodeBlock");
-      expect(blocks[1].type).toBe("ScriptBlock");
-      expect(blocks[2].type).toBe("GenericBlock");
+      expect(blocks[1].type).toBe("GenericBlock");
     });
   });
 
@@ -1251,7 +1055,7 @@ Content
     });
 
     it("should parse valid inline code correctly", () => {
-      const result = parse("This is `code` here");
+      const result = parse("This is code`code` here");
 
       expect(result.errors).toHaveLength(0);
       expect(result.ast.children).toHaveLength(3);
@@ -1261,19 +1065,8 @@ Content
       expect(result.ast.children[2].type).toBe("Text");
     });
 
-    it("should parse valid inline script correctly", () => {
-      const result = parse("Execute !script! now");
-
-      expect(result.errors).toHaveLength(0);
-      expect(result.ast.children).toHaveLength(3);
-      expect(result.ast.children[0].type).toBe("Text");
-      expect(result.ast.children[1].type).toBe("ScriptInline");
-      expect(result.ast.children[1].content).toBe("script");
-      expect(result.ast.children[2].type).toBe("Text");
-    });
-
     it("should parse valid generic inline correctly", () => {
-      const result = parse("This is :text: here");
+      const result = parse("This is span:text: here");
 
       expect(result.errors).toHaveLength(0);
       expect(result.ast.children).toHaveLength(3);
@@ -1326,7 +1119,7 @@ Content
     });
 
     it("should parse valid inlines even with punctuation nearby", () => {
-      const result = parse("Note: use `code` here!");
+      const result = parse("Note: use code`code` here!");
 
       expect(result.errors).toHaveLength(0);
       // Should have Text, CodeInline, Text
@@ -1336,7 +1129,7 @@ Content
     });
 
     it("should handle nested valid inlines in generic block", () => {
-      const result = parse(":::\nHello: world with `code` here\n:::");
+      const result = parse(":::\nHello: world with code`code` here\n:::");
 
       expect(result.errors).toHaveLength(0);
       expect(result.ast.children).toHaveLength(1);
@@ -1357,23 +1150,11 @@ Content
     });
 
     it("should handle colons in JavaScript objects inside code blocks", () => {
-      const result = parse("```#js\nconst obj = { a: 1, b: 2 };\n```");
+      const result = parse("```js\nconst obj = { a: 1, b: 2 };\n```");
 
       expect(result.errors).toHaveLength(0);
       expect(result.ast.children).toHaveLength(1);
       expect(result.ast.children[0].type).toBe("CodeBlock");
-      expect(result.ast.children[0].name).toBe("js");
-      // The colons should be preserved as part of the content, not parsed as inline delimiters
-      expect(result.ast.children[0].content).toContain("a: 1");
-      expect(result.ast.children[0].content).toContain("b: 2");
-    });
-
-    it("should handle colons in JavaScript objects inside script blocks", () => {
-      const result = parse("!!!#js\nconst obj = { a: 1, b: 2 };\n!!!");
-
-      expect(result.errors).toHaveLength(0);
-      expect(result.ast.children).toHaveLength(1);
-      expect(result.ast.children[0].type).toBe("ScriptBlock");
       expect(result.ast.children[0].name).toBe("js");
       // The colons should be preserved as part of the content, not parsed as inline delimiters
       expect(result.ast.children[0].content).toContain("a: 1");
@@ -1440,7 +1221,7 @@ Content
       });
 
       it("should handle mix of escaped and unescaped backticks", () => {
-        const result = parse("Text \\` and `actual code` here");
+        const result = parse("Text \\` and code`actual code` here");
 
         expect(result.errors).toHaveLength(0);
         // Should have Text, CodeInline, Text

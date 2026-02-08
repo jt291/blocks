@@ -16,6 +16,7 @@ export interface Attributes {
   classes: string[];
   options: string[];
   keyValues: Record<string, string>;
+  events: Record<string, string>;
 }
 
 // Base node types
@@ -38,11 +39,6 @@ export interface CommentBlockNode extends BlockNode {
 
 export interface CodeBlockNode extends BlockNode {
   type: "CodeBlock";
-  content: string;
-}
-
-export interface ScriptBlockNode extends BlockNode {
-  type: "ScriptBlock";
   content: string;
 }
 
@@ -73,14 +69,16 @@ export interface CodeInlineNode extends InlineNode {
   content: string;
 }
 
-export interface ScriptInlineNode extends InlineNode {
-  type: "ScriptInline";
-  content: string;
-}
-
 export interface GenericInlineNode extends InlineNode {
   type: "GenericInline";
   content: (InlineNode | TextNode)[];
+}
+
+export interface ScriptNode extends Node {
+  type: "Script";
+  content: string;
+  evaluated?: boolean;
+  result?: unknown;
 }
 
 export interface TextNode extends Node {
@@ -91,19 +89,17 @@ export interface TextNode extends Node {
 // Root document
 export interface DocumentNode extends Node {
   type: "Document";
-  children: (BlockNode | InlineNode | TextNode)[];
+  children: (BlockNode | InlineNode | ScriptNode | TextNode)[];
 }
 
 // Type unions
 export type AnyBlockNode =
   | CommentBlockNode
   | CodeBlockNode
-  | ScriptBlockNode
   | GenericBlockNode;
 export type AnyInlineNode =
   | CommentInlineNode
   | CodeInlineNode
-  | ScriptInlineNode
   | GenericInlineNode
   | TextNode;
-export type AnyNode = DocumentNode | AnyBlockNode | AnyInlineNode;
+export type AnyNode = DocumentNode | AnyBlockNode | AnyInlineNode | ScriptNode;

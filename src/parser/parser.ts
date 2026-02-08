@@ -10,8 +10,7 @@ import type {
   GenericBlockNode,
   GenericInlineNode,
   InlineNode,
-  ScriptBlockNode,
-  ScriptInlineNode,
+  ScriptNode,
   TextNode,
 } from "./ast.js";
 
@@ -42,167 +41,7 @@ function processTokenImage(tok: IToken): string {
   return tok.image;
 }
 
-/**
- * Parse attributes from a string like "{#id .class %option key=value}"
- */
-function parseAttributesString(attrsStr: string): Attributes | undefined {
-  if (!attrsStr || !attrsStr.trim()) {
-    return undefined;
-  }
 
-  // Remove outer braces and trim
-  const content = attrsStr.trim().replace(/^\{/, "").replace(/\}$/, "").trim();
-  if (!content) {
-    return undefined;
-  }
-
-  const attrs: Attributes = {
-    classes: [],
-    options: [],
-    keyValues: {},
-  };
-
-  // Split by whitespace and parse each part
-  const parts = content.match(/\S+/g) || [];
-  for (const part of parts) {
-    if (part.startsWith("#")) {
-      // ID attribute
-      attrs.id = part.substring(1);
-    } else if (part.startsWith(".")) {
-      // Class attribute
-      attrs.classes.push(part.substring(1));
-    } else if (part.startsWith("%")) {
-      // Option attribute
-      attrs.options.push(part.substring(1));
-    } else if (part.includes("=")) {
-      // Key-value attribute
-      const [key, ...valueParts] = part.split("=");
-      if (key) {
-        const value = valueParts.join("="); // Handle = in value
-        attrs.keyValues[key] = value; // Keep quotes as-is to match old behavior
-      }
-    }
-  }
-
-  return attrs;
-}
-
-/**
- * Parse a complete inline code token: `#name? content`{attrs?}
- * Extracts name, content, and attributes from the token image
- */
-function parseInlineCodeToken(tokenImage: string): {
-  name?: string;
-  content: string;
-  attributes?: Attributes;
-} {
-  // Check if there are attributes at the end: `...`{...}
-  const attrsMatch = tokenImage.match(/^(`[^`\n]*`)\s*(\{[^}]+\})$/);
-  let coreInline: string;
-  let attributes: Attributes | undefined;
-
-  if (attrsMatch?.[1] && attrsMatch[2]) {
-    coreInline = attrsMatch[1]; // The `content` part
-    attributes = parseAttributesString(attrsMatch[2]); // The {attrs} part
-  } else {
-    coreInline = tokenImage;
-  }
-
-  // Remove the backticks
-  const innerContent = coreInline.substring(1, coreInline.length - 1);
-
-  // Check for #name at the start
-  const nameMatch = innerContent.match(/^#([a-zA-Z_][a-zA-Z0-9_-]*)\s*/);
-  let name: string | undefined;
-  let content: string;
-
-  if (nameMatch) {
-    name = nameMatch[1];
-    content = innerContent.substring(nameMatch[0].length);
-  } else {
-    content = innerContent;
-  }
-
-  return { name, content, attributes };
-}
-
-/**
- * Parse a complete inline script token: !#name? content!{attrs?}
- * Extracts name, content, and attributes from the token image
- */
-function parseInlineScriptToken(tokenImage: string): {
-  name?: string;
-  content: string;
-  attributes?: Attributes;
-} {
-  // Check if there are attributes at the end: !...!{...}
-  const attrsMatch = tokenImage.match(/^(![^!\n]*!)\s*(\{[^}]+\})$/);
-  let coreInline: string;
-  let attributes: Attributes | undefined;
-
-  if (attrsMatch?.[1] && attrsMatch[2]) {
-    coreInline = attrsMatch[1]; // The !content! part
-    attributes = parseAttributesString(attrsMatch[2]); // The {attrs} part
-  } else {
-    coreInline = tokenImage;
-  }
-
-  // Remove the exclamation marks
-  const innerContent = coreInline.substring(1, coreInline.length - 1);
-
-  // Check for #name at the start
-  const nameMatch = innerContent.match(/^#([a-zA-Z_][a-zA-Z0-9_-]*)\s*/);
-  let name: string | undefined;
-  let content: string;
-
-  if (nameMatch) {
-    name = nameMatch[1];
-    content = innerContent.substring(nameMatch[0].length);
-  } else {
-    content = innerContent;
-  }
-
-  return { name, content, attributes };
-}
-
-/**
- * Parse a complete inline generic token: :#name? content:{attrs?}
- * Extracts name, content, and attributes from the token image
- */
-function parseInlineGenericToken(tokenImage: string): {
-  name?: string;
-  content: string;
-  attributes?: Attributes;
-} {
-  // Check if there are attributes at the end: :...::{...}
-  const attrsMatch = tokenImage.match(/^(:[^:\n]*:)\s*(\{[^}]+\})$/);
-  let coreInline: string;
-  let attributes: Attributes | undefined;
-
-  if (attrsMatch?.[1] && attrsMatch[2]) {
-    coreInline = attrsMatch[1]; // The :content: part
-    attributes = parseAttributesString(attrsMatch[2]); // The {attrs} part
-  } else {
-    coreInline = tokenImage;
-  }
-
-  // Remove the colons
-  const innerContent = coreInline.substring(1, coreInline.length - 1);
-
-  // Check for #name at the start
-  const nameMatch = innerContent.match(/^#([a-zA-Z_][a-zA-Z0-9_-]*)\s*/);
-  let name: string | undefined;
-  let content: string;
-
-  if (nameMatch) {
-    name = nameMatch[1];
-    content = innerContent.substring(nameMatch[0].length);
-  } else {
-    content = innerContent;
-  }
-
-  return { name, content, attributes };
-}
 
 export class BlocksParser extends EmbeddedActionsParser {
   constructor() {
@@ -216,13 +55,14 @@ export class BlocksParser extends EmbeddedActionsParser {
   // Main document rule
   public document = this.RULE(
     "document",
-    (): (BlockNode | InlineNode | TextNode)[] => {
-      const children: (BlockNode | InlineNode | TextNode)[] = [];
+    (): (BlockNode | InlineNode | ScriptNode | TextNode)[] => {
+      const children: (BlockNode | InlineNode | ScriptNode | TextNode)[] = [];
 
       this.MANY(() => {
         const child = this.OR([
           { ALT: () => this.SUBRULE(this.blockElement) },
           { ALT: () => this.SUBRULE(this.inlineElement) },
+          { ALT: () => this.SUBRULE(this.scriptExpression) },
           { ALT: () => this.SUBRULE(this.textElement) },
         ]);
         if (child) children.push(child);
@@ -237,47 +77,28 @@ export class BlocksParser extends EmbeddedActionsParser {
     return this.OR([
       { ALT: () => this.SUBRULE(this.commentBlock) },
       { ALT: () => this.SUBRULE(this.codeBlock) },
-      { ALT: () => this.SUBRULE(this.scriptBlock) },
       { ALT: () => this.SUBRULE(this.genericBlock) },
     ]);
   });
 
-  // Comment block: /* #name? content */
-  // Simplified: only # prefix indicates name, no attributes ever
+  // Comment block: /* content */
+  // No name support in v1.0 spec
   private commentBlock = this.RULE("commentBlock", (): CommentBlockNode => {
     this.CONSUME(tokens.BlockCommentStart);
 
-    // Skip leading whitespace
-    this.MANY(() => {
-      this.CONSUME(tokens.Whitespace);
-    });
-
-    let name: string | undefined;
+    // Consume all content until */
     const contentTokens: IToken[] = [];
-
-    // Try to consume name if it starts with #
-    this.OPTION(() => {
-      this.CONSUME(tokens.Hash);
-      const nameToken = this.CONSUME(tokens.Identifier);
-      name = nameToken.image;
-      // Skip whitespace after name (should not be part of content)
-      this.MANY2(() => {
-        this.CONSUME3(tokens.Whitespace);
-      });
-    });
-
-    // Consume all remaining content until */
-    this.MANY3(() => {
+    this.MANY(() => {
       const tok = this.OR([
-        { ALT: () => this.CONSUME2(tokens.Identifier) },
+        { ALT: () => this.CONSUME(tokens.Identifier) },
         { ALT: () => this.CONSUME(tokens.Content) },
-        { ALT: () => this.CONSUME2(tokens.Whitespace) },
+        { ALT: () => this.CONSUME(tokens.Whitespace) },
         { ALT: () => this.CONSUME(tokens.Newline) },
         { ALT: () => this.CONSUME(tokens.InlineCommentStart) },
-        // Escaped tokens (can appear in block content)
+        { ALT: () => this.CONSUME(tokens.ScriptExprStart) },
+        // Escaped tokens
         { ALT: () => this.CONSUME(tokens.EscapedHash) },
         { ALT: () => this.CONSUME(tokens.EscapedBacktick) },
-        { ALT: () => this.CONSUME(tokens.EscapedExclamation) },
         { ALT: () => this.CONSUME(tokens.EscapedColon) },
         { ALT: () => this.CONSUME(tokens.EscapedLBrace) },
         { ALT: () => this.CONSUME(tokens.EscapedRBrace) },
@@ -286,28 +107,25 @@ export class BlocksParser extends EmbeddedActionsParser {
         { ALT: () => this.CONSUME(tokens.EscapedDash) },
         { ALT: () => this.CONSUME(tokens.EscapedDollar) },
         { ALT: () => this.CONSUME(tokens.EscapedBackslash) },
+        { ALT: () => this.CONSUME(tokens.EscapedDot) },
+        { ALT: () => this.CONSUME(tokens.EscapedQuestion) },
         { ALT: () => this.CONSUME(tokens.Backslash) },
-        // Complete inline tokens (can appear in block content)
-        { ALT: () => this.CONSUME(tokens.InlineCodeCompleteWithAttrs) },
-        { ALT: () => this.CONSUME(tokens.InlineCodeComplete) },
-        { ALT: () => this.CONSUME(tokens.InlineScriptCompleteWithAttrs) },
-        { ALT: () => this.CONSUME(tokens.InlineScriptComplete) },
-        { ALT: () => this.CONSUME(tokens.InlineGenericCompleteWithAttrs) },
-        { ALT: () => this.CONSUME(tokens.InlineGenericComplete) },
-        // Individual delimiters (punctuation)
+        // Individual delimiters
         { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
-        { ALT: () => this.CONSUME(tokens.InlineScriptDelim) },
         { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
         { ALT: () => this.CONSUME(tokens.LBrace) },
-        { ALT: () => this.CONSUME(tokens.RBrace) },
-        { ALT: () => this.CONSUME2(tokens.Hash) },
+        { ALT: () => this.CONSUME(tokens.ScriptExprEnd) },
+        { ALT: () => this.CONSUME(tokens.LBracket) },
+        { ALT: () => this.CONSUME(tokens.RBracket) },
+        { ALT: () => this.CONSUME(tokens.Hash) },
         { ALT: () => this.CONSUME(tokens.Dot) },
+        { ALT: () => this.CONSUME(tokens.At) },
+        { ALT: () => this.CONSUME(tokens.Question) },
         { ALT: () => this.CONSUME(tokens.Percent) },
         { ALT: () => this.CONSUME(tokens.Equals) },
         { ALT: () => this.CONSUME(tokens.StringValue) },
         { ALT: () => this.CONSUME(tokens.AnyChar) },
         { ALT: () => this.CONSUME(tokens.BlockCodeDelim) },
-        { ALT: () => this.CONSUME(tokens.BlockScriptDelim) },
         { ALT: () => this.CONSUME(tokens.BlockGenericDelim) },
       ]);
       if (tok) contentTokens.push(tok);
@@ -320,14 +138,11 @@ export class BlocksParser extends EmbeddedActionsParser {
       content: contentTokens.map((t) => processTokenImage(t)).join(""),
     };
 
-    if (name) {
-      node.name = name;
-    }
-
     return node;
   });
 
-  // Code block: ```#name? {attrs?} content ```
+  // Code block: ``` language [attrs] content ```
+  // Language is required, no # prefix
   private codeBlock = this.RULE("codeBlock", (): CodeBlockNode => {
     const openDelim = this.CONSUME(tokens.BlockCodeDelim);
     const openDelimLength = openDelim.image.length;
@@ -337,23 +152,22 @@ export class BlocksParser extends EmbeddedActionsParser {
       this.CONSUME(tokens.Whitespace);
     });
 
-    let name: string | undefined;
-    let attributes: Attributes | undefined;
+    // Consume language name (required)
+    const nameToken = this.CONSUME(tokens.Identifier);
+    const name = nameToken.image;
 
-    // Try to consume name if it starts with #
-    this.OPTION(() => {
-      this.CONSUME(tokens.Hash);
-      const nameToken = this.CONSUME(tokens.Identifier);
-      name = nameToken.image;
+    if (!name || name.trim() === "") {
+      throw new Error("Code block language name is required");
+    }
 
-      // Skip whitespace after name
-      this.MANY2(() => {
-        this.CONSUME2(tokens.Whitespace);
-      });
+    // Skip whitespace after name
+    this.MANY2(() => {
+      this.CONSUME2(tokens.Whitespace);
     });
 
     // Try to consume attributes
-    this.OPTION2(() => {
+    let attributes: Attributes | undefined;
+    this.OPTION(() => {
       attributes = this.SUBRULE(this.attributes);
     });
 
@@ -365,7 +179,7 @@ export class BlocksParser extends EmbeddedActionsParser {
       ]);
     });
 
-    // Consume all content until ```
+    // Consume all content until matching ```
     const contentTokens: IToken[] = [];
     this.MANY4(() => {
       const tok = this.OR2([
@@ -374,10 +188,10 @@ export class BlocksParser extends EmbeddedActionsParser {
         { ALT: () => this.CONSUME4(tokens.Whitespace) },
         { ALT: () => this.CONSUME2(tokens.Newline) },
         { ALT: () => this.CONSUME(tokens.InlineCommentStart) },
-        // Escaped tokens (can appear in block content)
+        { ALT: () => this.CONSUME(tokens.ScriptExprStart) },
+        // Escaped tokens
         { ALT: () => this.CONSUME(tokens.EscapedHash) },
         { ALT: () => this.CONSUME(tokens.EscapedBacktick) },
-        { ALT: () => this.CONSUME(tokens.EscapedExclamation) },
         { ALT: () => this.CONSUME(tokens.EscapedColon) },
         { ALT: () => this.CONSUME(tokens.EscapedLBrace) },
         { ALT: () => this.CONSUME(tokens.EscapedRBrace) },
@@ -386,29 +200,26 @@ export class BlocksParser extends EmbeddedActionsParser {
         { ALT: () => this.CONSUME(tokens.EscapedDash) },
         { ALT: () => this.CONSUME(tokens.EscapedDollar) },
         { ALT: () => this.CONSUME(tokens.EscapedBackslash) },
+        { ALT: () => this.CONSUME(tokens.EscapedDot) },
+        { ALT: () => this.CONSUME(tokens.EscapedQuestion) },
         { ALT: () => this.CONSUME(tokens.Backslash) },
-        // Complete inline tokens (can appear in block content)
-        { ALT: () => this.CONSUME(tokens.InlineCodeCompleteWithAttrs) },
-        { ALT: () => this.CONSUME(tokens.InlineCodeComplete) },
-        { ALT: () => this.CONSUME(tokens.InlineScriptCompleteWithAttrs) },
-        { ALT: () => this.CONSUME(tokens.InlineScriptComplete) },
-        { ALT: () => this.CONSUME(tokens.InlineGenericCompleteWithAttrs) },
-        { ALT: () => this.CONSUME(tokens.InlineGenericComplete) },
-        // Individual delimiters (punctuation)
+        // Individual delimiters
         { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
-        { ALT: () => this.CONSUME(tokens.InlineScriptDelim) },
         { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
         { ALT: () => this.CONSUME2(tokens.LBrace) },
-        { ALT: () => this.CONSUME(tokens.RBrace) },
-        { ALT: () => this.CONSUME2(tokens.Hash) },
+        { ALT: () => this.CONSUME(tokens.ScriptExprEnd) },
+        { ALT: () => this.CONSUME(tokens.LBracket) },
+        { ALT: () => this.CONSUME(tokens.RBracket) },
+        { ALT: () => this.CONSUME(tokens.Hash) },
         { ALT: () => this.CONSUME(tokens.Dot) },
+        { ALT: () => this.CONSUME(tokens.At) },
+        { ALT: () => this.CONSUME(tokens.Question) },
         { ALT: () => this.CONSUME(tokens.Percent) },
         { ALT: () => this.CONSUME(tokens.Equals) },
         { ALT: () => this.CONSUME(tokens.StringValue) },
         { ALT: () => this.CONSUME(tokens.AnyChar) },
         { ALT: () => this.CONSUME(tokens.BlockCommentStart) },
         { ALT: () => this.CONSUME(tokens.BlockCommentEnd) },
-        { ALT: () => this.CONSUME(tokens.BlockScriptDelim) },
         { ALT: () => this.CONSUME(tokens.BlockGenericDelim) },
       ]);
       if (tok) contentTokens.push(tok);
@@ -428,66 +239,31 @@ export class BlocksParser extends EmbeddedActionsParser {
 
     const node: CodeBlockNode = {
       type: "CodeBlock",
+      name,
       content: contentTokens.map((t) => processTokenImage(t)).join(""),
     };
 
-    if (name) node.name = name;
     if (attributes) node.attributes = attributes;
 
     return node;
   });
 
-  // Script block: !!!#name? {attrs?} content !!!
-  private scriptBlock = this.RULE("scriptBlock", (): ScriptBlockNode => {
-    const openDelim = this.CONSUME(tokens.BlockScriptDelim);
-    const openDelimLength = openDelim.image.length;
+  // Script expression: ${ content }
+  private scriptExpression = this.RULE("scriptExpression", (): ScriptNode => {
+    this.CONSUME(tokens.ScriptExprStart);
 
-    // Skip leading whitespace
-    this.MANY(() => {
-      this.CONSUME(tokens.Whitespace);
-    });
-
-    let name: string | undefined;
-    let attributes: Attributes | undefined;
-
-    // Try to consume name if it starts with #
-    this.OPTION(() => {
-      this.CONSUME(tokens.Hash);
-      const nameToken = this.CONSUME(tokens.Identifier);
-      name = nameToken.image;
-
-      // Skip whitespace after name
-      this.MANY2(() => {
-        this.CONSUME2(tokens.Whitespace);
-      });
-    });
-
-    // Try to consume attributes
-    this.OPTION2(() => {
-      attributes = this.SUBRULE(this.attributes);
-    });
-
-    // Skip whitespace/newline after name or attributes
-    this.MANY3(() => {
-      this.OR([
-        { ALT: () => this.CONSUME3(tokens.Whitespace) },
-        { ALT: () => this.CONSUME(tokens.Newline) },
-      ]);
-    });
-
-    // Consume all content until !!!
+    // Consume all content until }
     const contentTokens: IToken[] = [];
-    this.MANY4(() => {
-      const tok = this.OR2([
-        { ALT: () => this.CONSUME2(tokens.Identifier) },
+    this.MANY(() => {
+      const tok = this.OR([
+        { ALT: () => this.CONSUME(tokens.Identifier) },
         { ALT: () => this.CONSUME(tokens.Content) },
-        { ALT: () => this.CONSUME4(tokens.Whitespace) },
-        { ALT: () => this.CONSUME2(tokens.Newline) },
+        { ALT: () => this.CONSUME(tokens.Whitespace) },
+        { ALT: () => this.CONSUME(tokens.Newline) },
         { ALT: () => this.CONSUME(tokens.InlineCommentStart) },
-        // Escaped tokens (can appear in block content)
+        // Escaped tokens
         { ALT: () => this.CONSUME(tokens.EscapedHash) },
         { ALT: () => this.CONSUME(tokens.EscapedBacktick) },
-        { ALT: () => this.CONSUME(tokens.EscapedExclamation) },
         { ALT: () => this.CONSUME(tokens.EscapedColon) },
         { ALT: () => this.CONSUME(tokens.EscapedLBrace) },
         { ALT: () => this.CONSUME(tokens.EscapedRBrace) },
@@ -496,22 +272,19 @@ export class BlocksParser extends EmbeddedActionsParser {
         { ALT: () => this.CONSUME(tokens.EscapedDash) },
         { ALT: () => this.CONSUME(tokens.EscapedDollar) },
         { ALT: () => this.CONSUME(tokens.EscapedBackslash) },
+        { ALT: () => this.CONSUME(tokens.EscapedDot) },
+        { ALT: () => this.CONSUME(tokens.EscapedQuestion) },
         { ALT: () => this.CONSUME(tokens.Backslash) },
-        // Complete inline tokens (can appear in block content)
-        { ALT: () => this.CONSUME(tokens.InlineCodeCompleteWithAttrs) },
-        { ALT: () => this.CONSUME(tokens.InlineCodeComplete) },
-        { ALT: () => this.CONSUME(tokens.InlineScriptCompleteWithAttrs) },
-        { ALT: () => this.CONSUME(tokens.InlineScriptComplete) },
-        { ALT: () => this.CONSUME(tokens.InlineGenericCompleteWithAttrs) },
-        { ALT: () => this.CONSUME(tokens.InlineGenericComplete) },
-        // Individual delimiters (punctuation)
+        // Individual delimiters
         { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
-        { ALT: () => this.CONSUME(tokens.InlineScriptDelim) },
         { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
-        { ALT: () => this.CONSUME2(tokens.LBrace) },
-        { ALT: () => this.CONSUME(tokens.RBrace) },
-        { ALT: () => this.CONSUME2(tokens.Hash) },
+        { ALT: () => this.CONSUME(tokens.LBrace) },
+        { ALT: () => this.CONSUME(tokens.LBracket) },
+        { ALT: () => this.CONSUME(tokens.RBracket) },
+        { ALT: () => this.CONSUME(tokens.Hash) },
         { ALT: () => this.CONSUME(tokens.Dot) },
+        { ALT: () => this.CONSUME(tokens.At) },
+        { ALT: () => this.CONSUME(tokens.Question) },
         { ALT: () => this.CONSUME(tokens.Percent) },
         { ALT: () => this.CONSUME(tokens.Equals) },
         { ALT: () => this.CONSUME(tokens.StringValue) },
@@ -524,30 +297,18 @@ export class BlocksParser extends EmbeddedActionsParser {
       if (tok) contentTokens.push(tok);
     });
 
-    const closeDelim = this.CONSUME2(tokens.BlockScriptDelim);
-    const closeLength = closeDelim.image.length;
+    this.CONSUME(tokens.ScriptExprEnd);
 
-    // Verify exact length match
-    if (openDelimLength !== closeLength) {
-      const closeLine = getLineNumber(closeDelim);
-      const openLine = getLineNumber(openDelim);
-      throw new Error(
-        `Script block closing delimiter length mismatch: expected ${openDelimLength} exclamation mark${openDelimLength > 1 ? "s" : ""} but got ${closeLength} at line ${closeLine} (opened at line ${openLine})`,
-      );
-    }
-
-    const node: ScriptBlockNode = {
-      type: "ScriptBlock",
+    const node: ScriptNode = {
+      type: "Script",
       content: contentTokens.map((t) => processTokenImage(t)).join(""),
     };
-
-    if (name) node.name = name;
-    if (attributes) node.attributes = attributes;
 
     return node;
   });
 
-  // Generic block: :::#name? {attrs?} content :::
+  // Generic block: :::name [attrs] content :::
+  // Name is required, no # prefix
   private genericBlock = this.RULE("genericBlock", (): GenericBlockNode => {
     const openDelim = this.CONSUME(tokens.BlockGenericDelim);
     const delimLength = openDelim.image.length;
@@ -557,23 +318,22 @@ export class BlocksParser extends EmbeddedActionsParser {
       this.CONSUME(tokens.Whitespace);
     });
 
-    let name: string | undefined;
-    let attributes: Attributes | undefined;
+    // Consume name (required)
+    const nameToken = this.CONSUME(tokens.Identifier);
+    const name = nameToken.image;
 
-    // Try to consume name if it starts with #
-    this.OPTION(() => {
-      this.CONSUME(tokens.Hash);
-      const nameToken = this.CONSUME(tokens.Identifier);
-      name = nameToken.image;
+    if (!name || name.trim() === "") {
+      throw new Error("Generic block name is required");
+    }
 
-      // Skip whitespace after name
-      this.MANY2(() => {
-        this.CONSUME2(tokens.Whitespace);
-      });
+    // Skip whitespace after name
+    this.MANY2(() => {
+      this.CONSUME2(tokens.Whitespace);
     });
 
     // Try to consume attributes
-    this.OPTION2(() => {
+    let attributes: Attributes | undefined;
+    this.OPTION(() => {
       attributes = this.SUBRULE(this.attributes);
     });
 
@@ -585,23 +345,22 @@ export class BlocksParser extends EmbeddedActionsParser {
       ]);
     });
 
-    // Parse content (can contain blocks and inlines)
-    const content: (BlockNode | InlineNode | TextNode)[] = [];
+    // Parse content (can contain blocks, inlines, and script expressions)
+    const content: (BlockNode | InlineNode | ScriptNode | TextNode)[] = [];
     this.MANY4({
       GATE: () => {
         // Continue parsing until we find a closing delimiter of EXACTLY the same length
-        // This allows nested generic blocks with different lengths
         if (this.LA(1).tokenType === tokens.BlockGenericDelim) {
           const nextDelim = this.LA(1) as IToken;
-          // Only stop if the delimiter has EXACTLY the same length
           return nextDelim.image.length !== delimLength;
         }
-        return true; // Continue if it's not a delimiter at all
+        return true;
       },
       DEF: () => {
         const child = this.OR2([
           { ALT: () => this.SUBRULE(this.blockElement) },
           { ALT: () => this.SUBRULE(this.inlineElement) },
+          { ALT: () => this.SUBRULE(this.scriptExpression) },
           { ALT: () => this.SUBRULE(this.textElement) },
         ]);
         if (child) content.push(child);
@@ -610,7 +369,7 @@ export class BlocksParser extends EmbeddedActionsParser {
 
     const closeDelim = this.CONSUME2(tokens.BlockGenericDelim);
 
-    // Verify exact length match (shouldn't fail with correct GATE, but safety check)
+    // Verify exact length match
     if (closeDelim.image.length !== delimLength) {
       throw new Error(
         `Generic block closing delimiter length mismatch: expected ${delimLength} colons but got ${closeDelim.image.length}`,
@@ -619,10 +378,10 @@ export class BlocksParser extends EmbeddedActionsParser {
 
     const node: GenericBlockNode = {
       type: "GenericBlock",
+      name,
       content,
     };
 
-    if (name) node.name = name;
     if (attributes) node.attributes = attributes;
 
     return node;
@@ -633,44 +392,26 @@ export class BlocksParser extends EmbeddedActionsParser {
     return this.OR([
       { ALT: () => this.SUBRULE(this.commentInline) },
       { ALT: () => this.SUBRULE(this.codeInline) },
-      { ALT: () => this.SUBRULE(this.scriptInline) },
       { ALT: () => this.SUBRULE(this.genericInline) },
     ]);
   });
 
-  // Comment inline: // #name? content\n
+  // Comment inline: // content\n
+  // No name support in v1.0 spec
   private commentInline = this.RULE("commentInline", (): CommentInlineNode => {
     this.CONSUME(tokens.InlineCommentStart);
 
-    // Skip leading whitespace
-    this.MANY(() => {
-      this.CONSUME(tokens.Whitespace);
-    });
-
-    let name: string | undefined;
+    // Consume all content until newline or EOF
     const contentTokens: IToken[] = [];
-
-    // Try to consume name if it starts with #
-    this.OPTION(() => {
-      this.CONSUME(tokens.Hash);
-      const nameToken = this.CONSUME(tokens.Identifier);
-      name = nameToken.image;
-      // Skip whitespace after name (should not be part of content)
-      this.MANY3(() => {
-        this.CONSUME3(tokens.Whitespace);
-      });
-    });
-
-    // Consume all remaining content until newline or EOF
-    this.MANY2(() => {
+    this.MANY(() => {
       const tok = this.OR([
-        { ALT: () => this.CONSUME2(tokens.Identifier) },
+        { ALT: () => this.CONSUME(tokens.Identifier) },
         { ALT: () => this.CONSUME(tokens.Content) },
-        { ALT: () => this.CONSUME2(tokens.Whitespace) },
-        // Escaped tokens (can appear in inline comment)
+        { ALT: () => this.CONSUME(tokens.Whitespace) },
+        { ALT: () => this.CONSUME(tokens.ScriptExprStart) },
+        // Escaped tokens
         { ALT: () => this.CONSUME(tokens.EscapedHash) },
         { ALT: () => this.CONSUME(tokens.EscapedBacktick) },
-        { ALT: () => this.CONSUME(tokens.EscapedExclamation) },
         { ALT: () => this.CONSUME(tokens.EscapedColon) },
         { ALT: () => this.CONSUME(tokens.EscapedLBrace) },
         { ALT: () => this.CONSUME(tokens.EscapedRBrace) },
@@ -679,22 +420,20 @@ export class BlocksParser extends EmbeddedActionsParser {
         { ALT: () => this.CONSUME(tokens.EscapedDash) },
         { ALT: () => this.CONSUME(tokens.EscapedDollar) },
         { ALT: () => this.CONSUME(tokens.EscapedBackslash) },
+        { ALT: () => this.CONSUME(tokens.EscapedDot) },
+        { ALT: () => this.CONSUME(tokens.EscapedQuestion) },
         { ALT: () => this.CONSUME(tokens.Backslash) },
-        // Complete inline tokens (can appear in inline comment)
-        { ALT: () => this.CONSUME(tokens.InlineCodeCompleteWithAttrs) },
-        { ALT: () => this.CONSUME(tokens.InlineCodeComplete) },
-        { ALT: () => this.CONSUME(tokens.InlineScriptCompleteWithAttrs) },
-        { ALT: () => this.CONSUME(tokens.InlineScriptComplete) },
-        { ALT: () => this.CONSUME(tokens.InlineGenericCompleteWithAttrs) },
-        { ALT: () => this.CONSUME(tokens.InlineGenericComplete) },
-        // Individual delimiters (punctuation)
+        // Individual delimiters
         { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
-        { ALT: () => this.CONSUME(tokens.InlineScriptDelim) },
         { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
         { ALT: () => this.CONSUME(tokens.LBrace) },
-        { ALT: () => this.CONSUME(tokens.RBrace) },
-        { ALT: () => this.CONSUME2(tokens.Hash) },
+        { ALT: () => this.CONSUME(tokens.ScriptExprEnd) },
+        { ALT: () => this.CONSUME(tokens.LBracket) },
+        { ALT: () => this.CONSUME(tokens.RBracket) },
+        { ALT: () => this.CONSUME(tokens.Hash) },
         { ALT: () => this.CONSUME(tokens.Dot) },
+        { ALT: () => this.CONSUME(tokens.At) },
+        { ALT: () => this.CONSUME(tokens.Question) },
         { ALT: () => this.CONSUME(tokens.Percent) },
         { ALT: () => this.CONSUME(tokens.Equals) },
         { ALT: () => this.CONSUME(tokens.StringValue) },
@@ -702,95 +441,186 @@ export class BlocksParser extends EmbeddedActionsParser {
         { ALT: () => this.CONSUME(tokens.BlockCommentStart) },
         { ALT: () => this.CONSUME(tokens.BlockCommentEnd) },
         { ALT: () => this.CONSUME(tokens.BlockCodeDelim) },
-        { ALT: () => this.CONSUME(tokens.BlockScriptDelim) },
         { ALT: () => this.CONSUME(tokens.BlockGenericDelim) },
       ]);
       if (tok) contentTokens.push(tok);
     });
 
-    this.OPTION2(() => this.CONSUME(tokens.Newline));
+    this.OPTION(() => this.CONSUME(tokens.Newline));
 
     const node: CommentInlineNode = {
       type: "CommentInline",
       content: contentTokens.map((t) => processTokenImage(t)).join(""),
     };
 
-    if (name) {
-      node.name = name;
-    }
-
     return node;
   });
 
-  // Code inline: `content` or `content`{attrs} (complete token from lexer)
+  // Code inline: name`content`[attrs?]
+  // Name is REQUIRED
   private codeInline = this.RULE("codeInline", (): CodeInlineNode => {
-    const token = this.OR([
-      { ALT: () => this.CONSUME(tokens.InlineCodeCompleteWithAttrs) },
-      { ALT: () => this.CONSUME(tokens.InlineCodeComplete) },
-    ]);
+    // Consume name (required)
+    const nameToken = this.CONSUME(tokens.Identifier);
+    const name = nameToken.image;
 
-    // Parse the token image (only happens during actual parsing, not grammar recording)
-    const tokenImage = token?.image || "";
-    const parsed = parseInlineCodeToken(tokenImage);
+    if (!name || name.trim() === "") {
+      throw new Error("Inline code name is required");
+    }
+
+    // Consume opening backtick
+    this.CONSUME(tokens.InlineCodeDelim);
+
+    // Consume content until closing backtick
+    const contentTokens: IToken[] = [];
+    this.MANY(() => {
+      const tok = this.OR([
+        { ALT: () => this.CONSUME2(tokens.Identifier) },
+        { ALT: () => this.CONSUME(tokens.Content) },
+        { ALT: () => this.CONSUME(tokens.Whitespace) },
+        { ALT: () => this.CONSUME(tokens.ScriptExprStart) },
+        // Escaped tokens
+        { ALT: () => this.CONSUME(tokens.EscapedHash) },
+        { ALT: () => this.CONSUME(tokens.EscapedBacktick) },
+        { ALT: () => this.CONSUME(tokens.EscapedColon) },
+        { ALT: () => this.CONSUME(tokens.EscapedLBrace) },
+        { ALT: () => this.CONSUME(tokens.EscapedRBrace) },
+        { ALT: () => this.CONSUME(tokens.EscapedLBracket) },
+        { ALT: () => this.CONSUME(tokens.EscapedRBracket) },
+        { ALT: () => this.CONSUME(tokens.EscapedDash) },
+        { ALT: () => this.CONSUME(tokens.EscapedDollar) },
+        { ALT: () => this.CONSUME(tokens.EscapedBackslash) },
+        { ALT: () => this.CONSUME(tokens.EscapedDot) },
+        { ALT: () => this.CONSUME(tokens.EscapedQuestion) },
+        { ALT: () => this.CONSUME(tokens.Backslash) },
+        // Other delimiters (not backtick)
+        { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
+        { ALT: () => this.CONSUME(tokens.LBrace) },
+        { ALT: () => this.CONSUME(tokens.ScriptExprEnd) },
+        { ALT: () => this.CONSUME(tokens.Hash) },
+        { ALT: () => this.CONSUME(tokens.Dot) },
+        { ALT: () => this.CONSUME(tokens.At) },
+        { ALT: () => this.CONSUME(tokens.Question) },
+        { ALT: () => this.CONSUME(tokens.Percent) },
+        { ALT: () => this.CONSUME(tokens.Equals) },
+        { ALT: () => this.CONSUME(tokens.StringValue) },
+        { ALT: () => this.CONSUME(tokens.AnyChar) },
+        { ALT: () => this.CONSUME(tokens.InlineCommentStart) },
+        { ALT: () => this.CONSUME(tokens.BlockCommentStart) },
+        { ALT: () => this.CONSUME(tokens.BlockCommentEnd) },
+        { ALT: () => this.CONSUME(tokens.BlockCodeDelim) },
+        { ALT: () => this.CONSUME(tokens.BlockGenericDelim) },
+      ]);
+      if (tok) contentTokens.push(tok);
+    });
+
+    // Consume closing backtick
+    this.CONSUME2(tokens.InlineCodeDelim);
+
+    // Try to consume attributes [...]
+    let attributes: Attributes | undefined;
+    this.OPTION(() => {
+      attributes = this.SUBRULE(this.attributes);
+    });
 
     const node: CodeInlineNode = {
       type: "CodeInline",
-      content: parsed.content,
+      name,
+      content: contentTokens.map((t) => processTokenImage(t)).join(""),
     };
 
-    if (parsed.name) node.name = parsed.name;
-    if (parsed.attributes) node.attributes = parsed.attributes;
+    if (attributes) node.attributes = attributes;
 
     return node;
   });
 
-  // Script inline: !content! or !content!{attrs} (complete token from lexer)
-  private scriptInline = this.RULE("scriptInline", (): ScriptInlineNode => {
-    const token = this.OR([
-      { ALT: () => this.CONSUME(tokens.InlineScriptCompleteWithAttrs) },
-      { ALT: () => this.CONSUME(tokens.InlineScriptComplete) },
-    ]);
-
-    // Parse the token image (only happens during actual parsing, not grammar recording)
-    const tokenImage = token?.image || "";
-    const parsed = parseInlineScriptToken(tokenImage);
-
-    const node: ScriptInlineNode = {
-      type: "ScriptInline",
-      content: parsed.content,
-    };
-
-    if (parsed.name) node.name = parsed.name;
-    if (parsed.attributes) node.attributes = parsed.attributes;
-
-    return node;
-  });
-
-  // Generic inline: :content: or :content:{attrs} (complete token from lexer)
-  // NOTE: For simplicity, content is treated as plain text, not parsed recursively for nested inlines
+  // Generic inline: name:content[attrs?]
+  // Name is REQUIRED, content ends at first unescaped [ or whitespace/newline
   private genericInline = this.RULE("genericInline", (): GenericInlineNode => {
-    const token = this.OR([
-      { ALT: () => this.CONSUME(tokens.InlineGenericCompleteWithAttrs) },
-      { ALT: () => this.CONSUME(tokens.InlineGenericComplete) },
-    ]);
+    // Consume name (required)
+    const nameToken = this.CONSUME(tokens.Identifier);
+    const name = nameToken.image;
 
-    // Parse the token image (only happens during actual parsing, not grammar recording)
-    const tokenImage = token?.image || "";
-    const parsed = parseInlineGenericToken(tokenImage);
+    if (!name || name.trim() === "") {
+      throw new Error("Inline generic name is required");
+    }
+
+    // Consume colon separator
+    this.CONSUME(tokens.InlineGenericDelim);
+
+    // Consume content until [ or whitespace/newline
+    const contentTokens: IToken[] = [];
+    this.MANY({
+      GATE: () => {
+        // Stop at [ (attributes) or whitespace/newline
+        const next = this.LA(1);
+        return (
+          next.tokenType !== tokens.LBracket &&
+          next.tokenType !== tokens.Whitespace &&
+          next.tokenType !== tokens.Newline
+        );
+      },
+      DEF: () => {
+        const tok = this.OR([
+          { ALT: () => this.CONSUME2(tokens.Identifier) },
+          { ALT: () => this.CONSUME(tokens.Content) },
+          { ALT: () => this.CONSUME(tokens.ScriptExprStart) },
+          // Escaped tokens
+          { ALT: () => this.CONSUME(tokens.EscapedHash) },
+          { ALT: () => this.CONSUME(tokens.EscapedBacktick) },
+          { ALT: () => this.CONSUME(tokens.EscapedColon) },
+          { ALT: () => this.CONSUME(tokens.EscapedLBrace) },
+          { ALT: () => this.CONSUME(tokens.EscapedRBrace) },
+          { ALT: () => this.CONSUME(tokens.EscapedLBracket) },
+          { ALT: () => this.CONSUME(tokens.EscapedRBracket) },
+          { ALT: () => this.CONSUME(tokens.EscapedDash) },
+          { ALT: () => this.CONSUME(tokens.EscapedDollar) },
+          { ALT: () => this.CONSUME(tokens.EscapedBackslash) },
+          { ALT: () => this.CONSUME(tokens.EscapedDot) },
+          { ALT: () => this.CONSUME(tokens.EscapedQuestion) },
+          { ALT: () => this.CONSUME(tokens.Backslash) },
+          // Other delimiters
+          { ALT: () => this.CONSUME2(tokens.InlineGenericDelim) },
+          { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
+          { ALT: () => this.CONSUME(tokens.LBrace) },
+          { ALT: () => this.CONSUME(tokens.ScriptExprEnd) },
+          { ALT: () => this.CONSUME(tokens.RBracket) },
+          { ALT: () => this.CONSUME(tokens.Hash) },
+          { ALT: () => this.CONSUME(tokens.Dot) },
+          { ALT: () => this.CONSUME(tokens.At) },
+          { ALT: () => this.CONSUME(tokens.Question) },
+          { ALT: () => this.CONSUME(tokens.Percent) },
+          { ALT: () => this.CONSUME(tokens.Equals) },
+          { ALT: () => this.CONSUME(tokens.StringValue) },
+          { ALT: () => this.CONSUME(tokens.AnyChar) },
+          { ALT: () => this.CONSUME(tokens.InlineCommentStart) },
+          { ALT: () => this.CONSUME(tokens.BlockCommentStart) },
+          { ALT: () => this.CONSUME(tokens.BlockCommentEnd) },
+          { ALT: () => this.CONSUME(tokens.BlockCodeDelim) },
+          { ALT: () => this.CONSUME(tokens.BlockGenericDelim) },
+        ]);
+        if (tok) contentTokens.push(tok);
+      },
+    });
+
+    // Try to consume attributes [...]
+    let attributes: Attributes | undefined;
+    this.OPTION(() => {
+      attributes = this.SUBRULE(this.attributes);
+    });
 
     // For now, treat content as plain text (no nested inline parsing)
     const contentNode: TextNode = {
       type: "Text",
-      value: parsed.content,
+      value: contentTokens.map((t) => processTokenImage(t)).join(""),
     };
 
     const node: GenericInlineNode = {
       type: "GenericInline",
+      name,
       content: [contentNode],
     };
 
-    if (parsed.name) node.name = parsed.name;
-    if (parsed.attributes) node.attributes = parsed.attributes;
+    if (attributes) node.attributes = attributes;
 
     return node;
   });
@@ -801,7 +631,6 @@ export class BlocksParser extends EmbeddedActionsParser {
       // Escaped tokens - treat as literal text with their unescaped value
       { ALT: () => this.CONSUME(tokens.EscapedHash) },
       { ALT: () => this.CONSUME(tokens.EscapedBacktick) },
-      { ALT: () => this.CONSUME(tokens.EscapedExclamation) },
       { ALT: () => this.CONSUME(tokens.EscapedColon) },
       { ALT: () => this.CONSUME(tokens.EscapedLBrace) },
       { ALT: () => this.CONSUME(tokens.EscapedRBrace) },
@@ -810,23 +639,25 @@ export class BlocksParser extends EmbeddedActionsParser {
       { ALT: () => this.CONSUME(tokens.EscapedDash) },
       { ALT: () => this.CONSUME(tokens.EscapedDollar) },
       { ALT: () => this.CONSUME(tokens.EscapedBackslash) },
+      { ALT: () => this.CONSUME(tokens.EscapedDot) },
+      { ALT: () => this.CONSUME(tokens.EscapedQuestion) },
       { ALT: () => this.CONSUME(tokens.Backslash) },
       // Regular text tokens
       { ALT: () => this.CONSUME(tokens.Content) },
       { ALT: () => this.CONSUME(tokens.Whitespace) },
       { ALT: () => this.CONSUME(tokens.Newline) },
-      { ALT: () => this.CONSUME(tokens.Identifier) },
       { ALT: () => this.CONSUME(tokens.StringValue) },
       { ALT: () => this.CONSUME(tokens.LBrace) },
-      { ALT: () => this.CONSUME(tokens.RBrace) },
+      { ALT: () => this.CONSUME(tokens.ScriptExprEnd) },
+      { ALT: () => this.CONSUME(tokens.LBracket) },
+      { ALT: () => this.CONSUME(tokens.RBracket) },
       { ALT: () => this.CONSUME(tokens.Hash) },
       { ALT: () => this.CONSUME(tokens.Dot) },
+      { ALT: () => this.CONSUME(tokens.At) },
+      { ALT: () => this.CONSUME(tokens.Question) },
       { ALT: () => this.CONSUME(tokens.Percent) },
       { ALT: () => this.CONSUME(tokens.Equals) },
       { ALT: () => this.CONSUME(tokens.AnyChar) },
-      { ALT: () => this.CONSUME(tokens.InlineCodeDelim) },
-      { ALT: () => this.CONSUME(tokens.InlineScriptDelim) },
-      { ALT: () => this.CONSUME(tokens.InlineGenericDelim) },
     ]);
 
     const node: TextNode = {
@@ -837,14 +668,15 @@ export class BlocksParser extends EmbeddedActionsParser {
     return node;
   });
 
-  // Attributes: { #id .class %option key=value }
+  // Attributes: [#id .class ?option key=value @event=handler]
   private attributes = this.RULE("attributes", (): Attributes => {
-    this.CONSUME(tokens.LBrace);
+    this.CONSUME(tokens.LBracket);
 
     const attrs: Attributes = {
       classes: [],
       options: [],
       keyValues: {},
+      events: {},
     };
 
     this.MANY(() => {
@@ -867,20 +699,33 @@ export class BlocksParser extends EmbeddedActionsParser {
         },
         {
           ALT: () => {
-            // %option
-            this.CONSUME(tokens.Percent);
+            // ?option
+            this.CONSUME(tokens.Question);
             const opt = this.CONSUME3(tokens.Identifier);
             attrs.options.push(opt.image);
           },
         },
         {
           ALT: () => {
-            // key=value
-            const key = this.CONSUME4(tokens.Identifier);
+            // @event=handler
+            this.CONSUME(tokens.At);
+            const eventName = this.CONSUME4(tokens.Identifier);
             this.CONSUME(tokens.Equals);
-            const value = this.OR2([
+            const handler = this.OR2([
               { ALT: () => this.CONSUME(tokens.StringValue) },
               { ALT: () => this.CONSUME5(tokens.Identifier) },
+            ]);
+            attrs.events[eventName.image] = handler.image;
+          },
+        },
+        {
+          ALT: () => {
+            // key=value
+            const key = this.CONSUME6(tokens.Identifier);
+            this.CONSUME2(tokens.Equals);
+            const value = this.OR3([
+              { ALT: () => this.CONSUME2(tokens.StringValue) },
+              { ALT: () => this.CONSUME7(tokens.Identifier) },
             ]);
             attrs.keyValues[key.image] = value.image;
           },
@@ -894,7 +739,7 @@ export class BlocksParser extends EmbeddedActionsParser {
       ]);
     });
 
-    this.CONSUME(tokens.RBrace);
+    this.CONSUME(tokens.RBracket);
 
     return attrs;
   });

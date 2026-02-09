@@ -189,22 +189,28 @@ Total: \${price * quantity}`,
       },
       invoice: {
         name: "Invoice",
-        source: `:::invoice {#inv-001 .document}
-Customer: \${customer.name}
-Email: \${customer.email}
+        source: `---
+customer:
+  name: "Alice Smith"
+  email: "alice@example.com"
+items:
+  - name: "Product A"
+    price: 100
+  - name: "Product B"
+    price: 200
+---
 
-Items:
-- Product A: $\${items.productA}
-- Product B: $\${items.productB}
+# Invoice #\${customer.name.split(' ')[0]}
 
-Subtotal: $\${items.productA+items.productB}
-Tax (10%): $\${(items.productA+items.productB)*0.1}
-Total: $\${(items.productA+items.productB)*1.1}
-:::`,
-        variables: {
-          customer: { name: "Alice Smith", email: "alice@example.com" },
-          items: { productA: 100, productB: 200 }
-        }
+**Customer:** \${customer.name}
+**Email:** \${customer.email}
+
+**Items:**
+- \${items[0].name}: $\${items[0].price}
+- \${items[1].name}: $\${items[1].price}
+
+**Total:** $\${items[0].price + items[1].price}`,
+        variables: { }
       }
     };
 

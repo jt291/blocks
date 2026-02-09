@@ -6,6 +6,58 @@
   <title>Blocks Language Playground</title>
   <link rel="stylesheet" href="/playground.css">
   <script src="https://unpkg.com/@alenaksu/json-viewer@2.1.0/dist/json-viewer.bundle.js"></script>
+  <style>
+    /* Additional styles for select */
+    .examples-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 1rem;
+      background: #f6f8fa;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .examples-bar label {
+      font-weight: 600;
+      color: #24292f;
+      font-size: 14px;
+    }
+
+    .example-select {
+      padding: 0.5rem 1rem;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      background: white;
+      font-size: 14px;
+      cursor: pointer;
+      min-width: 220px;
+      color: #24292f;
+      transition: all 0.2s;
+      flex-grow: 1;
+      max-width: 300px;
+    }
+
+    .example-select:hover {
+      border-color: #0969da;
+      background: #f6f8fa;
+    }
+
+    .example-select:focus {
+      outline: 2px solid #0969da;
+      outline-offset: 2px;
+      border-color: #0969da;
+    }
+
+    .example-select option {
+      padding: 0.5rem;
+    }
+
+    #processBtn {
+      margin-left: auto;
+    }
+  </style>
 </head>
 <body>
   <div class="playground-container">
@@ -23,15 +75,19 @@
 
     <!-- Examples -->
     <div class="examples-bar">
-      <button class="btn" data-example="basics">Basics</button>
-      <button class="btn" data-example="scripts">Scripts</button>
-      <button class="btn" data-example="attributes">Attributes</button>
-      <button class="btn" data-example="inlines">Inlines</button>
-      <button class="btn" data-example="nested">Nested</button>
-      <button class="btn" data-example="codeblock">Code Block</button>
-      <button class="btn" data-example="comments">Comments</button>
-      <button class="btn" data-example="metadata">Metadata</button>
-      <button class="btn" data-example="invoice">Invoice</button>
+      <label for="exampleSelect">Examples:</label>
+      <select id="exampleSelect" class="example-select">
+        <option value="">-- Choose an example --</option>
+        <option value="basics">Basics</option>
+        <option value="scripts">Scripts</option>
+        <option value="attributes">Attributes</option>
+        <option value="inlines">Inlines</option>
+        <option value="nested">Nested</option>
+        <option value="codeblock">Code Block</option>
+        <option value="comments">Comments</option>
+        <option value="metadata">Metadata</option>
+        <option value="invoice">Invoice</option>
+      </select>
       <button class="btn btn-primary" id="processBtn">⚡ Process</button>
     </div>
 
@@ -85,14 +141,8 @@
         </div>
 
         <!-- AST JSON Tab -->
-        <div class="tab-content json-container" id="astJsonTab">
+        <div class="tab-content" id="astJsonTab">
           <json-viewer id="astJson"></json-viewer>
-        </div>
-
-        <!-- Actions -->
-        <div class="actions-bar">
-          <button class="btn" id="copyJsonBtn">📋 Copy JSON</button>
-          <button class="btn" id="clearBtn">🗑️ Clear</button>
         </div>
       </div>
     </div>
@@ -102,74 +152,77 @@
     import { process } from './src/index.ts';
     import { createLexer } from './src/lexer/lexer.ts';
 
-    // Examples - All Spec v1.0 compliant
+    // Get elements
+    const sourceInput = document.getElementById('sourceInput');
+    const variablesInput = document.getElementById('variablesInput');
+    const exampleSelect = document.getElementById('exampleSelect');
+    const processBtn = document.getElementById('processBtn');
+    const errorBanner = document.getElementById('errorBanner');
+    const errorList = document.getElementById('errorList');
+    const outputDisplay = document.getElementById('outputDisplay');
+    const tokensList = document.getElementById('tokensTab');
+    const astTree = document.getElementById('astTree');
+    const astJson = document.getElementById('astJson');
+
+    // Examples
     const examples = {
-      basics: {
-        name: "Basics",
-        source: `:::section {#intro .welcome}
-Welcome to Blocks!
+      basics: `/* Welcome to Blocks */
 
-Result: \${2+2}
+Text with expression: \${2 + 2}
+
+// Inline comment
+More text here`,
+
+      scripts: `:::calculator
+Price: \${price}
+Quantity: \${quantity}
+Total: \${price * quantity}
 :::`,
-        variables: { }
-      },
-      scripts: {
-        name: "Scripts",
-        source: `Total: \${price*quantity}
-Tax: \${total*0.1}
-Grand Total: \${total*1.1}`,
-        variables: { price: 10, quantity: 5, total: 50 }
-      },
-      attributes: {
-        name: "Attributes",
-        source: `:::div {#main .container .flex lang=en theme=dark}
-Block with attributes
+
+      attributes: `:::section [#main .container data-id="123"]
+Content with attributes
 :::
 
-Text with \`code\`{#c1 .highlight} inline.`,
-        variables: { }
-      },
-      inlines: {
-        name: "Inlines",
-        source: `Text with \`inline code\` and code\`content\` formats.
+Inline with code\`snippet\`[.highlight]`,
 
-:::section
-More text with \`js console.log()\` examples.
-:::`,
-        variables: { }
-      },
-      nested: {
-        name: "Nested",
-        source: `:::outer {.container}
-Value: \${x}
+      inlines: `This is **bold** and *italic* text.
 
-::::inner {.box}
-Double: \${x*2}
-::::
+Use code\`inline code\` for snippets.
+
+Links: [text](url) and images: ![alt](src)`,
+
+      nested: `:::section [.container]
+
+  :::article [#main]
+  
+    /* Main Content */
+    
+    :::info [.note]
+    This is nested
+    :::
+    
+  :::
+
 :::`,
-        variables: { x: 5 }
-      },
-      codeblock: {
-        name: "Code Block",
-        source: `\`\`\`javascript
-function hello() {
-  console.log("Hello, world!");
-}
+
+      codeblock: `\`\`\`python [#snippet1 .highlight]
+def hello(name):
+    print(f"Hello, {name}!")
+
+hello("World")
 \`\`\``,
-        variables: { }
-      },
-      comments: {
-        name: "Comments",
-        source: `/* This is a block comment */
-:::section
-content with \${value}
-:::
-/* Another comment */`,
-        variables: { value: 42 }
-      },
-      metadata: {
-        name: "Metadata",
-        source: `---
+
+      comments: `/* Block comment
+   Multi-line
+*/
+
+// Inline comment
+
+Text here
+
+/* Another block */`,
+
+      metadata: `---
 title: "My Document"
 author: "Alice"
 date: "2024-01-15"
@@ -185,11 +238,11 @@ Date: \${date}
 Price: \${price}
 Quantity: \${quantity}
 Total: \${price * quantity}`,
-        variables: { }
-      },
-      invoice: {
-        name: "Invoice",
-        source: `---
+
+      invoice: `---
+invoice:
+  number: "INV-001"
+  date: "2024-01-15"
 customer:
   name: "Alice Smith"
   email: "alice@example.com"
@@ -200,115 +253,62 @@ items:
     price: 200
 ---
 
-# Invoice #\${customer.name.split(' ')[0]}
+:::invoice
+/* Invoice \${invoice.number} - \${invoice.date} */
 
-**Customer:** \${customer.name}
-**Email:** \${customer.email}
+Customer: \${customer.name}
+Email: \${customer.email}
 
-**Items:**
+Items:
 - \${items[0].name}: $\${items[0].price}
 - \${items[1].name}: $\${items[1].price}
 
-**Total:** $\${items[0].price + items[1].price}`,
-        variables: { }
-      }
+Total: $\${items[0].price + items[1].price}
+:::`,
     };
 
-    // State
-    let currentAST = null;
-    let currentOutput = '';
-    let nodeIdCounter = 0;
-
-    // Elements
-    const sourceInput = document.getElementById('sourceInput');
-    const variablesInput = document.getElementById('variablesInput');
-    const outputDisplay = document.getElementById('outputDisplay');
-    const errorBanner = document.getElementById('errorBanner');
-    const errorList = document.getElementById('errorList');
-    const tokensList = document.getElementById('tokensList');
-    const astTree = document.getElementById('astTree');
-    const astJson = document.getElementById('astJson');
-    const processBtn = document.getElementById('processBtn');
-    const copyJsonBtn = document.getElementById('copyJsonBtn');
-    const clearBtn = document.getElementById('clearBtn');
-
-    // Tab switching
-    document.querySelectorAll('.tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        const targetTab = tab.dataset.tab;
-        
-        // Update active tab
-        for (const t of document.querySelectorAll('.tab')) {
-          t.classList.remove('active');
+    // Handle Tab key in textareas (indent with 2 spaces)
+    function handleTab(textarea) {
+      textarea.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+          
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const value = textarea.value;
+          
+          // Insert 2 spaces at cursor position
+          textarea.value = `${value.substring(0, start)}  ${value.substring(end)}`;
+          
+          // Move cursor after the inserted spaces
+          textarea.selectionStart = textarea.selectionEnd = start + 2;
         }
-        tab.classList.add('active');
-        
-        // Update active content
-        for (const c of document.querySelectorAll('.tab-content')) {
-          c.classList.remove('active');
-        }
-        document.getElementById(`${targetTab}Tab`).classList.add('active');
       });
-    });
+    }
 
-    // Example buttons
-    document.querySelectorAll('[data-example]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const exampleKey = btn.dataset.example;
-        const example = examples[exampleKey];
-        sourceInput.value = example.source;
-        variablesInput.value = JSON.stringify(example.variables, null, 2);
+    // Apply Tab handling to both textareas
+    handleTab(sourceInput);
+    handleTab(variablesInput);
+
+    // Handle example selection
+    exampleSelect.addEventListener('change', (e) => {
+      const example = e.target.value;
+      if (example && examples[example]) {
+        sourceInput.value = examples[example];
         processSource();
-      });
-    });
-
-    // Process button
-    processBtn.addEventListener('click', () => {
-      processSource();
-    });
-
-    // Auto-process on input (debounced)
-    let processTimeout;
-    sourceInput.addEventListener('input', () => {
-      clearTimeout(processTimeout);
-      processTimeout = setTimeout(processSource, 500);
-    });
-
-    variablesInput.addEventListener('input', () => {
-      clearTimeout(processTimeout);
-      processTimeout = setTimeout(processSource, 500);
-    });
-
-    // Copy JSON
-    copyJsonBtn.addEventListener('click', () => {
-      if (currentAST) {
-        navigator.clipboard.writeText(JSON.stringify(currentAST, null, 2));
-        copyJsonBtn.textContent = '✅ Copied!';
-        setTimeout(() => {
-          copyJsonBtn.textContent = '📋 Copy JSON';
-        }, 2000);
       }
     });
 
-    // Clear
-    clearBtn.addEventListener('click', () => {
-      sourceInput.value = '';
-      variablesInput.value = '{}';
-      currentAST = null;
-      currentOutput = '';
-      outputDisplay.textContent = '';
-      tokensList.innerHTML = '<p class="empty-state">No tokens yet. Type some code!</p>';
-      astTree.innerHTML = '<p class="empty-state">No AST yet. Type some code!</p>';
-      astJson.data = null;
-      errorBanner.classList.remove('visible');
-    });
-
-    // Process source: Parse → Evaluate → Render
+    // Process source
     function processSource() {
       const source = sourceInput.value;
 
       if (!source.trim()) {
-        clearBtn.click();
+        errorBanner.classList.remove('visible');
+        outputDisplay.textContent = '';
+        tokensList.innerHTML = '';
+        astTree.innerHTML = '';
+        astJson.data = null;
         return;
       }
 
@@ -326,265 +326,136 @@ items:
           return;
         }
 
-        // Tokenize
+        // Tokenize (for Tokens tab)
         const lexer = createLexer();
         const { tokens } = lexer.tokenize(source);
 
-        // Parse
-        const result = process(source, { variables }); //parse(source);
+        // Process: Extract metadata + Parse + Evaluate + Render
+        const result = process(source, { variables });
         
         // Display errors
-        if (result.errors.length > 0) {
+        if (result.errors && result.errors.length > 0) {
           errorList.innerHTML = result.errors.map(e => `<li>${e}</li>`).join('');
           errorBanner.classList.add('visible');
         } else {
           errorBanner.classList.remove('visible');
         }
 
-        // Evaluate with context
-        // const evaluated = evaluate(result.ast, { variables });
-        currentAST = result.ast;
+        // Display output
+        outputDisplay.textContent = result.output || '';
 
-        // Render output
-        currentOutput = result.output;
-        // Display views
-        renderOutput(currentOutput);
+        // Display tokens
         renderTokens(tokens);
-        renderASTTree(currentAST);
-        renderASTJSON(currentAST);
+
+        // Display AST Tree
+        renderASTTree(result.ast);
+
+        // Display AST JSON
+        astJson.data = result.ast;
+
+        // Log for debugging
+        console.log('Metadata:', result.metadata);
+        console.log('Output:', result.output);
+        console.log('AST:', result.ast);
 
       } catch (error) {
         errorList.innerHTML = `<li>${error.message}</li>`;
         errorBanner.classList.add('visible');
+        console.error(error);
       }
-    }
-
-    // Render output
-    function renderOutput(output) {
-      outputDisplay.textContent = output || '(empty)';
     }
 
     // Render tokens
     function renderTokens(tokens) {
-      if (tokens.length === 0) {
-        tokensList.innerHTML = '<p class="empty-state">No tokens</p>';
-        return;
+      const tokensContainer = document.getElementById('tokensList');
+      tokensContainer.innerHTML = '';
+      
+      for (const token of tokens) {
+        const tokenEl = document.createElement('div');
+        tokenEl.className = 'token-item';
+        tokenEl.innerHTML = `
+          <span class="token-type">${token.tokenType.name}</span>
+          <span class="token-image">${escapeHtml(token.image)}</span>
+          <span class="token-pos">L${token.startLine}:${token.startColumn}</span>
+        `;
+        tokensContainer.appendChild(tokenEl);
       }
-
-      tokensList.innerHTML = tokens
-        .map((token, _idx) => {
-          const type = token.tokenType.name;
-          const value = token.image.replace(/\n/g, '\\n').replace(/\t/g, '\\t');
-          const loc = `L${token.startLine}:${token.startColumn}`;
-          
-          return `
-            <div class="token-item">
-              <span class="token-type">${type}</span>
-              <span class="token-value">${escapeHtml(value)}</span>
-              <span class="token-location">${loc}</span>
-            </div>
-          `;
-        })
-        .join('');
     }
 
     // Render AST Tree
     function renderASTTree(ast) {
-      nodeIdCounter = 0; // Reset counter for each render
-      astTree.innerHTML = renderASTNode(ast, 0);
+      const treeContainer = document.getElementById('astTree');
+      treeContainer.innerHTML = '';
       
-      // Add event delegation for toggle functionality
-      astTree.addEventListener('click', (e) => {
-        const header = e.target.closest('.ast-node-header');
-        if (header) {
-          //const nodeId = header.dataset.nodeId;
-          const childrenContainer = header.nextElementSibling;
-          if (childrenContainer?.classList.contains('ast-node-children')) {
-            childrenContainer.classList.toggle('collapsed');
-            const toggle = header.querySelector('.ast-toggle');
-            if (toggle) {
-              toggle.textContent = childrenContainer.classList.contains('collapsed') ? '▶' : '▼';
-            }
+      function createNode(node, depth = 0) {
+        if (!node) return;
+        
+        const nodeEl = document.createElement('div');
+        nodeEl.className = 'ast-node';
+        nodeEl.style.marginLeft = `${depth * 20}px`;
+        
+        let label = node.type || 'Unknown';
+        if (node.name) label = `${label} "${node.name}"`;
+        if (node.value !== undefined) label = `${label} = ${JSON.stringify(node.value)}`;
+        
+        nodeEl.textContent = label;
+        treeContainer.appendChild(nodeEl);
+        
+        if (node.children && Array.isArray(node.children)) {
+          for (const child of node.children) {
+            createNode(child, depth + 1);
           }
         }
-      });
-    }
-
-    // Helper function to create a preview of string content
-    function createContentPreview(content, maxLength = 50) {
-      const text = content || '';
-      const preview = text.substring(0, maxLength);
-      const ellipsis = text.length > maxLength ? '...' : '';
-      return `"${preview}${ellipsis}"`;
-    }
-
-    function renderASTNode(node, depth) {
-      if (!node) return '';
-
-      const type = node.type || 'Unknown';
-      const MAX_PREVIEW_LENGTH = 50;
-      let info = '';
-      let children = [];
-
-      // Extract node info
-      if (node.type === 'GenericBlock') {
-        info = `name="${node.name}"`;
-        children = node.content || [];
-      } else if (node.type === 'CodeBlock') {
-        info = node.name ? `lang="${node.name}"` : '';
-        // CodeBlock.content is a string, not an array - show preview
-        info += ` ${createContentPreview(node.content, MAX_PREVIEW_LENGTH)}`;
-        children = []; // No children to iterate
-      } else if (node.type === 'CommentBlock') {
-        // CommentBlock.content is a string - show preview
-        info = createContentPreview(node.content, MAX_PREVIEW_LENGTH);
-        children = []; // No children to iterate
-      } else if (node.type === 'CodeInline') {
-        // CodeInline.content is a string - show preview
-        info = createContentPreview(node.content, MAX_PREVIEW_LENGTH);
-        children = []; // No children to iterate
-      } else if (node.type === 'CommentInline') {
-        // CommentInline.content is a string - show preview
-        info = createContentPreview(node.content, MAX_PREVIEW_LENGTH);
-        children = []; // No children to iterate
-      } else if (node.type === 'GenericInline') {
-        info = `name="${node.name}"`;
-        children = node.content || [];
-      } else if (node.type === 'Text') {
-        info = createContentPreview(node.value, MAX_PREVIEW_LENGTH);
-      } else if (node.type === 'Document') {
-        children = node.children || [];
-      } else if (node.content) {
-        children = Array.isArray(node.content) ? node.content : [];
       }
-
-      // Render attributes
-      if (node.attributes) {
-        const attrs = [];
-        if (node.attributes.id) attrs.push(`#${node.attributes.id}`);
-        if (node.attributes.classes?.length) attrs.push(`.${node.attributes.classes.join('.')}`);
-        if (attrs.length) info += ` {${attrs.join(' ')}}`;
-      }
-
-      const hasChildren = children.length > 0;
-      const nodeId = `node-${nodeIdCounter++}`;
-
-      let html = `
-        <div class="ast-node">
-          <div class="ast-node-header" data-node-id="${nodeId}">
-            <span class="ast-toggle">${hasChildren ? '▼' : '  '}</span>
-            <span class="ast-node-type">${type}</span>
-            ${info ? `<span class="ast-node-info">${escapeHtml(info)}</span>` : ''}
-          </div>
-      `;
-
-      if (hasChildren) {
-        html += `<div class="ast-node-children" id="${nodeId}">`;
-        children.forEach(child => {
-          html += renderASTNode(child, depth + 1);
-        });
-        html += '</div>';
-      }
-
-      html += '</div>';
-      return html;
-    }
-
-    // Render AST JSON
-    function renderASTJSON(ast) {
-      astJson.data = ast;
+      
+      createNode(ast);
     }
 
     // Escape HTML
-    function escapeHtml(str) {
+    function escapeHtml(text) {
       const div = document.createElement('div');
-      div.textContent = str;
+      div.textContent = text;
       return div.innerHTML;
     }
 
-    // Initial load
-    const firstExample = examples.basics;
-    sourceInput.value = firstExample.source;
-    variablesInput.value = JSON.stringify(firstExample.variables, null, 2);
-    processSource();
+    // Tab switching
+    for (const tab of document.querySelectorAll('.tab')) {
+      tab.addEventListener('click', () => {
+        const tabName = tab.dataset.tab;
+        
+        // Update tabs
+        for (const t of document.querySelectorAll('.tab')) {
+          t.classList.remove('active');
+        }
+        tab.classList.add('active');
+        
+        // Update content
+        for (const c of document.querySelectorAll('.tab-content')) {
+          c.classList.remove('active');
+        }
+        document.getElementById(`${tabName}Tab`).classList.add('active');
+      });
+    }
+
+    // Process button
+    processBtn.addEventListener('click', processSource);
+
+    // Auto-process on input (debounced)
+    let timeout;
+    sourceInput.addEventListener('input', () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(processSource, 500);
+    });
+
+    variablesInput.addEventListener('input', () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(processSource, 500);
+    });
+
+    // Initial process
+    if (sourceInput.value.trim()) {
+      processSource();
+    }
   </script>
 </body>
 </html>
-
-<!--
-/* This is a comment block */
-/* #include header.html */
-/* #config { #settings .important %readonly } some content */
-
-// Simple comment
-//#todo Fix later
-`console.log()`
-`#js alert()`{.hl}
-!getValue()!
-!#py script!{#s1}
-:#name content:{.k}
-:content:
-::
-:text with `code`:
-
-
-!!!
-<p> content </p>
-!!!
-
-!!!#html {#id .class1 .class2 %opt1 %opt2}
-<p> HTML content </p>
-!!!
-
-:::#container
-text with `code` and :emphasis:
-:::
-
-:::#container {#id .class1 .class2 %opt1 %opt2}
-text with `code` and :emphasis:
-:::
-
-un petit texte avec `du code`{#id} et de :lemphase: et du vide :: 
-
-
-:::#container
-text with `code`{#id} and :emphasis:
-et du HTML
-<p> content </p>
-:::
-
-```
-<dfn></dfn>
-```
-
-:::
-bloc externe
-
-::::: #id
-bloc interne (5 deux-points)
-:::::
-
-:::
-
-// Avec noms
-:::#outer
-  :::::#inner
-  contenu
-  :::::
-:::
-
-// Avec attributs
-:::{.wrapper}
-  :::::{.content}
-  text
-  :::::
-:::
-
-// Avec contenu mixte
-:::#container
-text `code`
-:::::
-<p>HTML</p>
-:::::
-:::
--->

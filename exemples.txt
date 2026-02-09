@@ -20,6 +20,43 @@ A block can have attributes:
   attribute=value : theme=dark lang=en
 */
 
-::: hello {#main .blue .large %collapsible %highlight theme=dark lang=en}
+::: hello [#main .blue .large %collapsible %highlight theme=dark lang=en]
 Welcome to Blocks!
+:::
+
+3. Inlines
+Text with `inline code` and code`content` formats.
+
+::: section
+More text with js`console.log()` examples.
+:::
+
+Text with name:generic inline[], another generic inline link:hello blocks![href="somewhere on the web" target=_blank]
+
+
+5. Metadata
+
+---
+title: "My Document"
+author: "Alice"
+date: "2024-01-15"
+fruits:
+  price: 100
+  quantity: 3
+---
+
+/*
+On peut définir des métadonnées globales au format YAML
+et les utiliser plus tard avec la notation ${metadata}.
+*/
+
+::: block
+# ${title}
+
+Author: ${author}
+Date: ${date}
+
+Price: ${fruits.price}
+Quantity: ${fruits.quantity}
+Total: ${fruits.price * fruits.quantity}
 :::

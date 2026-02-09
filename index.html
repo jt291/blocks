@@ -23,45 +23,58 @@
 
     <!-- Examples -->
     <div class="examples-bar">
-      <button class="btn" data-example="simple">Simple Block</button>
-      <button class="btn" data-example="nested">Nested Blocks</button>
+      <button class="btn" data-example="basics">Basics</button>
+      <button class="btn" data-example="scripts">Scripts</button>
       <button class="btn" data-example="attributes">Attributes</button>
-      <button class="btn" data-example="inline">Inline Elements</button>
+      <button class="btn" data-example="inlines">Inlines</button>
+      <button class="btn" data-example="nested">Nested</button>
       <button class="btn" data-example="codeblock">Code Block</button>
       <button class="btn" data-example="comments">Comments</button>
-      <button class="btn btn-primary" id="parseBtn">🔄 Parse</button>
+      <button class="btn" data-example="invoice">Invoice</button>
+      <button class="btn btn-primary" id="processBtn">⚡ Process</button>
     </div>
 
     <!-- Layout -->
     <div class="playground-layout">
       <!-- Left: Source Input -->
       <div class="playground-left">
+        <div class="panel-header">Source</div>
         <textarea 
           class="source-editor" 
           id="sourceInput" 
-          placeholder="Type or paste Blocks code here...
-Example:
-:::section {#main .container}
-This is a paragraph with `inline code`.
-:::"
+          placeholder="Type or paste Blocks code here..."
           spellcheck="false"
-        >::: #container
-ligne 1
-ligne 2
-:::</textarea>
+        ></textarea>
+      </div>
+
+      <!-- Middle: Variables Panel -->
+      <div class="playground-middle">
+        <div class="panel-header">Variables (JSON)</div>
+        <textarea 
+          class="variables-editor" 
+          id="variablesInput" 
+          placeholder='{\n  "key": "value"\n}'
+          spellcheck="false"
+        >{}</textarea>
       </div>
 
       <!-- Right: Output Tabs -->
       <div class="playground-right">
         <!-- Tabs -->
         <div class="tabs">
-          <button class="tab active" data-tab="tokens">🔤 Tokens</button>
+          <button class="tab active" data-tab="output">📄 Output</button>
+          <button class="tab" data-tab="tokens">🔤 Tokens</button>
           <button class="tab" data-tab="astTree">🌳 AST Tree</button>
-          <button class="tab" data-tab="astJson">📄 AST JSON</button>
+          <button class="tab" data-tab="astJson">📊 AST JSON</button>
+        </div>
+
+        <!-- Output Tab -->
+        <div class="tab-content active" id="outputTab">
+          <pre class="output-display" id="outputDisplay"></pre>
         </div>
 
         <!-- Tokens Tab -->
-        <div class="tab-content active" id="tokensTab">
+        <div class="tab-content" id="tokensTab">
           <div class="tokens-list" id="tokensList"></div>
         </div>
 
@@ -85,51 +98,110 @@ ligne 2
   </div>
 
   <script type="module">
-    import { parse } from './src/index.ts';
+    import { evaluate, parse, render } from './src/index.ts';
     import { createLexer } from './src/lexer/lexer.ts';
 
-    // Examples
+    // Examples - All Spec v1.0 compliant
     const examples = {
-      simple: `:::section
-Hello, Blocks!
-:::`,
-      nested: `:::outer
-Text in outer block
+      basics: {
+        name: "Basics",
+        source: `:::section {#intro .welcome}
+Welcome to Blocks!
 
-::::inner
-Nested content
+Result: \${2+2}
+:::`,
+        variables: { }
+      },
+      scripts: {
+        name: "Scripts",
+        source: `Total: \${price*quantity}
+Tax: \${total*0.1}
+Grand Total: \${total*1.1}`,
+        variables: { price: 10, quantity: 5, total: 50 }
+      },
+      attributes: {
+        name: "Attributes",
+        source: `:::div {#main .container .flex lang=en theme=dark}
+Block with attributes
+:::
+
+Text with \`code\`{#c1 .highlight} inline.`,
+        variables: { }
+      },
+      inlines: {
+        name: "Inlines",
+        source: `Text with \`inline code\` and code\`content\` formats.
+
+:::section
+More text with \`js console.log()\` examples.
+:::`,
+        variables: { }
+      },
+      nested: {
+        name: "Nested",
+        source: `:::outer {.container}
+Value: \${x}
+
+::::inner {.box}
+Double: \${x*2}
 ::::
 :::`,
-      attributes: `:::div {#main .container .flex ?dismissible lang=fr theme=dark}
-Block with attributes
-:::`,
-      inline: `Text with \`inline code\` and :emphasis: and !script!.`,
-      codeblock: `\`\`\`javascript
+        variables: { x: 5 }
+      },
+      codeblock: {
+        name: "Code Block",
+        source: `\`\`\`javascript
 function hello() {
   console.log("Hello, world!");
 }
 \`\`\``,
-      comments: `// This is a line comment
-/* This is a 
-   block comment */
+        variables: { }
+      },
+      comments: {
+        name: "Comments",
+        source: `/* This is a block comment */
 :::section
-content
-:::`
+content with \${value}
+:::
+/* Another comment */`,
+        variables: { value: 42 }
+      },
+      invoice: {
+        name: "Invoice",
+        source: `:::invoice {#inv-001 .document}
+Customer: \${customer.name}
+Email: \${customer.email}
+
+Items:
+- Product A: $\${items.productA}
+- Product B: $\${items.productB}
+
+Subtotal: $\${items.productA+items.productB}
+Tax (10%): $\${(items.productA+items.productB)*0.1}
+Total: $\${(items.productA+items.productB)*1.1}
+:::`,
+        variables: {
+          customer: { name: "Alice Smith", email: "alice@example.com" },
+          items: { productA: 100, productB: 200 }
+        }
+      }
     };
 
     // State
-    let currentTokens = [];
     let currentAST = null;
+    let currentOutput = '';
     let nodeIdCounter = 0;
 
     // Elements
     const sourceInput = document.getElementById('sourceInput');
+    const variablesInput = document.getElementById('variablesInput');
+    const outputDisplay = document.getElementById('outputDisplay');
     const errorBanner = document.getElementById('errorBanner');
     const errorList = document.getElementById('errorList');
     const tokensList = document.getElementById('tokensList');
     const astTree = document.getElementById('astTree');
     const astJson = document.getElementById('astJson');
-    const parseBtn = document.getElementById('parseBtn');
+    const processBtn = document.getElementById('processBtn');
     const copyJsonBtn = document.getElementById('copyJsonBtn');
     const clearBtn = document.getElementById('clearBtn');
 
@@ -139,11 +211,15 @@ content
         const targetTab = tab.dataset.tab;
         
         // Update active tab
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        for (const t of document.querySelectorAll('.tab')) {
+          t.classList.remove('active');
+        }
         tab.classList.add('active');
         
         // Update active content
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        for (const c of document.querySelectorAll('.tab-content')) {
+          c.classList.remove('active');
+        }
         document.getElementById(`${targetTab}Tab`).classList.add('active');
       });
     });
@@ -151,22 +227,29 @@ content
     // Example buttons
     document.querySelectorAll('[data-example]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const example = btn.dataset.example;
-        sourceInput.value = examples[example];
-        parseSource();
+        const exampleKey = btn.dataset.example;
+        const example = examples[exampleKey];
+        sourceInput.value = example.source;
+        variablesInput.value = JSON.stringify(example.variables, null, 2);
+        processSource();
       });
     });
 
-    // Parse button
-    parseBtn.addEventListener('click', () => {
-      parseSource();
+    // Process button
+    processBtn.addEventListener('click', () => {
+      processSource();
     });
 
-    // Auto-parse on input (debounced)
-    let parseTimeout;
+    // Auto-process on input (debounced)
+    let processTimeout;
     sourceInput.addEventListener('input', () => {
-      clearTimeout(parseTimeout);
-      parseTimeout = setTimeout(parseSource, 500);
+      clearTimeout(processTimeout);
+      processTimeout = setTimeout(processSource, 500);
+    });
+
+    variablesInput.addEventListener('input', () => {
+      clearTimeout(processTimeout);
+      processTimeout = setTimeout(processSource, 500);
     });
 
     // Copy JSON
@@ -183,16 +266,18 @@ content
     // Clear
     clearBtn.addEventListener('click', () => {
       sourceInput.value = '';
-      currentTokens = [];
+      variablesInput.value = '{}';
       currentAST = null;
+      currentOutput = '';
+      outputDisplay.textContent = '';
       tokensList.innerHTML = '<p class="empty-state">No tokens yet. Type some code!</p>';
       astTree.innerHTML = '<p class="empty-state">No AST yet. Type some code!</p>';
       astJson.data = null;
       errorBanner.classList.remove('visible');
     });
 
-    // Parse source
-    function parseSource() {
+    // Process source: Parse → Evaluate → Render
+    function processSource() {
       const source = sourceInput.value;
 
       if (!source.trim()) {
@@ -201,15 +286,26 @@ content
       }
 
       try {
+        // Parse variables
+        let variables = {};
+        try {
+          const varsText = variablesInput.value.trim();
+          if (varsText) {
+            variables = JSON.parse(varsText);
+          }
+        } catch (e) {
+          errorList.innerHTML = `<li>Invalid JSON in variables: ${e.message}</li>`;
+          errorBanner.classList.add('visible');
+          return;
+        }
+
         // Tokenize
         const lexer = createLexer();
         const { tokens } = lexer.tokenize(source);
-        currentTokens = tokens;
 
         // Parse
         const result = parse(source);
-        currentAST = result.ast;
-
+        
         // Display errors
         if (result.errors.length > 0) {
           errorList.innerHTML = result.errors.map(e => `<li>${e}</li>`).join('');
@@ -218,15 +314,28 @@ content
           errorBanner.classList.remove('visible');
         }
 
-        // Render views
+        // Evaluate with context
+        const evaluated = evaluate(result.ast, { variables });
+        currentAST = evaluated;
+
+        // Render output
+        currentOutput = render(evaluated);
+
+        // Display views
+        renderOutput(currentOutput);
         renderTokens(tokens);
-        renderASTTree(result.ast);
-        renderASTJSON(result.ast);
+        renderASTTree(evaluated);
+        renderASTJSON(evaluated);
 
       } catch (error) {
         errorList.innerHTML = `<li>${error.message}</li>`;
         errorBanner.classList.add('visible');
       }
+    }
+
+    // Render output
+    function renderOutput(output) {
+      outputDisplay.textContent = output || '(empty)';
     }
 
     // Render tokens
@@ -345,8 +454,11 @@ content
       return div.innerHTML;
     }
 
-    // Initial parse
-    parseSource();
+    // Initial load
+    const firstExample = examples.basics;
+    sourceInput.value = firstExample.source;
+    variablesInput.value = JSON.stringify(firstExample.variables, null, 2);
+    processSource();
   </script>
 </body>
 </html>

@@ -276,6 +276,7 @@ export class BlocksParser extends EmbeddedActionsParser {
     this.MANY(() => {
       const tok = this.OR([
         { ALT: () => this.CONSUME(tokens.Identifier) },
+        { ALT: () => this.CONSUME(tokens.Number) },
         { ALT: () => this.CONSUME(tokens.Content) },
         { ALT: () => this.CONSUME(tokens.Whitespace) },
         { ALT: () => this.CONSUME(tokens.Newline) },

@@ -1,16 +1,18 @@
-1. Basics : (commentaires bloc et inline + bloc générique simple)
+1. Basics : (texte simple, commentaires bloc et inline)
 
 /*
-This is a multi-line block comment
+multi-line block comment
 */
 
-// this is a single-line comment
+Welcome to Blocks!  // inline comment
 
-::: hello
-Welcome to Blocks!
-:::
+/* another block comment */
 
-2. Attributs (ajouter des attributs au bloc générique)
+2. Inline et bloc générique
+
+3. Inline et code bloc
+
+3. Attributs 
 
 /*
 A block can have attributes:

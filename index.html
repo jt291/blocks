@@ -411,10 +411,19 @@ items:
       });
     }
 
+    // Helper function to create a preview of string content
+    function createContentPreview(content, maxLength = 50) {
+      const text = content || '';
+      const preview = text.substring(0, maxLength);
+      const ellipsis = text.length > maxLength ? '...' : '';
+      return `"${preview}${ellipsis}"`;
+    }
+
     function renderASTNode(node, depth) {
       if (!node) return '';
 
       const type = node.type || 'Unknown';
+      const MAX_PREVIEW_LENGTH = 50;
       let info = '';
       let children = [];
 
@@ -425,30 +434,25 @@ items:
       } else if (node.type === 'CodeBlock') {
         info = node.name ? `lang="${node.name}"` : '';
         // CodeBlock.content is a string, not an array - show preview
-        const preview = (node.content || '').substring(0, 50);
-        info += ` "${preview}${node.content && node.content.length > 50 ? '...' : ''}"`;
+        info += ` ${createContentPreview(node.content, MAX_PREVIEW_LENGTH)}`;
         children = []; // No children to iterate
       } else if (node.type === 'CommentBlock') {
         // CommentBlock.content is a string - show preview
-        const preview = (node.content || '').substring(0, 50);
-        info = `"${preview}${node.content && node.content.length > 50 ? '...' : ''}"`;
+        info = createContentPreview(node.content, MAX_PREVIEW_LENGTH);
         children = []; // No children to iterate
       } else if (node.type === 'CodeInline') {
         // CodeInline.content is a string - show preview
-        const preview = (node.content || '').substring(0, 50);
-        info = `"${preview}${node.content && node.content.length > 50 ? '...' : ''}"`;
+        info = createContentPreview(node.content, MAX_PREVIEW_LENGTH);
         children = []; // No children to iterate
       } else if (node.type === 'CommentInline') {
         // CommentInline.content is a string - show preview
-        const preview = (node.content || '').substring(0, 50);
-        info = `"${preview}${node.content && node.content.length > 50 ? '...' : ''}"`;
+        info = createContentPreview(node.content, MAX_PREVIEW_LENGTH);
         children = []; // No children to iterate
       } else if (node.type === 'GenericInline') {
         info = `name="${node.name}"`;
         children = node.content || [];
       } else if (node.type === 'Text') {
-        const preview = node.value.substring(0, 50);
-        info = `"${preview}${node.value.length > 50 ? '...' : ''}"`;
+        info = createContentPreview(node.value, MAX_PREVIEW_LENGTH);
       } else if (node.type === 'Document') {
         children = node.children || [];
       } else if (node.content) {

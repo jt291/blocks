@@ -99,7 +99,7 @@
   </div>
 
   <script type="module">
-    import { evaluate, parse, render } from './src/index.ts';
+    import { process } from './src/index.ts';
     import { createLexer } from './src/lexer/lexer.ts';
 
     // Examples - All Spec v1.0 compliant
@@ -331,7 +331,7 @@ items:
         const { tokens } = lexer.tokenize(source);
 
         // Parse
-        const result = parse(source);
+        const result = process(source, { variables }); //parse(source);
         
         // Display errors
         if (result.errors.length > 0) {
@@ -342,17 +342,16 @@ items:
         }
 
         // Evaluate with context
-        const evaluated = evaluate(result.ast, { variables });
-        currentAST = evaluated;
+        // const evaluated = evaluate(result.ast, { variables });
+        currentAST = result.ast;
 
         // Render output
-        currentOutput = render(evaluated);
-
+        currentOutput = result.output;
         // Display views
         renderOutput(currentOutput);
         renderTokens(tokens);
-        renderASTTree(evaluated);
-        renderASTJSON(evaluated);
+        renderASTTree(currentAST);
+        renderASTJSON(currentAST);
 
       } catch (error) {
         errorList.innerHTML = `<li>${error.message}</li>`;
@@ -373,7 +372,7 @@ items:
       }
 
       tokensList.innerHTML = tokens
-        .map((token, idx) => {
+        .map((token, _idx) => {
           const type = token.tokenType.name;
           const value = token.image.replace(/\n/g, '\\n').replace(/\t/g, '\\t');
           const loc = `L${token.startLine}:${token.startColumn}`;
@@ -398,9 +397,9 @@ items:
       astTree.addEventListener('click', (e) => {
         const header = e.target.closest('.ast-node-header');
         if (header) {
-          const nodeId = header.dataset.nodeId;
+          //const nodeId = header.dataset.nodeId;
           const childrenContainer = header.nextElementSibling;
-          if (childrenContainer && childrenContainer.classList.contains('ast-node-children')) {
+          if (childrenContainer?.classList.contains('ast-node-children')) {
             childrenContainer.classList.toggle('collapsed');
             const toggle = header.querySelector('.ast-toggle');
             if (toggle) {

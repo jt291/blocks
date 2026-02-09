@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 
 export default defineConfig({
   server: {
-    open: '/public/playground.html'
+    open: '/index.html'
   },
   build: {
     emptyOutDir: false, // Don't clear dist directory

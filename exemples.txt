@@ -1,0 +1,25 @@
+1. Basics : (commentaires bloc et inline + bloc générique simple)
+
+/*
+This is a multi-line block comment
+*/
+
+// this is a single-line comment
+
+::: hello
+Welcome to Blocks!
+:::
+
+2. Attributs (ajouter des attributs au bloc générique)
+
+/*
+A block can have attributes:
+  unique identifier : #main
+  classes : .blue .large
+  options : %collapsible %highlight
+  attribute=value : theme=dark lang=en
+*/
+
+::: hello {#main .blue .large %collapsible %highlight theme=dark lang=en}
+Welcome to Blocks!
+:::

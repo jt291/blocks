@@ -30,6 +30,7 @@
       <button class="btn" data-example="nested">Nested</button>
       <button class="btn" data-example="codeblock">Code Block</button>
       <button class="btn" data-example="comments">Comments</button>
+      <button class="btn" data-example="metadata">Metadata</button>
       <button class="btn" data-example="invoice">Invoice</button>
       <button class="btn btn-primary" id="processBtn">⚡ Process</button>
     </div>
@@ -165,6 +166,26 @@ content with \${value}
 :::
 /* Another comment */`,
         variables: { value: 42 }
+      },
+      metadata: {
+        name: "Metadata",
+        source: `---
+title: "My Document"
+author: "Alice"
+date: "2024-01-15"
+price: 100
+quantity: 3
+---
+
+# \${title}
+
+Author: \${author}
+Date: \${date}
+
+Price: \${price}
+Quantity: \${quantity}
+Total: \${price * quantity}`,
+        variables: { }
       },
       invoice: {
         name: "Invoice",

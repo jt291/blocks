@@ -2,6 +2,7 @@ import type { IToken } from "chevrotain";
 import { evaluate } from "./interpreter/interpreter.js";
 import { render } from "./interpreter/renderer.js";
 import { createLexer } from "./lexer/lexer.js";
+import { extractMetadata } from "./metadata/parser.js";
 import type {
   BlockNode,
   DocumentNode,
@@ -28,6 +29,9 @@ export * from "./parser/ast.js";
 export * from "./parser/parser.js";
 // Export preprocessor
 export * from "./preprocessor/index.js";
+// Export metadata utilities
+export { extractMetadata, parseMetadata } from "./metadata/parser.js";
+export type { MetadataResult } from "./metadata/parser.js";
 
 export interface ParseResult {
   ast: DocumentNode;
@@ -211,6 +215,12 @@ export function parse(input: string): ParseResult {
 
 /**
  * Process Blocks source code: Parse → Evaluate → Render
+ * 
+ * Supports YAML frontmatter:
+ * ---
+ * var: value
+ * ---
+ * Content with ${var}
  */
 export function process(
   source: string,
@@ -219,18 +229,27 @@ export function process(
   output: string;
   ast: any;
   errors: any[];
+  metadata: Record<string, any>;
 } {
-  // Parse
-  const { ast, errors } = parse(source);
+  // Extract metadata from source
+  const { variables: metadataVars, source: contentSource } =
+    extractMetadata(source);
+
+  // Merge variables: programmatic options override metadata
+  const variables = {
+    ...metadataVars,
+    ...(context?.variables || {}),
+  };
+
+  // Parse content (after metadata extraction)
+  const { ast, errors } = parse(contentSource);
 
   if (errors.length > 0) {
-    return { output: "", ast, errors };
+    return { output: "", ast, errors, metadata: metadataVars };
   }
 
-  // Evaluate - convert context to EvaluationContext
-  const evalContext = context
-    ? { variables: context.variables || {} }
-    : undefined;
+  // Evaluate with merged variables
+  const evalContext = { variables };
   const evaluated = evaluate(ast, evalContext);
 
   // Render
@@ -240,5 +259,6 @@ export function process(
     output,
     ast: evaluated,
     errors: [],
+    metadata: metadataVars,
   };
 }
